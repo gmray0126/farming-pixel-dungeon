@@ -47,6 +47,7 @@ try:
     initial = profile()
     assert not initial['active'] and len(initial['stash']) == 5, initial
     tap(270, 194)
+    tap(270, 194)
     screenshot('02-minimum-all-nodes')
     # Tall phone similar to the user's screenshot; logical width is only 144px.
     screen(720, 1560, 5)
@@ -90,6 +91,7 @@ try:
     time.sleep(1)
     adb('shell', 'input', 'keyevent', '3')
     time.sleep(3)
+    (OUT / 'logcat-before-restart.txt').write_bytes(adb('logcat', '-d'))
     run = adb('exec-out', 'run-as', PACKAGE, 'cat', 'files/game1/game.dat')
     assert len(run) > 1000, 'Native run was not saved'
     raid_id = state['raid']
@@ -104,8 +106,9 @@ try:
     assert 'FATAL EXCEPTION' not in logs, 'Android runtime crashed'
     (OUT / 'result.json').write_text(json.dumps({'installed': True, 'minimum_layout': '135x225', 'phone_layout': '144x312', 'inventory_round_trip': True, 'supply_purchase': True, 'node_learned': True, 'hub_saved': True, 'raid_with_equipment': True, 'saved_run': True, 'resumed_same_raid': True, 'raid_id': raid_id}, indent=2))
 except Exception as error:
-    screenshot('failure')
     (OUT / 'error.txt').write_text(str(error))
+    try: screenshot('failure')
+    except Exception: pass
     raise
 finally:
     try: (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))
