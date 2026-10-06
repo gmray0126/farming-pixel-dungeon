@@ -2,7 +2,7 @@ package com.shatteredpixel.shatteredpixeldungeon.extraction;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import static com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.*;
-import static com.shatteredpixel.shatteredpixeldungeon.levels.LevelTransition.Type.*;
+import static com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition.Type.*;
 
 public class ExtractionRouteTest {
     @Test public void firstFourSewerExitsContinueTheRaid(){

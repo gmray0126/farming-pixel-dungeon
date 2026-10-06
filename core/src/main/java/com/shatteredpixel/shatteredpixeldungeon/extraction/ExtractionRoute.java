@@ -1,6 +1,6 @@
 /* Farming Pixel Dungeon. GPL-3.0-or-later. */
 package com.shatteredpixel.shatteredpixeldungeon.extraction;
-import com.shatteredpixel.shatteredpixeldungeon.levels.LevelTransition;
+import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 
 /** Five original sewer floors; the sixth-floor stair is the extraction point. */
 public final class ExtractionRoute {

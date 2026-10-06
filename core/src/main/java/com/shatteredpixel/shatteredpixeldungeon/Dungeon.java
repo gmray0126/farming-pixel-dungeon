@@ -510,6 +510,7 @@ public class Dungeon {
 		Light light = hero.buff( Light.class );
 		hero.viewDistance = light == null ? level.viewDistance : Math.max( Light.DISTANCE, level.viewDistance );
 		
+		hero.fieldOfView = level.heroFOV;
 		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.floor(hero,depth);
 		hero.curAction = hero.lastAction = null;
 
@@ -902,6 +903,7 @@ public class Dungeon {
 	//default to recomputing based on max hero vision, in case vision just shrank/grew
 	public static void observe(){
 		int dist = Math.max(Dungeon.hero.viewDistance, 8);
+		dist += Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.value(hero,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.VISION));
 		dist *= 1f + 0.25f*Dungeon.hero.pointsInTalent(Talent.FARSIGHT);
 
 		if (Dungeon.hero.buff(MagicalSight.class) != null){
