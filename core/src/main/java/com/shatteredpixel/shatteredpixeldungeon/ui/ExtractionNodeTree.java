@@ -165,7 +165,7 @@ public class ExtractionNodeTree extends Component {
         private boolean pinching,dragging;
         private float startSpan,startScale,anchorX,anchorY;
         private final PointF last=new PointF();
-        Gestures(){super(x,y+15,width,height-15);}
+        Gestures(){super(ExtractionNodeTree.this.x,ExtractionNodeTree.this.y+15,ExtractionNodeTree.this.width,ExtractionNodeTree.this.height-15);}
         @Override protected void onPointerDown(PointerEvent event){
             if(event==curEvent){dragging=false;last.set(event.current);}
             else if(another==null&&curEvent!=null){
