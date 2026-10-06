@@ -301,6 +301,7 @@ public class MagesStaff extends MeleeWeapon {
 
 	@Override
 	public Item upgrade(boolean enchant) {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 		super.upgrade( enchant );
 
 		updateWand(true);

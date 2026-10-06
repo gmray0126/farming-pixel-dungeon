@@ -55,7 +55,7 @@ public class ScrollOfUpgrade extends InventoryScroll {
 
 	@Override
 	protected boolean usableOnItem(Item item) {
-		return item.isUpgradable();
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(item);
 	}
 
 	@Override
@@ -78,6 +78,7 @@ public class ScrollOfUpgrade extends InventoryScroll {
 	}
 
 	public Item upgradeItem( Item item ){
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(item)) return item;
 		upgrade( curUser );
 
 		Degrade.detach( curUser, Degrade.class );

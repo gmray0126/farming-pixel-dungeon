@@ -393,7 +393,7 @@ public class Item implements Bundlable {
 	}
 
 	public Item level( int value ){
-		level = value;
+		level = com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(this,value);
 
 		updateQuickslot();
 
@@ -401,6 +401,7 @@ public class Item implements Bundlable {
 	}
 	
 	public Item upgrade() {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 		
 		this.level++;
 

@@ -119,6 +119,7 @@ public class WndUpgrade extends Window {
 			}
 		}
 
+		levelTo = com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(toUpgrade,levelTo);
 		// *** Sprites, showing item at current level and with +1 ***
 
 		ColorBlock bg1 = new ColorBlock(ITEMSLOT_SIZE, ITEMSLOT_SIZE, 0x9953564D);
@@ -433,6 +434,9 @@ public class WndUpgrade extends Window {
 			protected void onClick() {
 				super.onClick();
 
+				if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(toUpgrade)) {
+					hide();com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("영구 강화 상한에 도달했습니다.");return;
+				}
 				ScrollOfUpgrade.upgrade(Dungeon.hero);
 
 				Item upgraded = toUpgrade;
@@ -450,7 +454,7 @@ public class WndUpgrade extends Window {
 
 				hide();
 
-				if (moreUpgradeItem != null && toUpgrade.isUpgradable()){
+				if (moreUpgradeItem != null && com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(toUpgrade)){
 					GameScene.show(new WndUpgrade(moreUpgradeItem, upgraded, false));
 				}
 			}

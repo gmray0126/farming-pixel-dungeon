@@ -368,7 +368,7 @@ abstract public class Weapon extends KindOfWeapon {
 	public int level() {
 		int level = super.level();
 		if (curseInfusionBonus) level += 1 + level/6;
-		return level;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(this,level);
 	}
 	
 	@Override
@@ -377,6 +377,7 @@ abstract public class Weapon extends KindOfWeapon {
 	}
 	
 	public Item upgrade(boolean enchant ) {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 
 		if (enchant){
 			if (enchantment == null){

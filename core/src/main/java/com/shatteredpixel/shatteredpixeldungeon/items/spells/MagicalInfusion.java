@@ -54,7 +54,7 @@ public class MagicalInfusion extends InventorySpell {
 
 	@Override
 	protected boolean usableOnItem(Item item) {
-		return item.isUpgradable();
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(item);
 	}
 
 	@Override
@@ -89,6 +89,7 @@ public class MagicalInfusion extends InventorySpell {
 	}
 
 	public Item upgradeItem( Item item ){
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(item)) return item;
 		ScrollOfUpgrade.upgrade(curUser);
 
 		Degrade.detach( curUser, Degrade.class );

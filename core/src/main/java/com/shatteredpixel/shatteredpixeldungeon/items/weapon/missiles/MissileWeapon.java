@@ -145,6 +145,7 @@ abstract public class MissileWeapon extends Weapon {
 	}
 
 	public Item upgrade( boolean enchant ) {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 		if (!bundleRestoring) {
 			durability = MAX_DURABILITY;
 			extraThrownLeft = false;
@@ -162,6 +163,7 @@ abstract public class MissileWeapon extends Weapon {
 	
 	@Override
 	public Item upgrade() {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 		if (!bundleRestoring) {
 			durability = MAX_DURABILITY;
 			extraThrownLeft = false;
@@ -655,7 +657,7 @@ abstract public class MissileWeapon extends Weapon {
 	@Override
 	public String info() {
 
-		String info = super.info();
+		String info = super.info() + com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.description(this);
 
 		if (levelKnown) {
 			info += "\n\n" + Messages.get(MissileWeapon.class, "stats_known", tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq());

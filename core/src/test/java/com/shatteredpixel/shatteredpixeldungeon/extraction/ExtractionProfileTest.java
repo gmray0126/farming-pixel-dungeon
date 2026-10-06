@@ -22,6 +22,46 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void permanentWeaponCapsAreThreeTimesEveryTier(){
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon[] weapons={
+            new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Longsword(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword()};
+        for(int i=0;i<weapons.length;i++){
+            Item weapon=weapons[i];int cap=(i+1)*3;
+            assertEquals(cap,WeaponUpgradeLimit.cap(weapon));weapon.upgrade(cap-1);
+            assertTrue(WeaponUpgradeLimit.eligible(weapon));weapon.upgrade();
+            assertFalse(WeaponUpgradeLimit.eligible(weapon));weapon.upgrade(10);
+            assertEquals(cap,weapon.trueLevel());weapon.level(100);assertEquals(cap,weapon.trueLevel());
+        }
+    }
+    @Test public void blockedWeaponUpgradeKeepsItsCurseAndHardeningAndInfusionCannotExceedCap(){
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword();
+        weapon.level(15);weapon.cursed=true;weapon.enchantHardened=true;weapon.curseInfusionBonus=true;
+        weapon.upgrade(true);assertTrue(weapon.cursed);assertTrue(weapon.enchantHardened);
+        assertEquals(15,weapon.trueLevel());assertEquals(15,weapon.level());
+        assertSame(weapon,new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().upgradeItem(weapon));
+        assertSame(weapon,new com.shatteredpixel.shatteredpixeldungeon.items.spells.MagicalInfusion().upgradeItem(weapon));
+    }
+    @Test public void legacyOverCapWeaponSaveIsRestoredAtTierCap(){
+        Item sword=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword().level(8);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();sword.storeInBundle(saved);saved.put("level",100);
+        Item restored=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword();restored.restoreFromBundle(saved);
+        assertEquals(9,restored.trueLevel());assertFalse(WeaponUpgradeLimit.eligible(restored));
+        com.watabou.utils.Bundle roundTrip=new com.watabou.utils.Bundle();restored.storeInBundle(roundTrip);
+        Item again=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword();again.restoreFromBundle(roundTrip);assertEquals(9,again.trueLevel());
+    }
+    @Test public void boundWandAndThrownWeaponFollowTheirWeaponTierLimits(){
+        Dungeon.hero=new Hero();
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff staff=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff();
+        com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand wand=new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile();wand.level(20);
+        staff.imbueWand(wand,null);assertEquals(3,staff.trueLevel());assertEquals(3,wand.trueLevel());
+        staff.upgrade(10);assertEquals(3,staff.trueLevel());assertEquals(3,wand.trueLevel());
+        Item trident=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Trident();trident.level(100);
+        assertEquals(15,trident.trueLevel());trident.upgrade();assertEquals(15,trident.trueLevel());
+    }
     @Test public void utilitiesApplyAcrossWeaponsAndRemainRaidOnly(){
         profile.nodes.add("scout_0");profile.nodes.add("food_0");
         assertEquals(1,profile.bonus(ExtractionGrowth.Stat.VISION,3),0.001f);
