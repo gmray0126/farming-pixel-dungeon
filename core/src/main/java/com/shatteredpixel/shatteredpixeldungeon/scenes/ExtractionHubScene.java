@@ -45,7 +45,7 @@ public class ExtractionHubScene extends PixelScene {
         ExtractionProfile p=ExtractionProfile.get();
         label("파밍 픽셀 던전",9,left,top,width-34,GOLD);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
-        label(p.gold+" G  ·  "+p.points+" P,7,left,top+20,width,TEXT);
+        label(p.gold+" G  ·  "+p.points+" P",7,left,top+20,width,TEXT);
         label("성장 Lv. "+p.growthLevel()+"  ·  경험치 "+p.growthExperience()+" / "+p.growthExperienceRequired(),6,left,top+29,width,GREEN);
         float tw=(width-6)/4f;
         String[] titles={"준비","성장","원정","상점"};
