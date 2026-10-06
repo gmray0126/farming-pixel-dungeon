@@ -26,6 +26,27 @@ public class ExtractionProfileTest {
         @Override public void showStatusWithIcon(int color,String text,int icon,Object... args){}
         @Override public void add(State state){}
         @Override public void remove(State state){}
+        @Override public void die(){}
+    }
+    @Test public void sewerMonsterDeathsDropTheirRealLootWithoutRequiringAnImmediateSprite() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Dungeon.level=Dungeon.newLevel();Hero h=Dungeon.hero;h.pos=Dungeon.level.entrance();
+        h.sprite=new EffectSprite();h.sprite.visible=false;
+        java.util.Arrays.fill(Dungeon.level.heroFOV,true);
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob[] mobs={
+            new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Gnoll(),
+            new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Crab(),
+            new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Snake(),
+            new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Swarm(),
+            new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Slime()};
+        Field chance=com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob.class.getDeclaredField("lootChance");chance.setAccessible(true);
+        int heapCount=Dungeon.level.heaps.size();
+        for(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob mob:mobs){
+            chance.setFloat(mob,1);mob.pos=h.pos;mob.sprite=new EffectSprite();Dungeon.level.mobs.add(mob);
+            mob.die(h);assertFalse(Dungeon.level.mobs.contains(mob));
+        }
+        assertTrue(Dungeon.level.heaps.size()>heapCount);assertTrue(profile.xp>0);
+        h.sprite=null;
     }
     @Test public void drinkingNonHazardousPotionsExecutesTheirRealEffects(){
         profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
