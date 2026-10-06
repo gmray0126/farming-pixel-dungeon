@@ -13,6 +13,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.watabou.utils.FileUtils;
+import com.watabou.noosa.Game;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +32,8 @@ public class ExtractionProfileTest {
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
+        Game.version = "0.1.0-extraction-INDEV";
+        Game.versionCode = 921;
         SPDSettings.set(new HeadlessPreferences("test-preferences.xml", folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, folder.getRoot().getAbsolutePath()+"/");
         Dungeon.hero = null;
