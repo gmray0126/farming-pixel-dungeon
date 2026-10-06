@@ -22,6 +22,64 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void resumeRestoresMightRingWhileGlobalHeroIsStillNull(){
+        Hero h=new Hero();h.extractionRaidID=1;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
+        h.belongings.ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight();
+        h.belongings.ring.activate(h);Dungeon.hero=h;h.updateHT(false);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);
+        Dungeon.hero=null;
+        Hero restored=(Hero)saved.get("hero");
+        assertNotNull(restored);assertEquals(21,restored.HT);assertEquals(11,restored.STR());
+    }
+    @Test public void abandonmentNeedsNoLiveHeroAndKeepsCreditedGrowth() throws Exception {
+        Item sword=profile.stash.get(0);profile.prepare(sword,true);profile.begin();int id=profile.raidID;
+        profile.credit(id,30);Dungeon.hero=null;Dungeon.level=null;
+        profile.abandon();profile.abandon();
+        assertFalse(profile.active);assertEquals(30,profile.xp);assertEquals(4,profile.points);
+        assertEquals(4,profile.stash.size());assertTrue(profile.prepared.isEmpty());assertEquals(100,profile.gold);
+        assertTrue(profile.result.contains("포기"));
+        forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.active);assertEquals(30,profile.xp);
+        profile.begin();assertTrue(profile.raidID>id);Hero fresh=new Hero();profile.initialize(fresh);
+        assertNull(fresh.belongings.weapon);
+    }
+    @Test public void failedAbandonmentPreservesRaidAndEscrow() throws Exception {
+        Item sword=profile.stash.get(0);profile.prepare(sword,true);profile.begin();int id=profile.raidID;
+        java.io.File blocker=folder.newFile("abandon-blocker");
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.abandon();fail("Saving must fail");}catch(IllegalStateException expected){}
+        assertTrue(profile.active);assertEquals(id,profile.raidID);
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        Hero fresh=new Hero();profile.initialize(fresh);assertNotNull(fresh.belongings.weapon);
+    }
+    @Test public void generatedLootAndPotionStatesSurviveNativeRunResume() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";
+        Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();
+        Hero h=Dungeon.hero;h.pos=Dungeon.level.entrance();
+        for(com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category category:new com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category[]{
+                com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION,
+                com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.SEED,
+                com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.WEAPON,
+                com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARMOR,
+                com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING}){
+            for(int i=0;i<20;i++){
+                Item loot=com.shatteredpixel.shatteredpixeldungeon.items.Generator.random(category);
+                assertNotNull(loot);com.watabou.utils.Bundle copy=new com.watabou.utils.Bundle();copy.put("loot",loot);
+                assertNotNull(copy.get("loot"));
+            }
+        }
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.prolong(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision.class,10);
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.prolong(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Levitation.class,10);
+        com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing.heal(h);
+        h.belongings.ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight();h.belongings.ring.activate(h);
+        Dungeon.saveGame(1);Dungeon.saveLevel(1);
+        int id=h.extractionRaidID;Dungeon.hero=null;Dungeon.level=null;
+        Dungeon.loadGame(1);Dungeon.level=Dungeon.loadLevel(1);
+        assertEquals(id,Dungeon.hero.extractionRaidID);assertEquals(1,Dungeon.depth);
+        assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Healing.class));
+        assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision.class));
+        assertFalse(Dungeon.level.mobs.isEmpty());
+    }
     @Test public void chapterAndDifficultyUnlocksPersistAndRaidSelectionIsFrozen() throws Exception {
         try{profile.selectRaid(2,1);fail("Prison must be locked");}catch(IllegalStateException expected){}
         try{profile.selectRaid(1,2);fail("Difficulty must be locked");}catch(IllegalStateException expected){}

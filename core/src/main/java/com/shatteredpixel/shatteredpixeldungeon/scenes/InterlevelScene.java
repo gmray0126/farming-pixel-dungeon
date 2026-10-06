@@ -558,6 +558,13 @@ public class InterlevelScene extends PixelScene {
 			}
 
 			if (error != null) {
+				if(mode==Mode.CONTINUE&&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().active){
+					final String detail=error.getClass().getSimpleName()+": "+String.valueOf(error.getMessage());
+					add(new WndError("원정을 불러오지 못했습니다. 저장은 보존했습니다. 거점에서 재시도하거나 포기할 수 있습니다.\n\n"+detail){
+						@Override public void onBackPressed(){super.onBackPressed();Game.switchScene(ExtractionHubScene.class);}
+					});
+					thread=null;error=null;break;
+				}
 				String errorMsg;
 				if (error instanceof FileNotFoundException)     errorMsg = Messages.get(this, "file_not_found");
 				else if (error instanceof IOException)          errorMsg = Messages.get(this, "io_error");

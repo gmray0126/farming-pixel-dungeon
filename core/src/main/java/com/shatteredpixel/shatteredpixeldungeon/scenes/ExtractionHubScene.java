@@ -55,7 +55,8 @@ public class ExtractionHubScene extends PixelScene {
         }
         float y=top+58;
         if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else shop(y);
-        button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" · "+p.selectedDifficulty+"단계 출격",left,bottom-22,width,22,this::depart,true);
+        button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" · "+p.selectedDifficulty+"단계 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
+        if(p.active)button("포기하기",left+width-48,bottom-22,48,22,this::abandon,false);
     }
     private void equipment(float y){
         ExtractionProfile p=ExtractionProfile.get();
@@ -245,6 +246,13 @@ public class ExtractionHubScene extends PixelScene {
                     "유물은 최대 2개 착용하며 같은 유물은 중복 착용할 수 없습니다. 창고나 가방에 있는 유물은 효과가 없습니다.\n\n준비 화면에서 유물을 길게 눌러 착용할 물품을 선택하세요. 유물은 적 처치로 성장하며 +5가 상한입니다.\n\n상점은 보급품과 T1~T2 장비만 판매합니다."
                 };
                 if(index>=0&&index<pages.length)add(new WndMessage(pages[index]));
+            }
+        });
+    }
+    private void abandon(){
+        add(new WndOptions("원정 포기","출격 물품과 전리품을 잃습니다. 창고·성장 노드·이미 얻은 성장 경험치는 유지됩니다.","원정 포기","취소"){
+            @Override protected void onSelect(int index){
+                if(index==0)try{ExtractionProfile.get().abandon();refresh();}catch(RuntimeException e){error(e);}
             }
         });
     }

@@ -223,6 +223,16 @@ public final class ExtractionProfile {
     public void buyPotion() {
         buy(0);
     }
+    /** Abandon without loading a possibly broken run; only credited XP is retained. */
+    public void abandon() {
+        if(!active)return;
+        change(()->{
+            active=false;escrow.clear();raidXP=0;
+            result="원정을 포기했습니다. 출격 물품과 전리품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
+        });
+        Dungeon.deleteGame(1,true);
+        Dungeon.hero=null;Dungeon.level=null;
+    }
     public void buy(final int offerIndex) {
         if(active)throw new IllegalStateException("원정 중에는 거점 상점을 이용할 수 없습니다.");
         if(offerIndex<0||offerIndex>=ExtractionShop.OFFERS.size())throw new IllegalArgumentException("없는 상품입니다.");
