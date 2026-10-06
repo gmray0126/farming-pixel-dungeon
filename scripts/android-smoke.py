@@ -1,7 +1,6 @@
 """Install and launch the actual APK in an isolated CI Android emulator."""
 import gzip
 import json
-import os
 from pathlib import Path
 import subprocess
 import time
@@ -11,7 +10,7 @@ OUT = Path('android-smoke')
 OUT.mkdir(exist_ok=True)
 
 def adb(*args, **kwargs):
-    return subprocess.check_output(['adb', *args], **kwargs)
+    return subprocess.check_output(['adb', *args], timeout=60, **kwargs)
 
 def screenshot(name):
     (OUT / (name + '.png')).write_bytes(adb('exec-out', 'screencap', '-p'))
@@ -34,7 +33,7 @@ try:
     adb('shell', 'wm', 'density', '160')
     adb('shell', 'run-as', PACKAGE, 'mkdir', '-p', 'shared_prefs')
     prefs = b'<map><int name="version" value="921"/><boolean name="intro" value="false"/><boolean name="fullscreen" value="true"/><int name="scale" value="4"/><string name="language">ko</string></map>'
-    adb('exec-out', f"run-as {PACKAGE} sh -c 'cat > shared_prefs/ShatteredPixelDungeon.xml'", input=prefs)
+    adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > shared_prefs/ShatteredPixelDungeon.xml'", input=prefs)
     adb('logcat', '-c')
     launch()
     screenshot('01-hub')
@@ -52,7 +51,7 @@ try:
     initial['prepared'] = initial['stash'][:2]
     initial['stash'] = initial['stash'][2:]
     data = gzip.compress(json.dumps(initial, ensure_ascii=False).encode())
-    adb('exec-out', f"run-as {PACKAGE} sh -c 'cat > files/extraction-profile.dat'", input=data)
+    adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > files/extraction-profile.dat'", input=data)
     launch()
     screenshot('03-prepared-hub')
     adb('shell', 'input', 'tap', '360', '368')

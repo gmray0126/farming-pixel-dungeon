@@ -14,6 +14,7 @@ on:
       - 'gradlew'
       - 'android/**'
       - 'core/**'
+      - 'scripts/android-smoke.py'
       - 'EXTRACTION_README_KO.md'
       - 'SPD-classes/**'
       - 'services/**'
