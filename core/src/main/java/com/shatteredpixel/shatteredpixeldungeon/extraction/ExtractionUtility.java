@@ -35,7 +35,7 @@ public final class ExtractionUtility {
         float turns=value(h,FOOD_INVIS);if(turns>0)Buff.prolong(h,Invisibility.class,turns);
     }
     public static boolean floor(Hero h,int depth){
-        if(h==null||h.extractionRaidID==0||depth<1||depth>5||(h.extractionVisited&(1<<depth))!=0)return false;
+        if(h==null||h.extractionRaidID==0||depth<1||depth>10||(h.extractionVisited&(1<<depth))!=0)return false;
         h.extractionVisited|=1<<depth;
         heal(h,value(h,FLOOR_HEAL));shield(h,value(h,FLOOR_SHIELD));
         float turns=value(h,FLOOR_AWARENESS);if(turns>0)Buff.prolong(h,Awareness.class,turns);
@@ -46,11 +46,13 @@ public final class ExtractionUtility {
     }
     public static void defeated(Hero h,Mob mob){
         if(h==null||h.extractionRaidID==0||!h.isAlive()||mob.alignment!=Char.Alignment.ENEMY)return;
-        if(mob instanceof Goo&&Dungeon.depth==5&&Dungeon.branch==0){
+        if(!h.extractionBossDefeated&&Dungeon.branch==0&&((mob instanceof Goo&&Dungeon.depth==5&&ExtractionDifficulty.chapter()==1)||(mob instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu&&Dungeon.depth==10&&ExtractionDifficulty.chapter()==2))){
             h.extractionBossDefeated=true;
-            if(h.sprite!=null)GLog.p("하수도 보스 처치! 아래 계단으로 탈출할 수 있습니다.");
+            if(h.sprite!=null)ExtractionDifficulty.bossLoot(mob);
+            if(h.sprite!=null)GLog.p("챕터 보스 처치! 아래 계단으로 탈출할 수 있습니다.");
         }
-        if(mob.EXP>0&&Dungeon.level!=null&&Dungeon.level.heroFOV[mob.pos])kill(h);
+        if(mob.EXP>0&&Dungeon.level!=null&&Dungeon.level.heroFOV[mob.pos]){kill(h);ExpeditionArtifacts.kill(h);}
+        if(h.sprite!=null)ExtractionDifficulty.eliteLoot(mob);
     }
     public static void kill(Hero h){
         heal(h,value(h,KILL_HEAL));shield(h,value(h,KILL_SHIELD));haste(h,value(h,KILL_HASTE));recharge(h,value(h,KILL_RECHARGE));
@@ -60,11 +62,12 @@ public final class ExtractionUtility {
         if(h.extractionRaidID!=0&&enemy instanceof Mob&&((Mob)enemy).surprisedBy(h)){
             multiplier*=1+value(h,SURPRISE_DAMAGE)/100f;recharge(h,value(h,SURPRISE_RECHARGE));
         }
-        return Math.round(damage*multiplier);
+        return ExpeditionArtifacts.attack(h,enemy,Math.round(damage*multiplier));
     }
     private static boolean source(Object src,Class<?> type){return src==type||type.isInstance(src);}
     public static int incoming(Hero h,int damage,Object src){
         if(h.extractionRaidID==0||damage<=0)return damage;
+        damage=ExpeditionArtifacts.incoming(h,ExtractionDifficulty.incoming(damage,src));
         float reduction=0;
         boolean poison=source(src,Poison.class),burn=source(src,Burning.class),bleed=source(src,Bleeding.class),ooze=source(src,Ooze.class);
         if(poison||burn||bleed||ooze)reduction+=value(h,DOT_REDUCTION);

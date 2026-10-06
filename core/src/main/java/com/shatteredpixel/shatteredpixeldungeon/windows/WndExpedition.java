@@ -13,7 +13,7 @@ public class WndExpedition extends Window {
     public WndExpedition(){
         super();
         final int w=118;resize(w,188);Hero hero=Dungeon.hero;ExtractionProfile p=ExtractionProfile.get();
-        text("원정자 · Lv."+hero.lvl,10,0,0,w,ExtractionNodeTree.GOLD);
+        text("원정자 · 성장 "+(1+p.xp/25),10,0,0,w,ExtractionNodeTree.GOLD);
         text("HP "+hero.HP+" / "+hero.HT+"  ·  힘 "+hero.STR(),7,0,16,w,WHITE);
         text("영구 성장 "+(1+p.xp/25)+"  ·  "+p.points+" P\n다음 성장 "+(p.xp%25)+" / 25 XP",6,0,28,w,WHITE);
         text("통합 성장 지도",8,0,51,w,ExtractionNodeTree.GOLD);
@@ -22,7 +22,7 @@ public class WndExpedition extends Window {
             (p.nodes.contains(ExtractionProfile.IDS[n])?"습득한 영구 노드입니다.":"선행: "+p.prerequisites(n)+"\n\n거점에서 분배할 수 있습니다."))),
             ()->GameScene.show(new WndGrowthAtlas()));
         add(tree);tree.setRect(0,65,w,109);
-        text("하수도 "+Dungeon.depth+" / 5 · "+(hero.extractionBossDefeated?"계단에서 탈출":"5층 보스 목표"),6,0,176,w,ExtractionNodeTree.GREEN);
+        text(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.raidChapter)+" "+Dungeon.depth+"층 · 난이도 "+p.raidDifficulty+" · "+(hero.extractionBossDefeated?"탈출 가능":"보스 목표"),6,0,176,w,ExtractionNodeTree.GREEN);
         resize(w,188);
     }
     private void text(String value,int size,float x,float y,int width,int color){

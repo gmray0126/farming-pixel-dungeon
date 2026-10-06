@@ -55,7 +55,7 @@ public class ExtractionHubScene extends PixelScene {
         }
         float y=top+58;
         if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else shop(y);
-        button(p.active?"원정 이어하기":"하수도로 출격",left,bottom-22,width,22,this::depart,true);
+        button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" · "+p.selectedDifficulty+"단계 출격",left,bottom-22,width,22,this::depart,true);
     }
     private void equipment(float y){
         ExtractionProfile p=ExtractionProfile.get();
@@ -140,7 +140,7 @@ public class ExtractionHubScene extends PixelScene {
             for(int c=0;c<3;c++){final int category=c;
                 button(ExtractionShop.CATEGORIES[c],left+c*(cw+2),y+22,cw,16,()->{shopCategory=category;shopPage=0;refresh();},c==shopCategory);
             }
-            for(int n=0;n<ExtractionShop.OFFERS.size();n++)if(ExtractionShop.OFFERS.get(n).category==shopCategory){
+            for(int n=0;n<ExtractionShop.OFFERS.size();n++)if(ExtractionShop.OFFERS.get(n).category==shopCategory&&ExtractionShop.OFFERS.get(n).available()){
                 offers.add(n);items.add(ExtractionShop.OFFERS.get(n).item());
             }
         }
@@ -215,15 +215,30 @@ public class ExtractionHubScene extends PixelScene {
     }
     private void expedition(float y){
         ExtractionProfile p=ExtractionProfile.get();
-        panel(left,y,width,71);
-        label("01  하수도",11,left+8,y+8,width-16,GOLD);
-        label("하수도 1~5층을 탐사하세요.\n5층 보스 처치 후 다음 계단에서 탈출.",7,left+8,y+27,width-16,TEXT);
-        label(p.active?"상태: 원정 진행 중":"상태: 출격 가능",6,left+8,y+57,width-16,GREEN);
-        label("원정 규칙",8,left,y+82,width,GOLD);
-        label("탈출: 장비와 전리품을 창고로\n포션·스크롤: 판매가로 자동 정산\n사망: 가져간 물품과 전리품 손실\n유지: 창고 · 성장 노드 · 경험치",7,left,y+97,width,TEXT);
-        float after=y+148;
-        if(!p.result.isEmpty()&&after+30<bottom-27)label(p.result,6,left,after,width,GREEN);
-        if(after+45<bottom-27)button("제작자 / 원본 크레딧",left,bottom-46,width,17,()->ShatteredPixelDungeon.switchScene(AboutScene.class),false);
+        int chapter=p.active?p.raidChapter:p.selectedChapter, difficulty=p.active?p.raidDifficulty:p.selectedDifficulty;
+        float half=(width-2)/2f;
+        for(int c=1;c<=2;c++){final int selected=c;
+            button((c==1?"01 하수도":"02 감옥")+(p.unlockedDifficulty[c-1]==0?" · 잠금":""),left+(c-1)*(half+2),y,half,18,()->{
+                if(p.active)throw new IllegalStateException("진행 중인 원정을 먼저 마치세요.");
+                if(p.unlockedDifficulty[selected-1]==0)throw new IllegalStateException("하수도 보스를 잡고 탈출하면 감옥이 열립니다.");
+                p.selectRaid(selected,Math.min(p.selectedDifficulty,p.unlockedDifficulty[selected-1]));refresh();
+            },chapter==c);
+        }
+        centered("난이도 "+difficulty+" / 10 · 해금 "+p.unlockedDifficulty[chapter-1],7,left+23,y+26,width-46,GOLD);
+        button("<",left,y+22,21,16,()->{p.selectRaid(chapter,Math.max(1,difficulty-1));refresh();},false);
+        button(">",left+width-21,y+22,21,16,()->{p.selectRaid(chapter,Math.min(10,difficulty+1));refresh();},false);
+        panel(left,y+43,width,49);
+        int start=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(chapter),end=start+4;
+        label(start+"~"+end+"층 · 보스 "+(chapter==1?"구":"텐구"),8,left+5,y+48,width-10,GOLD);
+        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.maxTier(chapter,difficulty)
+            +" · 정예 적과 추가 보스 병력",6,left+5,y+63,width-10,TEXT);
+        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지\n각 난이도 탈출로 다음 단계 해금",6,left,y+99,width,TEXT);
+        button("난이도 / 유물 안내",left,y+130,width,17,()->add(new WndMessage(
+            "난이도는 장비와 무관하게 출격 시 고정됩니다.\n높은 단계일수록 적의 체력·피해·명중·밀도와 정예 확률이 증가합니다. 난이도 3부터 보스 강화 패턴과 지원 병력이 등장합니다.\n\n"
+            +"하수도: 1~3단계 T2, 4~6단계 T3, 7~9단계 T4, 10단계 T5.\n감옥: 1~3단계 T3, 4~6단계 T4, 7~10단계 T5.\n보스는 현재 단계의 최상위 티어 무기를 보장합니다.\n\n"
+            +"피의 등불: 처치 회복 / 물약 회복 감소\n탐욕의 주머니: 좋은 장비 / 골드에 따른 피해 증가\n깨진 모래시계: 시간 가속 / 이후 둔화\n사냥꾼의 표식: 지정 적 피해 / 다른 적 피해 감소\n불안정한 나침반: 비밀 감지 / 주변 적 유인\n\n"
+            +"동시 착용은 유물 최대 2개, 같은 유물 중복 착용 불가. 유물은 적 처치로 성장하며 +5가 상한입니다. 상점은 보급품과 T1~T2 장비만 판매합니다.")),false);
+        if(!p.result.isEmpty()&&y+156+35<bottom-27)label(p.result,6,left,y+156,width,GREEN);
     }
     private void depart(){
         ExtractionProfile p=ExtractionProfile.get();p.begin();

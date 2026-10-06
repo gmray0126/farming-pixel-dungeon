@@ -22,6 +22,77 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void chapterAndDifficultyUnlocksPersistAndRaidSelectionIsFrozen() throws Exception {
+        try{profile.selectRaid(2,1);fail("Prison must be locked");}catch(IllegalStateException expected){}
+        try{profile.selectRaid(1,2);fail("Difficulty must be locked");}catch(IllegalStateException expected){}
+        profile.begin();Dungeon.hero=new Hero();Dungeon.gold=0;profile.settle(profile.raidID,true);
+        assertEquals(2,profile.unlockedDifficulty[0]);assertEquals(1,profile.unlockedDifficulty[1]);
+        profile.selectRaid(2,1);profile.begin();int id=profile.raidID;
+        try{profile.selectRaid(1,1);fail("Active selection must be frozen");}catch(IllegalStateException expected){}
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(1,profile.raidDifficulty);
+        profile.settle(id,false);assertEquals(1,profile.unlockedDifficulty[1]);
+        profile.selectRaid(1,2);profile.begin();profile.settle(profile.raidID,true);assertEquals(3,profile.unlockedDifficulty[0]);
+    }
+    @Test public void selectedPrisonStartsAtSixAndGeneratesScaledOriginalPrison(){
+        profile.unlockedDifficulty[1]=1;profile.selectRaid(2,1);profile.begin();
+        Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        assertEquals(6,Dungeon.depth);assertEquals(profile.raidID,Dungeon.hero.extractionRaidID);
+        com.shatteredpixel.shatteredpixeldungeon.levels.Level level=Dungeon.newLevel();
+        assertTrue(level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel);
+        int scaled=0;for(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob mob:level.mobs)if(mob.extractionScaled)scaled++;
+        assertTrue(scaled>0);assertEquals(20,Dungeon.hero.HT);
+    }
+    @Test public void lootCeilingsScalingAndShopRestrictionsDoNotFollowPlayerPower(){
+        assertEquals(2,ExtractionDifficulty.maxTier(1,1));assertEquals(3,ExtractionDifficulty.maxTier(1,4));
+        assertEquals(4,ExtractionDifficulty.maxTier(1,7));assertEquals(5,ExtractionDifficulty.maxTier(1,10));
+        assertEquals(3,ExtractionDifficulty.maxTier(2,1));assertEquals(5,ExtractionDifficulty.maxTier(2,7));
+        for(int chapter=1;chapter<=2;chapter++)for(int stage=1;stage<=10;stage++){
+            float[] weights=ExtractionDifficulty.tierWeights(chapter,stage,false);float sum=0;
+            for(int i=0;i<5;i++){sum+=weights[i];if(i>=ExtractionDifficulty.maxTier(chapter,stage))assertEquals(0,weights[i],0);}
+            assertEquals(100,sum,0);
+        }
+        assertTrue(ExtractionDifficulty.healthMultiplier(1,10)>ExtractionDifficulty.healthMultiplier(1,1));
+        assertTrue(ExtractionDifficulty.damageMultiplier(10)>ExtractionDifficulty.damageMultiplier(1));
+        profile.gold=99999;
+        for(int n=0;n<ExtractionShop.OFFERS.size();n++)if(!ExtractionShop.OFFERS.get(n).available()){
+            try{profile.buy(n);fail("High tier shop purchase must be rejected");}catch(IllegalStateException expected){}
+        }
+    }
+    @Test public void scaledEnemiesAndEliteFlagsRoundTripWithoutDoubleScaling(){
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat rat=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();
+        int original=rat.HT;ExtractionDifficulty.prepare(rat);int scaled=rat.HT;
+        assertTrue(scaled>original);ExtractionDifficulty.prepare(rat);assertEquals(scaled,rat.HT);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();rat.storeInBundle(saved);
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat restored=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();restored.restoreFromBundle(saved);
+        ExtractionDifficulty.prepare(restored);assertEquals(scaled,restored.HT);assertEquals(rat.extractionElite,restored.extractionElite);
+    }
+    @Test public void relicsOnlyWorkEquippedAndCapsAndChargesPersist() throws Exception {
+        Hero hero=new Hero();hero.extractionRaidID=1;Dungeon.hero=hero;
+        ExpeditionArtifacts.BloodLantern lantern=new ExpeditionArtifacts.BloodLantern();
+        hero.belongings.backpack.items.add(lantern);hero.HP=5;
+        ExpeditionArtifacts.kill(hero);assertEquals(5,hero.HP);assertEquals(1,ExpeditionArtifacts.healingMultiplier(hero),0);
+        hero.belongings.artifact=lantern;lantern.activate(hero);ExpeditionArtifacts.kill(hero);
+        assertEquals(6,hero.HP);assertEquals(.65f,ExpeditionArtifacts.healingMultiplier(hero),.001f);
+        for(int i=0;i<200;i++)lantern.gainKill();assertEquals(5,lantern.level());lantern.upgrade(100);assertEquals(5,lantern.level());
+        lantern.level(100);assertEquals(5,lantern.level());
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();lantern.storeInBundle(saved);
+        ExpeditionArtifacts.BloodLantern copy=new ExpeditionArtifacts.BloodLantern();copy.restoreFromBundle(saved);
+        assertEquals(5,copy.level());assertEquals(lantern.status(),copy.status());
+        profile.stash.add(copy);profile.prepare(copy,true);profile.begin();Hero next=new Hero();next.extractionRaidID=profile.raidID;
+        profile.initialize(next);assertTrue(next.belongings.artifact instanceof ExpeditionArtifacts.BloodLantern);
+    }
+    @Test public void relicTradeoffsAndTempoApplyAndTenguUnlocksExit(){
+        Hero hero=new Hero();hero.extractionRaidID=1;Dungeon.hero=hero;
+        hero.belongings.artifact=new ExpeditionArtifacts.GreedPouch();Dungeon.gold=500;
+        assertEquals(12,ExpeditionArtifacts.incoming(hero,10));
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(hero,ExpeditionArtifacts.BurstTempo.class);
+        assertEquals(2,ExpeditionArtifacts.tempo(hero),0);
+        profile.raidChapter=2;Dungeon.depth=10;Dungeon.branch=0;
+        ExtractionUtility.defeated(hero,new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu());assertTrue(hero.extractionBossDefeated);
+        assertFalse(ExpeditionArtifacts.canDrop(ExpeditionArtifacts.HuntersMark.class,1,1));
+        assertTrue(ExpeditionArtifacts.canDrop(ExpeditionArtifacts.HuntersMark.class,2,1));
+    }
     @Test public void allPotionAndScrollVariantsRedeemAcrossNestedBags() throws Exception {
         profile.begin();Dungeon.hero=new Hero();Dungeon.gold=0;
         Bag outer=new Bag(),inner=new Bag();outer.items.add(inner);inner.items.add(new Food());

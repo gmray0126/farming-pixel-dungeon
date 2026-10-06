@@ -760,7 +760,7 @@ public class Hero extends Char {
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
 		
 		if(extractionRaidID != 0)speed *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier()*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_SPEED);
-		return speed;
+		return speed*com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this);
 		
 	}
 
@@ -813,7 +813,7 @@ public class Hero extends Char {
 			return 0;
 		}
 
-		float delay = extractionRaidID != 0 ? 1f/com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackSpeedMultiplier(growthWeapon()) : 1f;
+		float delay = (extractionRaidID != 0 ? 1f/com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackSpeedMultiplier(growthWeapon()) : 1f)/com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this);
 
 		if (!RingOfForce.fightingUnarmed(this)) {
 			

@@ -214,7 +214,7 @@ public class InterlevelScene extends PixelScene {
 			}
 		Random.popGenerator();
 		
-		if (DeviceCompat.isDebug()){
+		if (DeviceCompat.isDebug() && Dungeon.hero.extractionRaidID==0){
 			fadeTime = 0f;
 		}
 
@@ -629,7 +629,7 @@ public class InterlevelScene extends PixelScene {
 			//When debugging, we may start a game at a later depth to quickly test something
 			// if this happens, the games quickly generates all prior levels on branch 0 first,
 			// which ensures levelgen consistency with a regular game that was played to that depth.
-			if (DeviceCompat.isDebug()){
+			if (DeviceCompat.isDebug() && Dungeon.hero.extractionRaidID==0){
 				int trueDepth = Dungeon.depth;
 				int trueBranch = Dungeon.branch;
 				for (int i = 1; i < trueDepth + (trueBranch == 0 ? 0 : 1); i++){

@@ -6,12 +6,16 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 public final class ExtractionRoute {
     public enum Action { BLOCK, TRAVEL, EXTRACT }
     public static Action action(int depth,int branch,LevelTransition.Type type,int destination,boolean bossDefeated,boolean locked){
+        return action(1,depth,branch,type,destination,bossDefeated,locked);
+    }
+    public static Action action(int chapter,int depth,int branch,LevelTransition.Type type,int destination,boolean bossDefeated,boolean locked){
+        int start=chapter==2?6:1,end=start+4;
         if(locked||branch!=0)return Action.BLOCK;
         if(type==LevelTransition.Type.REGULAR_ENTRANCE)
-            return depth>1&&depth<=5&&destination==depth-1?Action.TRAVEL:Action.BLOCK;
+            return depth>start&&depth<=end&&destination==depth-1?Action.TRAVEL:Action.BLOCK;
         if(type!=LevelTransition.Type.REGULAR_EXIT)return Action.BLOCK;
-        if(depth>=1&&depth<5&&destination==depth+1)return Action.TRAVEL;
-        if(depth==5&&destination==6&&bossDefeated)return Action.EXTRACT;
+        if(depth>=start&&depth<end&&destination==depth+1)return Action.TRAVEL;
+        if(depth==end&&destination==end+1&&bossDefeated)return Action.EXTRACT;
         return Action.BLOCK;
     }
     private ExtractionRoute(){}

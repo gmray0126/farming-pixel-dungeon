@@ -211,7 +211,7 @@ public class Tengu extends Mob {
 	@Override
 	public void die( Object cause ) {
 		
-		if (Dungeon.hero.subClass == HeroSubClass.NONE) {
+		if (Dungeon.hero.extractionRaidID==0&&Dungeon.hero.subClass == HeroSubClass.NONE) {
 			Dungeon.level.drop( new TengusMask(), pos ).sprite.drop();
 		}
 		
@@ -481,7 +481,7 @@ public class Tengu extends Mob {
 	
 	private int targetAbilityUses(){
 		//1 base ability use, plus 2 uses per jump
-		int targetAbilityUses = 1 + 2*arenaJumps;
+		int targetAbilityUses = 1 + 2*arenaJumps+(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?Math.max(0,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-3)/2:0);
 		
 		//and ane extra 2 use for jumps 3 and 4
 		targetAbilityUses += Math.max(0, arenaJumps-2);

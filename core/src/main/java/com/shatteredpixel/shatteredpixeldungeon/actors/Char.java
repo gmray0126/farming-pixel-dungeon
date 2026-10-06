@@ -387,7 +387,7 @@ public abstract class Char extends Actor {
 
 		} else if (hit( this, enemy, accMulti, false )) {
 			
-			int dr = Math.round(enemy.drRoll() * AscensionChallenge.statModifier(enemy));
+			int dr = Math.round(enemy.drRoll() * AscensionChallenge.statModifier(enemy))+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.extraArmor(enemy);
 			
 			if (this instanceof Hero){
 				Hero h = (Hero)this;
@@ -659,6 +659,7 @@ public abstract class Char extends Actor {
 			acuRoll *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
 		}
 		acuRoll *= accMulti;
+        if(attacker instanceof Mob&&((Mob)attacker).extractionScaled)acuRoll*=1+.05f*(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-1);
 
 		float defRoll = Random.Float( defStat );
 		if (defender.buff(Bless.class) != null) defRoll *= 1.25f;

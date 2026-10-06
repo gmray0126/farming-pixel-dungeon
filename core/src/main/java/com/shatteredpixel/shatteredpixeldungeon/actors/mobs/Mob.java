@@ -140,8 +140,11 @@ public abstract class Mob extends Char {
 
 	protected static final float TIME_TO_WAKE_UP = 1f;
 
-	protected boolean firstAdded = true;
+    public boolean extractionScaled=false;
+    public int extractionElite=0,extractionWaves=0;
+    protected boolean firstAdded = true;
 	protected void onAdd(){
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.prepare(this);
 		if (firstAdded) {
 			//modify health for ascension challenge if applicable, only on first add
 			float percent = HP / (float) HT;
@@ -170,6 +173,7 @@ public abstract class Mob extends Char {
 	public void storeInBundle( Bundle bundle ) {
 		
 		super.storeInBundle( bundle );
+        bundle.put("extraction_scaled",extractionScaled);bundle.put("extraction_elite",extractionElite);bundle.put("extraction_waves",extractionWaves);
 
 		if (state == SLEEPING) {
 			bundle.put( STATE, Sleeping.TAG );
@@ -208,6 +212,7 @@ public abstract class Mob extends Char {
 	public void restoreFromBundle( Bundle bundle ) {
 		
 		super.restoreFromBundle( bundle );
+        extractionScaled=bundle.getBoolean("extraction_scaled");extractionElite=bundle.getInt("extraction_elite");extractionWaves=bundle.getInt("extraction_waves");
 
 		if (bundle.getBoolean(USING_STEALTH)) {
 			activateSteathGameplayBehaviour();
@@ -261,6 +266,9 @@ public abstract class Mob extends Char {
 	
 	@Override
 	protected boolean act() {
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.prepare(this);
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.reinforce(this);
+        if(extractionElite>0&&sprite!=null)sprite.hardlight(extractionElite==1?0xD96B63:extractionElite==2?0x99AAB7:0xB99CDB);
 		
 		super.act();
 		
@@ -832,7 +840,7 @@ public abstract class Mob extends Char {
 		if ( !surprisedBy(enemy)
 				&& paralysed == 0
 				&& !(alignment == Alignment.ALLY && enemy == Dungeon.hero)) {
-			return this.defenseSkill;
+			return Math.round(this.defenseSkill*(extractionScaled?1+.035f*(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-1):1));
 		} else {
 			return 0;
 		}
@@ -899,7 +907,7 @@ public abstract class Mob extends Char {
 
 	@Override
 	public float speed() {
-		return super.speed() * AscensionChallenge.enemySpeedModifier(this);
+		return super.speed() * AscensionChallenge.enemySpeedModifier(this)*(extractionElite==3?1.25f:1);
 	}
 
 	public final boolean surprisedBy( Char enemy ){
@@ -1183,12 +1191,15 @@ public abstract class Mob extends Char {
 		target = cell;
 	}
 	
-	public String description() {
+	@Override public String name(){return (extractionElite>0?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.eliteName(extractionElite)+" ":"")+super.name();}
+
+    public String description() {
 		return Messages.get(this, "desc");
 	}
 
 	public String info(){
 		String desc = description();
+        if(extractionElite>0)desc="_"+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.eliteName(extractionElite)+" 정예_\n"+desc+"\n\n광폭: 피해 증가 · 철갑: 추가 방어 · 추적: 이동 속도 증가";
 
 		for (Buff b : buffs(ChampionEnemy.class)){
 			desc += "\n\n_" + Messages.titleCase(b.name()) + "_\n" + b.desc();
@@ -1813,4 +1824,3 @@ public abstract class Mob extends Char {
 		heldAllies.clear();
 	}
 }
-

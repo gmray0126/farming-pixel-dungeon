@@ -570,9 +570,14 @@ public class Generator {
 					SkeletonKey.class,
 					TalismanOfForesight.class,
 					TimekeepersHourglass.class,
-					UnstableSpellbook.class
-			};
-			ARTIFACT.defaultProbs = new float[]{ 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1 };
+					UnstableSpellbook.class,
+                    com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.BloodLantern.class,
+                    com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.GreedPouch.class,
+                    com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.BrokenHourglass.class,
+                    com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.HuntersMark.class,
+                    com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.UnstableCompass.class
+            };
+			ARTIFACT.defaultProbs = new float[]{ 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 			ARTIFACT.probs = ARTIFACT.defaultProbs.clone();
 
 			//Trinkets are unique like artifacts, but unlike them you can only have one at once
@@ -781,7 +786,7 @@ public class Generator {
 
 		floorSet = (int)GameMath.gate(0, floorSet, floorSetTierProbs.length-1);
 		
-		Armor a = (Armor)Reflection.newInstance(Category.ARMOR.classes[Random.chances(floorSetTierProbs[floorSet])]);
+		Armor a = (Armor)Reflection.newInstance(Category.ARMOR.classes[Random.chances(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.tierWeights():floorSetTierProbs[floorSet])]);
 		a.random();
 		return a;
 	}
@@ -812,9 +817,9 @@ public class Generator {
 
 		MeleeWeapon w;
 		if (useDefaults){
-			w = (MeleeWeapon) randomUsingDefaults(wepTiers[Random.chances(floorSetTierProbs[floorSet])]);
+			w = (MeleeWeapon) randomUsingDefaults(wepTiers[Random.chances(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.tierWeights():floorSetTierProbs[floorSet])]);
 		} else {
-			w = (MeleeWeapon) random(wepTiers[Random.chances(floorSetTierProbs[floorSet])]);
+			w = (MeleeWeapon) random(wepTiers[Random.chances(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.tierWeights():floorSetTierProbs[floorSet])]);
 		}
 		return w;
 	}
@@ -845,15 +850,17 @@ public class Generator {
 
 		MissileWeapon w;
 		if (useDefaults){
-			w = (MissileWeapon)randomUsingDefaults(misTiers[Random.chances(floorSetTierProbs[floorSet])]);
+			w = (MissileWeapon)randomUsingDefaults(misTiers[Random.chances(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.tierWeights():floorSetTierProbs[floorSet])]);
 		} else {
-			w = (MissileWeapon)random(misTiers[Random.chances(floorSetTierProbs[floorSet])]);
+			w = (MissileWeapon)random(misTiers[Random.chances(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.tierWeights():floorSetTierProbs[floorSet])]);
 		}
 		return w;
 	}
 
 	//enforces uniqueness of artifacts throughout a run.
 	public static Artifact randomArtifact() {
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())for(int n=0;n<Category.ARTIFACT.classes.length;n++)
+            if(!com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.canDrop(Category.ARTIFACT.classes[n],com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapter(),com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()))Category.ARTIFACT.probs[n]=0;
 
 		Category cat = Category.ARTIFACT;
 

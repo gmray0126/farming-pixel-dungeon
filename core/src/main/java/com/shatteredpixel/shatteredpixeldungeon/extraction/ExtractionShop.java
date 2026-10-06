@@ -26,6 +26,12 @@ public final class ExtractionShop {
             this.category=category;this.factory=factory;this.price=price;
         }
         public Item item() { return factory.get().identify(false); }
+        public boolean available(){
+            Item item=item();
+            int tier=WeaponUpgradeLimit.tier(item);
+            if(item instanceof Armor)tier=((Armor)item).tier;
+            return tier<=2;
+        }
     }
     private static void stock(int category, Supplier<Item> factory, int price) {
         OFFERS.add(new Offer(category,factory,price));

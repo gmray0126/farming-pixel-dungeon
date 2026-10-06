@@ -594,9 +594,9 @@ public abstract class Level implements Bundlable {
 	public boolean activateTransition(Hero hero, LevelTransition transition){
 		if (hero.extractionRaidID != 0) {
             com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action action =
-                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(Dungeon.depth,Dungeon.branch,transition.type,transition.destDepth,hero.extractionBossDefeated,locked);
+                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,Dungeon.depth,Dungeon.branch,transition.type,transition.destDepth,hero.extractionBossDefeated,locked);
             if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.BLOCK){
-                com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("하수도 5층 보스를 처치한 뒤 아래 계단으로 탈출하세요.");return false;
+                com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("이 챕터의 마지막 층 보스를 처치한 뒤 아래 계단으로 탈출하세요.");return false;
             }
             if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.EXTRACT){
                 beforeTransition();

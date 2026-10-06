@@ -289,6 +289,9 @@ public class Dungeon {
 		hero.extractionRaidID = profile.raidID;
 		com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
 		profile.initialize(hero);
+        depth=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(profile.raidChapter);
+        if(profile.raidChapter==2){LimitedDrops.STRENGTH_POTIONS.count=2;LimitedDrops.UPGRADE_SCROLLS.count=3;LimitedDrops.ARCANE_STYLI.count=1;}
+        if(profile.raidDifficulty>=3)challenges|=Challenges.STRONGER_BOSSES;
 	}
 
 	public static boolean isChallenged( int mask ) {
@@ -401,6 +404,7 @@ public class Dungeon {
 		Statistics.qualifiedForBossRemainsBadge = false;
 		
 		level.create();
+        for(Mob mob:level.mobs)com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.prepare(mob);
 		
 		if (branch == 0) Statistics.qualifiedForNoKilling = !bossLevel();
 		Statistics.qualifiedForBossChallengeBadge = false;
