@@ -40,12 +40,12 @@ public class ExtractionProfileTest {
             new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Swarm(),
             new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Slime()};
         Field chance=com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob.class.getDeclaredField("lootChance");chance.setAccessible(true);
-        int heapCount=Dungeon.level.heaps.size();
+        int heapCount=Dungeon.level.heaps.size;
         for(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob mob:mobs){
             chance.setFloat(mob,1);mob.pos=h.pos;mob.sprite=new EffectSprite();Dungeon.level.mobs.add(mob);
             mob.die(h);assertFalse(Dungeon.level.mobs.contains(mob));
         }
-        assertTrue(Dungeon.level.heaps.size()>heapCount);assertTrue(profile.xp>0);
+        assertTrue(Dungeon.level.heaps.size>heapCount);assertTrue(profile.xp>0);
         h.sprite=null;
     }
     @Test public void drinkingNonHazardousPotionsExecutesTheirRealEffects(){
