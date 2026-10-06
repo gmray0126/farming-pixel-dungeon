@@ -7,7 +7,6 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
-import com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
@@ -40,7 +39,6 @@ public final class ExtractionProfile {
                 catch (IOException e) { throw new IllegalStateException("영구 저장을 읽지 못했습니다. 원본 파일을 보존했습니다.", e); }
             } else {
                 p.stash.add(new WornShortsword().identify());
-                p.stash.add(new ClothArmor().identify());
                 for (int i=0; i<3; i++) p.stash.add(new SupplyHealingPotion().identify(false));
                 try { p.save(); } catch (IOException e) { throw new IllegalStateException(e); }
             }
@@ -131,6 +129,11 @@ public final class ExtractionProfile {
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring&&h.belongings.ring==null){h.belongings.ring=(com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring)i;h.belongings.ring.activate(h);}
             else if (!i.collect(h.belongings.backpack)) throw new IllegalStateException("준비 물품이 가방에 들어가지 않습니다.");
         }
+        if(h.belongings.weapon==null){
+            h.belongings.weapon=(KindOfWeapon)new BasicExpeditionSword().identify(false);
+            h.belongings.weapon.activate(h);
+        }
+        ExtractionPotionKnowledge.apply(this);
         for(Item i:h.belongings)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.shatteredpixel.shatteredpixeldungeon.items.Generator.removeArtifact((Class<? extends com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact>)i.getClass());
         h.HTBoost += Math.round(bonus(ExtractionGrowth.Stat.HEALTH)); h.updateHT(true); h.HP=h.HT;
         h.STR += Math.round(bonus(ExtractionGrowth.Stat.STRENGTH));
@@ -185,6 +188,9 @@ public final class ExtractionProfile {
         change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); });
     }
     /** High-water credit prevents replaying an older run save from awarding the same XP twice. */
+    public int growthLevel(){return 1+xp/25;}
+    public int growthExperience(){return xp%25;}
+    public int growthExperienceRequired(){return 25;}
     public void credit(final int id, final int total) {
         if (!active || id!=raidID || total<=raidXP) return;
         change(() -> { int level=xp/25; xp+=total-raidXP; raidXP=total; points+=xp/25-level; });
@@ -206,6 +212,8 @@ public final class ExtractionProfile {
                 Bundle copied=new Bundle();copied.put("loot",loot);loot.clear();
                 for(Bundlable item:copied.getCollection("loot"))loot.add((Item)item);
                 ExtractionShop.Redemption redeemed=ExtractionShop.redeemConsumables(loot);
+                // Unmodified free swords are reissued next run instead of filling the stash.
+                loot.removeIf(i -> i instanceof BasicExpeditionSword && i.level()==0 && ((BasicExpeditionSword)i).enchantment==null);
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
                 gold+=redeemed.gold;
@@ -216,7 +224,7 @@ public final class ExtractionProfile {
                 if(raidChapter==1)result+="\n2챕터 감옥 출격 가능";
             }
             active=false; escrow.clear();
-            if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고와 성장 노드는 남았습니다.";
+            if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
         });
         Dungeon.deleteGame(GamesInProgress.curSlot, true);
     }

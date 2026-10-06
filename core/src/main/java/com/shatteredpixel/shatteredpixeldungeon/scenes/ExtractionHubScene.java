@@ -45,15 +45,16 @@ public class ExtractionHubScene extends PixelScene {
         ExtractionProfile p=ExtractionProfile.get();
         label("파밍 픽셀 던전",9,left,top,width-34,GOLD);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
-        label(p.gold+" G  ·  "+p.points+" P  ·  성장 "+(1+p.xp/25),7,left,top+20,width,TEXT);
+        label(p.gold+" G  ·  "+p.points+" P,7,left,top+20,width,TEXT);
+        label("성장 Lv. "+p.growthLevel()+"  ·  경험치 "+p.growthExperience()+" / "+p.growthExperienceRequired(),6,left,top+29,width,GREEN);
         float tw=(width-6)/4f;
         String[] titles={"준비","성장","원정","상점"};
         for(int i=0;i<4;i++){
             final int n=i;
-            HubButton b=button(titles[i],left+i*(tw+2),top+33,tw,19,()->{tab=n;refresh();if(n==1)add(new WndGrowthAtlas(this::refresh));},i==tab);
+            HubButton b=button(titles[i],left+i*(tw+2),top+40,tw,19,()->{tab=n;refresh();if(n==1)add(new WndGrowthAtlas(this::refresh));},i==tab);
             if(i==tab)b.textColor(GOLD);
         }
-        float y=top+58;
+        float y=top+65;
         if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else shop(y);
         button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" · "+p.selectedDifficulty+"단계 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
         if(p.active)button("포기하기",left+width-48,bottom-22,48,22,this::abandon,false);
@@ -86,7 +87,7 @@ public class ExtractionHubScene extends PixelScene {
         centered("창고 "+(stashPage+1)+" / "+pages,6,left+24,pager+3,width-48,MUTED);
         button(">",left+width-22,pager,22,13,()->{stashPage=Math.min(pages-1,stashPage+1);refresh();},false);
         float bagY=pager+17;
-        label("출격  "+p.prepared.size()+" / "+p.capacity(),7,left,bagY,width-(p.capacity()>12?56:30),GREEN);
+        label("출격  "+p.prepared.size()+" / "+p.capacity()+(p.preparedWeapon()==null?" · 기본 검 지급":""),7,left,bagY,width-(p.capacity()>12?56:30),GREEN);
         button("비우기",left+width-29,bagY-2,29,13,()->{p.returnPrepared();bagPage=0;refresh();},false);
         if(p.capacity()>12)button((bagPage+1)+"/2",left+width-54,bagY-2,23,13,()->{bagPage=1-bagPage;refresh();},false);
         bagPage=Math.min(bagPage,Math.max(0,(p.capacity()-1)/12));
@@ -96,7 +97,7 @@ public class ExtractionHubScene extends PixelScene {
         if(after+51<bottom-26){
             panel(left,after+16,width,33);
             Item weapon=p.preparedWeapon(), armor=p.preparedArmor();
-            label("착용 무기  "+(weapon==null?"맨손":weapon.title()),6,left+5,after+20,width-10,GOLD);
+            label("착용 무기  "+(weapon==null?"보급 낡은 검 (자동 지급)":weapon.title()),6,left+5,after+20,width-10,GOLD);
             label("착용 갑옷  "+(armor==null?"없음":armor.title()),6,left+5,after+34,width-10,GREEN);
         }
     }

@@ -152,6 +152,11 @@ public class Potion extends Item {
 		handler = new ItemStatusHandler<>( (Class<? extends Potion>[])Generator.Category.POTION.classes, colors );
 	}
 
+	/** Permanent knowledge is applied after fresh colors are randomized, without drinking. */
+	public static void knowType(Class<? extends Potion> type) {
+		if (handler != null && handler.contains(type)) handler.know(type);
+	}
+
 	public static void clearColors() {
 		handler = null;
 	}

@@ -83,11 +83,11 @@ public class ExtractionProfileTest {
         profile.credit(id,30);Dungeon.hero=null;Dungeon.level=null;
         profile.abandon();profile.abandon();
         assertFalse(profile.active);assertEquals(30,profile.xp);assertEquals(4,profile.points);
-        assertEquals(4,profile.stash.size());assertTrue(profile.prepared.isEmpty());assertEquals(100,profile.gold);
+        assertEquals(3,profile.stash.size());assertTrue(profile.prepared.isEmpty());assertEquals(100,profile.gold);
         assertTrue(profile.result.contains("포기"));
         forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.active);assertEquals(30,profile.xp);
         profile.begin();assertTrue(profile.raidID>id);Hero fresh=new Hero();profile.initialize(fresh);
-        assertNull(fresh.belongings.weapon);
+        assertTrue(fresh.belongings.weapon instanceof BasicExpeditionSword);
     }
     @Test public void failedAbandonmentPreservesRaidAndEscrow() throws Exception {
         Item sword=profile.stash.get(0);profile.prepare(sword,true);profile.begin();int id=profile.raidID;
@@ -217,7 +217,7 @@ public class ExtractionProfileTest {
         int expected=100;for(Item i:consumables){expected+=ExtractionShop.salePrice(i);inner.items.add(i);}
         Dungeon.hero.belongings.backpack.items.add(outer);profile.settle(profile.raidID,true);
         assertEquals(expected,profile.gold);assertTrue(profile.result.contains("포션 6개 · 스크롤 3장"));
-        assertEquals(6,profile.stash.size());Bag saved=(Bag)((Bag)profile.stash.get(5)).items.get(0);
+        assertEquals(5,profile.stash.size());Bag saved=(Bag)((Bag)profile.stash.get(4)).items.get(0);
         assertEquals(1,saved.items.size());assertTrue(saved.items.get(0) instanceof Food);
         assertEquals(7,inner.items.size());
         forgetProfile();profile=ExtractionProfile.get();assertEquals(expected,profile.gold);
@@ -251,12 +251,12 @@ public class ExtractionProfileTest {
         Dungeon.hero.belongings.backpack.items.add(new ExtractionShop.SupplyUpgrade().quantity(2));
         Dungeon.hero.belongings.backpack.items.add(new ExtractionShop.SupplyIdentify());
         profile.settle(id,true);profile.settle(id,true);
-        assertEquals(397,profile.gold);assertEquals(6,profile.stash.size());assertTrue(profile.result.contains("6장"));
-        assertEquals(1,((Bag)profile.stash.get(5)).items.size());
+        assertEquals(397,profile.gold);assertEquals(5,profile.stash.size());assertTrue(profile.result.contains("6장"));
+        assertEquals(1,((Bag)profile.stash.get(4)).items.size());
         assertEquals(3,Dungeon.hero.belongings.backpack.items.size()); // live run bag remains intact
         assertEquals(2,bag.items.size());
         forgetProfile();profile=ExtractionProfile.get();assertEquals(397,profile.gold);
-        assertEquals(6,profile.stash.size());
+        assertEquals(5,profile.stash.size());
     }
     @Test public void failedRedemptionKeepsRunScrollsAndDeathPaysNothing() throws Exception {
         profile.begin();int id=profile.raidID;Dungeon.hero=new Hero();Dungeon.gold=0;
@@ -264,7 +264,7 @@ public class ExtractionProfileTest {
         java.io.File blocker=folder.newFile("settlement-blocker");
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
         try{profile.settle(id,true);fail("Saving must fail");}catch(IllegalStateException expected){}
-        assertTrue(profile.active);assertEquals(100,profile.gold);assertEquals(5,profile.stash.size());
+        assertTrue(profile.active);assertEquals(100,profile.gold);assertEquals(4,profile.stash.size());
         assertSame(scroll,Dungeon.hero.belongings.backpack.items.get(0));assertEquals(2,scroll.quantity());
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
         profile.settle(id,false);assertEquals(100,profile.gold);assertFalse(profile.active);
@@ -274,13 +274,13 @@ public class ExtractionProfileTest {
             Item item=offer.item();assertTrue(item.isIdentified());assertTrue(offer.price>ExtractionShop.salePrice(item));
         }
         profile.gold=1000;profile.buy(4);profile.buy(1);
-        assertEquals(730,profile.gold);Item food=profile.stash.get(6);food.quantity(3);
+        assertEquals(730,profile.gold);Item food=profile.stash.get(5);food.quantity(3);
         profile.sell(food,false);assertEquals(740,profile.gold);assertEquals(2,food.quantity());
         profile.sell(food,true);assertEquals(760,profile.gold);assertFalse(profile.stash.contains(food));
         forgetProfile();profile=ExtractionProfile.get();assertEquals(760,profile.gold);
-        assertTrue(profile.stash.get(5) instanceof ExtractionShop.SupplyUpgrade);
-        assertTrue(((ExtractionShop.SupplyUpgrade)profile.stash.get(5)).isKnown());
-        assertEquals("보급 강화 스크롤",profile.stash.get(5).name());
+        assertTrue(profile.stash.get(4) instanceof ExtractionShop.SupplyUpgrade);
+        assertTrue(((ExtractionShop.SupplyUpgrade)profile.stash.get(4)).isKnown());
+        assertEquals("보급 강화 스크롤",profile.stash.get(4).name());
         profile.begin();try{profile.buy(0);fail("Active raids block purchases");}catch(IllegalStateException expected){}
         try{profile.sell(profile.stash.get(0));fail("Active raids block sales");}catch(IllegalStateException expected){}
     }
@@ -289,14 +289,14 @@ public class ExtractionProfileTest {
         java.io.File blocker=folder.newFile("shop-blocker");
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
         try{profile.buy(0);fail("Saving must fail");}catch(IllegalStateException expected){}
-        assertEquals(gold,profile.gold);assertEquals(7,profile.stash.size());
-        Item restored=profile.stash.get(5);
+        assertEquals(gold,profile.gold);assertEquals(6,profile.stash.size());
+        Item restored=profile.stash.get(4);
         try{profile.sell(restored,false);fail("Saving must fail");}catch(IllegalStateException expected){}
-        assertEquals(gold,profile.gold);assertEquals(3,profile.stash.get(5).quantity());
+        assertEquals(gold,profile.gold);assertEquals(3,profile.stash.get(4).quantity());
     }
     @Test public void emptyGoldAndPreparedItemsCannotBeSoldOrBoughtAway() {
         profile.gold=0;try{profile.buy(1);fail("Gold is required");}catch(IllegalStateException expected){}
-        assertEquals(5,profile.stash.size());
+        assertEquals(4,profile.stash.size());
         Item gear=profile.stash.get(0);profile.prepare(gear,true);profile.sell(gear);
         assertEquals(0,profile.gold);assertTrue(profile.prepared.contains(gear));
         Bag bag=new Bag();bag.items.add(new Food().quantity(3));profile.stash.add(bag);
@@ -406,6 +406,56 @@ public class ExtractionProfileTest {
         field.setAccessible(true);
         field.set(null, null);
     }
+    @Test public void emptyLoadoutGetsFreeSwordAgainAfterDeathAndPreparedWeaponWins() throws Exception {
+        for(Item item:profile.stash)assertFalse(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor);
+        profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
+        assertTrue(Dungeon.hero.belongings.weapon instanceof BasicExpeditionSword);
+        assertNull(Dungeon.hero.belongings.armor);
+        assertEquals(0,ExtractionShop.salePrice(Dungeon.hero.belongings.weapon));
+        com.watabou.utils.Bundle copy=new com.watabou.utils.Bundle();copy.put("sword",Dungeon.hero.belongings.weapon);
+        assertTrue(copy.get("sword") instanceof BasicExpeditionSword);
+        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();
+        profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
+        assertTrue(Dungeon.hero.belongings.weapon instanceof BasicExpeditionSword);
+        profile.settle(profile.raidID,true);assertEquals(4,profile.stash.size());
+        Item chosen=profile.stash.get(0);profile.prepare(chosen,true);profile.begin();
+        Hero next=new Hero();profile.initialize(next);assertEquals(chosen.getClass(),next.belongings.weapon.getClass());
+        assertTrue(next.belongings.backpack.items.isEmpty());
+    }
+    @Test public void potionKnowledgeIsSelectiveAndSurvivesNewColorsAndNativeSave() throws Exception {
+        profile.learn(ExtractionGrowth.index("pack"));profile.learn(ExtractionGrowth.index("know_healing"));
+        forgetProfile();profile=ExtractionProfile.get();
+        for(int i=0;i<2;i++){
+            profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+            assertTrue(new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing().isKnown());
+            assertTrue(new com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding().isKnown());
+            assertFalse(new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength().isKnown());
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();
+            com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion.save(saved);
+            com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion.clearColors();
+            com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion.restore(saved);
+            assertTrue(new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing().isKnown());
+            profile.settle(profile.raidID,false);
+        }
+        profile.points=20;
+        for(String id:ExtractionPotionKnowledge.IDS)profile.learn(ExtractionGrowth.index(id));
+        profile.begin();Dungeon.initSeed();Dungeon.init();
+        for(Class type:com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.POTION.classes)
+            assertTrue(((com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion)com.watabou.utils.Reflection.newInstance(type)).isKnown());
+    }
+    @Test public void earnedExperienceLevelsPermanentProfileAfterDeathWithoutAutomaticStats() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Hero h=Dungeon.hero;int health=h.HT,strength=h.STR;
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat target=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();
+        int attack=h.attackSkill(target),defense=h.defenseSkill(target);
+        h.earnExp(26,target.getClass());
+        assertEquals(health,h.HT);assertEquals(strength,h.STR);
+        assertEquals(attack,h.attackSkill(target));assertEquals(defense,h.defenseSkill(target));
+        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();
+        assertEquals(2,profile.growthLevel());assertEquals(1,profile.growthExperience());
+        assertEquals(25,profile.growthExperienceRequired());assertEquals(4,profile.points);
+        profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(20,next.HT);assertEquals(10,next.STR);
+    }
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
         new Game(com.watabou.noosa.Scene.class,null);
@@ -450,7 +500,7 @@ public class ExtractionProfileTest {
         profile.settle(id, false);
         forgetProfile();
         profile = ExtractionProfile.get();
-        assertEquals(4, profile.stash.size());
+        assertEquals(3,profile.stash.size());
         assertTrue(profile.prepared.isEmpty());
         assertTrue(profile.nodes.contains("vital"));
         assertEquals(30, profile.xp);
@@ -477,7 +527,7 @@ public class ExtractionProfileTest {
         int id = profile.raidID;
         profile.begin();
         assertEquals(id, profile.raidID);
-        assertEquals(4, profile.stash.size());
+        assertEquals(3,profile.stash.size());
         assertTrue(profile.prepared.isEmpty());
     }
     @Test public void successfulExtractionStoresNestedLootOnce() throws Exception {
@@ -490,13 +540,13 @@ public class ExtractionProfileTest {
         Dungeon.gold = 17;
         profile.settle(id, true);
         profile.settle(id, true);
-        assertEquals(6, profile.stash.size());
+        assertEquals(5,profile.stash.size());
         assertEquals(117, profile.gold);
         assertEquals(10, profile.xp);
         forgetProfile();
         profile = ExtractionProfile.get();
-        assertEquals(6, profile.stash.size());
-        assertEquals(1, ((Bag)profile.stash.get(5)).items.size());
+        assertEquals(5,profile.stash.size());
+        assertEquals(1, ((Bag)profile.stash.get(4)).items.size());
     }
     @Test public void failedSaveRollsBackEquipmentMovement() throws Exception {
         Item item = profile.stash.get(0);
@@ -504,7 +554,7 @@ public class ExtractionProfileTest {
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, blocker.getAbsolutePath()+"/");
         try { profile.prepare(item, true); fail("Saving must fail"); }
         catch (IllegalStateException expected) { }
-        assertEquals(5, profile.stash.size());
+        assertEquals(4,profile.stash.size());
         assertTrue(profile.prepared.isEmpty());
     }
     @Test public void inventoryRoundTripSurvivesReload() throws Exception {
@@ -513,7 +563,7 @@ public class ExtractionProfileTest {
         profile.prepare(sword, false);
         forgetProfile();
         profile = ExtractionProfile.get();
-        assertEquals(5, profile.stash.size());
+        assertEquals(4,profile.stash.size());
         assertTrue(profile.prepared.isEmpty());
     }
     @Test public void preparationCapacityUsesLearnedPackNodes() throws Exception {
@@ -551,7 +601,7 @@ public class ExtractionProfileTest {
         profile.returnPrepared();
         forgetProfile();
         profile = ExtractionProfile.get();
-        assertEquals(5, profile.stash.size());
+        assertEquals(4,profile.stash.size());
         assertTrue(profile.prepared.isEmpty());
     }
     @Test public void expeditionDoesNotRestoreOriginalClassTalents() {
@@ -573,8 +623,8 @@ public class ExtractionProfileTest {
         for(int parent:ExtractionGrowth.NODES[index].parents)learnPath(ExtractionGrowth.IDS[parent]);
         if(!profile.nodes.contains(id))profile.learn(index);
     }
-    @Test public void graphHas162UniqueNodesWithBranchingAndConvergence() {
-        assertEquals(162, ExtractionGrowth.NODES.length);
+    @Test public void graphHas174UniqueNodesWithBranchingAndConvergence() {
+        assertEquals(174, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
@@ -586,8 +636,8 @@ public class ExtractionProfileTest {
             totalCost+=node.cost;
         }
         assertEquals(18,convergences);
-        assertEquals(396,totalCost);
-        for(int[] branch:ExtractionGrowth.BRANCH_NODES)assertEquals(9,branch.length);
+        assertEquals(408,totalCost);
+        for(int b=0;b<ExtractionGrowth.BRANCH_NODES.length;b++)assertEquals(b==18?12:9,ExtractionGrowth.BRANCH_NODES[b].length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
         profile.points=1000;

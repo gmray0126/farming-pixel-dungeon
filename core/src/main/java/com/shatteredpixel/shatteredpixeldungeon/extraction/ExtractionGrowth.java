@@ -11,8 +11,12 @@ import java.util.*;
 public final class ExtractionGrowth {
     private ExtractionGrowth() {}
     public static final int MAGIC = 11, FIST = 9;
-    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응"};
+    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식"};
     public enum Stat {
+        KNOW_HEALING("회복 물약 식별",false), KNOW_STRENGTH("힘 물약 식별",false), KNOW_EXPERIENCE("경험 물약 식별",false),
+        KNOW_MINDVISION("심안 물약 식별",false), KNOW_LEVITATION("부유 물약 식별",false), KNOW_INVISIBILITY("투명 물약 식별",false),
+        KNOW_HASTE("신속 물약 식별",false), KNOW_PURITY("정화 물약 식별",false), KNOW_FROST("서리 물약 식별",false),
+        KNOW_FLAME("화염 물약 식별",false), KNOW_TOXIC("유독 가스 물약 식별",false), KNOW_PARALYTIC("마비 가스 물약 식별",false),
         DAMAGE("공격 피해", false), DAMAGE_PERCENT("공격 피해", true),
         ACCURACY("명중", true), ATTACK_SPEED("공격 속도", true),
         CRIT_CHANCE("치명타 확률", true), CRIT_POWER("치명타 배율", true),
@@ -43,6 +47,7 @@ public final class ExtractionGrowth {
             for(int i=0;i<effects.length;i+=2)this.effects.put((Stat)effects[i],(Float)effects[i+1]);
         }
         public String description() {
+            if(branch==18)return name+"을 습득하면 매 원정 시작부터 해당 물약의 정체를 압니다. 색이 달라져도 효과가 유지됩니다.\n\n대응하는 특수 물약도 함께 식별됩니다. 다른 종류의 물약은 직접 식별해야 합니다.";
             StringBuilder text=new StringBuilder();
             for(Map.Entry<Stat,Float> e:effects.entrySet()){
                 if(text.length()>0)text.append("\n");
@@ -59,6 +64,7 @@ public final class ExtractionGrowth {
             return text.toString();
         }
         public String summary() {
+            if(branch==18)return "미리 식별";
             Stat s=effects.keySet().iterator().next();
             String label;
             switch(s){
@@ -250,10 +256,15 @@ public final class ExtractionGrowth {
         add(list, "ward_6", "안전 진입", 17, 3, 2, 3, new String[]{"ward_5"}, Stat.FLOOR_SHIELD, 6.0f);
         add(list, "ward_7", "원정 방호", 17, 4, 1, 4, new String[]{"ward_3", "ward_6"}, Stat.DOT_REDUCTION, 10.0f, Stat.BOSS_REDUCTION, 5.0f);
         add(list, "ward_8", "생존 안전망", 17, 5, 1, 5, new String[]{"ward_7"}, Stat.SECOND_WIND, 10.0f, Stat.FLOOR_SHIELD, 8.0f);
+        for(int i=0;i<ExtractionPotionKnowledge.IDS.length;i++)
+            add(list,ExtractionPotionKnowledge.IDS[i],ExtractionPotionKnowledge.NAMES[i]+" 지식",18,i,1,1,new String[]{"pack"},ExtractionPotionKnowledge.STATS[i],1f);
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];
-        BRANCH_NODES=new int[BRANCHES.length][9];int[] count=new int[BRANCHES.length];
+        BRANCH_NODES=new int[BRANCHES.length][];int[] count=new int[BRANCHES.length];
+        for(Node n:NODES)count[n.branch]++;
+        for(int b=0;b<count.length;b++)BRANCH_NODES[b]=new int[count[b]];
+        Arrays.fill(count,0);
         HashMap<String,Integer> index=new HashMap<>();
         for(int i=0;i<NODES.length;i++){
             Node n=NODES[i];if(index.put(n.id,i)!=null)throw new IllegalStateException("Duplicate node: "+n.id);

@@ -77,7 +77,7 @@ public class ExtractionNodeTree extends Component {
         for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++){
             int learned=0;for(int n:ExtractionGrowth.BRANCH_NODES[b])if(p.nodes.contains(ExtractionGrowth.IDS[n]))learned++;
             label(ExtractionGrowth.BRANCHES[b],6,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]-5,70,GrowthAtlasLayout.COLORS[b]);
-            label(learned+" / 9",4,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]+7,52,MUTED);
+            label(learned+" / "+ExtractionGrowth.BRANCH_NODES[b].length,4,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]+7,52,MUTED);
         }
         for(int n=0;n<ExtractionGrowth.NODES.length;n++){
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];boolean learned=p.nodes.contains(node.id);
@@ -119,7 +119,7 @@ public class ExtractionNodeTree extends Component {
         sprite.x=cx-sprite.width()/2;sprite.y=cy-sprite.height()/2;sprite.alpha(alpha);world.add(sprite);
     }
     private int nodeIcon(ExtractionGrowth.Node node){
-        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD};
+        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.POTION_AZURE};
         if(node.branch>=12||node.row==0||node.row>=4)return family[node.branch];
         ExtractionGrowth.Stat stat=node.effects.keySet().iterator().next();
         switch(stat){
