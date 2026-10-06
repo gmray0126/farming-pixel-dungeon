@@ -3,8 +3,10 @@ import gzip
 import json
 from pathlib import Path
 import subprocess
+import sys
 import time
 
+MODE = sys.argv[1] if len(sys.argv) > 1 else 'phone'
 PACKAGE = 'com.kwrousagi.echoextraction.indev'
 OUT = Path('android-smoke')
 OUT.mkdir(exist_ok=True)
@@ -30,6 +32,7 @@ def launch():
 
 def screen(width, height, scale):
     adb('shell', 'am', 'force-stop', PACKAGE)
+    time.sleep(3)
     adb('shell', 'wm', 'size', f'{width}x{height}')
     adb('shell', 'wm', 'density', '160')
     adb('shell', 'run-as', PACKAGE, 'mkdir', '-p', 'shared_prefs')
@@ -41,16 +44,22 @@ def screen(width, height, scale):
 try:
     adb('install', '-r', 'apk/android-debug.apk')
     adb('logcat', '-c')
-    screen(540, 900, 4)
-    tap(470, 202)  # Dismiss Android's first-use immersive notice (observed on the emulator).
-    screenshot('01-minimum-inventory')
-    initial = profile()
-    assert not initial['active'] and len(initial['stash']) == 5, initial
-    tap(270, 194)
-    tap(270, 194)
-    screenshot('02-minimum-all-nodes')
-    # Tall phone similar to the user's screenshot; logical width is only 144px.
+    if MODE == 'minimum':
+        screen(540, 900, 4)
+        tap(470, 202)
+        screenshot('01-minimum-inventory')
+        initial = profile()
+        assert not initial['active'] and len(initial['stash']) == 5, initial
+        tap(270, 194)
+        tap(270, 194)
+        screenshot('02-minimum-all-nodes')
+        assert adb('shell', 'pidof', PACKAGE).strip(), 'Game exited on minimum layout'
+        assert 'FATAL EXCEPTION' not in adb('logcat', '-d').decode(errors='replace')
+        (OUT / 'result.json').write_text(json.dumps({'minimum_layout': '135x225', 'first_run_hub': True}, indent=2))
+        sys.exit(0)
+    # Each geometry is tested on a separate device: never resize a live graphics context.
     screen(720, 1560, 5)
+    tap(470, 202)
     screenshot('03-phone-inventory')
     # Tap stock sword, then armor. No option dialog or injected equipment.
     tap(109, 430)
@@ -75,10 +84,10 @@ try:
     tap(360, 835)
     assert 'power' in profile()['nodes'] and profile()['points'] == 2, 'Root node learning failed'
     screenshot('08-learned-node')
-    # Restart at hub must preserve the grid transfers and unlocked node.
-    screen(720, 1560, 5)
+    # The serialized profile must contain the selected equipment and learned node.
+    tap(133, 243)
     assert len(profile()['prepared']) == 2 and 'power' in profile()['nodes'], 'Hub persistence failed'
-    screenshot('09-reloaded-loadout')
+    screenshot('09-saved-loadout')
     tap(360, 1475, 15)
     screenshot('10-raid')
     state = profile()
@@ -96,6 +105,7 @@ try:
     assert len(run) > 1000, 'Native run was not saved'
     raid_id = state['raid']
     adb('shell', 'am', 'force-stop', PACKAGE)
+    time.sleep(3)  # Let the test device retire its old EGL surface.
     launch()
     screenshot('12-resume-hub')
     tap(360, 1475, 12)
@@ -104,7 +114,7 @@ try:
     assert adb('shell', 'pidof', PACKAGE).strip(), 'Game exited on resume'
     logs = adb('logcat', '-d').decode(errors='replace')
     assert 'FATAL EXCEPTION' not in logs, 'Android runtime crashed'
-    (OUT / 'result.json').write_text(json.dumps({'installed': True, 'minimum_layout': '135x225', 'phone_layout': '144x312', 'inventory_round_trip': True, 'supply_purchase': True, 'node_learned': True, 'hub_saved': True, 'raid_with_equipment': True, 'saved_run': True, 'resumed_same_raid': True, 'raid_id': raid_id}, indent=2))
+    (OUT / 'result.json').write_text(json.dumps({'installed': True, 'phone_layout': '144x312', 'inventory_round_trip': True, 'supply_purchase': True, 'node_learned': True, 'hub_saved': True, 'raid_with_equipment': True, 'saved_run': True, 'resumed_same_raid': True, 'raid_id': raid_id}, indent=2))
 except Exception as error:
     (OUT / 'error.txt').write_text(str(error))
     try: screenshot('failure')

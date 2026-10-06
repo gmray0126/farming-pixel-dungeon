@@ -77,8 +77,12 @@ jobs:
           path: core/build/test-results/test/*.xml
           if-no-files-found: ignore
   smoke:
-    name: Test APK launch and resume on Android
+    name: Test APK on Android (${{ matrix.layout }})
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        layout: [minimum, phone]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -100,13 +104,12 @@ jobs:
           api-level: 29
           arch: x86_64
           profile: pixel_2
-          emulator-build: '12414864' # Android Emulator 35.2.10 stable
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: python3 scripts/android-smoke.py
+          emulator-options: -no-window -gpu swangle -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: python3 scripts/android-smoke.py ${{ matrix.layout }}
       - name: Upload runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: extraction-android-runtime
+          name: extraction-android-runtime-${{ matrix.layout }}
           path: android-smoke/
           if-no-files-found: ignore
