@@ -178,13 +178,13 @@ public final class ExtractionProfile {
                 // Work on a copy so failed settlement never removes scrolls from the run save.
                 Bundle copied=new Bundle();copied.put("loot",loot);loot.clear();
                 for(Bundlable item:copied.getCollection("loot"))loot.add((Item)item);
-                int scrolls=ExtractionShop.redeemUpgradeScrolls(loot);
+                ExtractionShop.Redemption redeemed=ExtractionShop.redeemConsumables(loot);
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f));
-                gold+=scrolls*ExtractionShop.UPGRADE_REFUND;
+                gold+=redeemed.gold;
                 int old=xp/25; xp+=10; points+=xp/25-old;
                 result="탈출 성공! 장비와 전리품을 창고에 보관했습니다."
-                        +(scrolls>0?"\n강화 스크롤 "+scrolls+"장 정산 · +"+(scrolls*ExtractionShop.UPGRADE_REFUND)+" G":"");
+                        +(redeemed.potions+redeemed.scrolls>0?"\n포션 "+redeemed.potions+"개 · 스크롤 "+redeemed.scrolls+"장 정산 · +"+redeemed.gold+" G":"");
             }
             active=false; escrow.clear();
             if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고와 성장 노드는 남았습니다.";

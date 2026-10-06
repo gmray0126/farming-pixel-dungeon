@@ -153,13 +153,14 @@ public class WndHero extends WndTabbed {
 			clear();
 			
 			Hero hero = Dungeon.hero;
+			int shownLevel=hero.extractionRaidID != 0 ? 1+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().xp/25 : hero.lvl;
 
 			IconTitle title = new IconTitle();
 			title.icon( HeroSprite.avatar(hero) );
 			if (hero.name().equals(hero.className()))
-				title.label( Messages.get(this, "title", hero.lvl, hero.className() ).toUpperCase( Locale.ENGLISH ) );
+				title.label( Messages.get(this, "title", shownLevel, hero.className() ).toUpperCase( Locale.ENGLISH ) );
 			else
-				title.label((hero.name() + "\n" + Messages.get(this, "title", hero.lvl, hero.className())).toUpperCase(Locale.ENGLISH));
+				title.label((hero.name() + "\n" + Messages.get(this, "title", shownLevel, hero.className())).toUpperCase(Locale.ENGLISH));
 			title.color(Window.TITLE_COLOR);
 			title.setRect( 0, 0, WIDTH-16, 0 );
 			add(title);
@@ -192,7 +193,7 @@ public class WndHero extends WndTabbed {
 			else                        statSlot( Messages.get(this, "str"), hero.STR() );
 			if (hero.shielding() > 0)   statSlot( Messages.get(this, "health"), hero.HP + "+" + hero.shielding() + "/" + hero.HT );
 			else                        statSlot( Messages.get(this, "health"), (hero.HP) + "/" + hero.HT );
-			statSlot( Messages.get(this, "exp"), hero.exp + "/" + hero.maxExp() );
+			statSlot( Messages.get(this, "exp"), hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().xp%25+"/25" : hero.exp+"/"+hero.maxExp() );
 
 			pos += GAP;
 

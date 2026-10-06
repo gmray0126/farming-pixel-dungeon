@@ -9,6 +9,7 @@ import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.*;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.*;
 import com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile;
 import com.shatteredpixel.shatteredpixeldungeon.items.scrolls.*;
+import com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import java.util.ArrayList;
 import java.util.function.Supplier;
@@ -62,16 +63,25 @@ public final class ExtractionShop {
     public static boolean canSellOne(Item item) {
         return item.stackable && item.quantity()>1 && !(item instanceof MissileWeapon);
     }
-    /** Only the ordinary upgrade scroll is redeemed; other scrolls remain loot. */
-    public static int redeemUpgradeScrolls(ArrayList<Item> items) {
-        int count=0;
+    public static final class Redemption {
+        public int gold, potions, scrolls;
+    }
+    /** Runs only on copied extraction loot, preserving the live run on save failure. */
+    public static Redemption redeemConsumables(ArrayList<Item> items) {
+        Redemption result=new Redemption();
         java.util.Iterator<Item> it=items.iterator();
         while(it.hasNext()){
             Item item=it.next();
-            if(item instanceof ScrollOfUpgrade){count+=item.quantity();it.remove();}
-            else if(item instanceof Bag)count+=redeemUpgradeScrolls(((Bag)item).items);
+            if(item instanceof Potion||item instanceof Scroll){
+                result.gold+=salePrice(item);
+                if(item instanceof Potion)result.potions+=item.quantity();else result.scrolls+=item.quantity();
+                it.remove();
+            }else if(item instanceof Bag){
+                Redemption nested=redeemConsumables(((Bag)item).items);
+                result.gold+=nested.gold;result.potions+=nested.potions;result.scrolls+=nested.scrolls;
+            }
         }
-        return count;
+        return result;
     }
     // Anonymous supplies keep their identity across each raid's randomized scroll labels.
     public static class SupplyIdentify extends ScrollOfIdentify {

@@ -202,7 +202,7 @@ public class ExtractionHubScene extends PixelScene {
         ExtractionNodeTree tree=new ExtractionNodeTree(this::node,()->add(new WndGrowthAtlas(this::refresh)));
         body.add(tree);tree.setRect(left,y+26,width,Math.min(166,bottom-27-(y+26)));
         float after=tree.bottom()+7;
-        if(after+9<bottom-26)label("습득 노드는 사망해도 유지 · 25 XP = 1 P",6,left,after,width,GREEN);
+        if(after+9<bottom-26)label("레벨은 능력치를 올리지 않음 · 25 XP = 1 P",6,left,after,width,GREEN);
     }
     private void node(final int n){
         ExtractionProfile p=ExtractionProfile.get();boolean learned=p.nodes.contains(ExtractionProfile.IDS[n]);
@@ -220,7 +220,7 @@ public class ExtractionHubScene extends PixelScene {
         label("하수도 1~5층을 탐사하세요.\n5층 보스 처치 후 다음 계단에서 탈출.",7,left+8,y+27,width-16,TEXT);
         label(p.active?"상태: 원정 진행 중":"상태: 출격 가능",6,left+8,y+57,width-16,GREEN);
         label("원정 규칙",8,left,y+82,width,GOLD);
-        label("탈출: 장비와 전리품을 창고로\n남은 강화 스크롤: 장당 50 G 정산\n사망: 가져간 물품과 전리품 손실\n유지: 창고 · 성장 노드 · 경험치",7,left,y+97,width,TEXT);
+        label("탈출: 장비와 전리품을 창고로\n포션·스크롤: 판매가로 자동 정산\n사망: 가져간 물품과 전리품 손실\n유지: 창고 · 성장 노드 · 경험치",7,left,y+97,width,TEXT);
         float after=y+148;
         if(!p.result.isEmpty()&&after+30<bottom-27)label(p.result,6,left,after,width,GREEN);
         if(after+45<bottom-27)button("제작자 / 원본 크레딧",left,bottom-46,width,17,()->ShatteredPixelDungeon.switchScene(AboutScene.class),false);

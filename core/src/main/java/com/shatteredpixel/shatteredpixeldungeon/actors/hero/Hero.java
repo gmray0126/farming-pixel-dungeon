@@ -261,10 +261,13 @@ public class Hero extends Char {
 		visibleEnemies = new ArrayList<>();
 	}
 	
+	/** Extraction levels award node points, never automatic combat scaling. */
+	public int combatLevel(){ return extractionRaidID != 0 ? 1 : lvl; }
+
 	public void updateHT( boolean boostHP ){
 		int curHT = HT;
 		
-		HT = 20 + 5*(lvl-1) + HTBoost;
+		HT = 20 + 5*(combatLevel()-1) + HTBoost;
 		float multiplier = RingOfMight.HTMultiplier(this);
 		HT = Math.round(multiplier * HT);
 		
@@ -360,6 +363,10 @@ public class Hero extends Char {
 		STR = bundle.getInt( STRENGTH );
 
 		belongings.restoreFromBundle( bundle );
+		if(extractionRaidID != 0){
+			attackSkill=10;defenseSkill=5;
+			updateHT(false);
+		}
 	}
 	
 	public static void preview( GamesInProgress.Info info, Bundle bundle ) {
@@ -2032,9 +2039,13 @@ public class Hero extends Char {
 	}
 	
 	public void earnExp( int exp, Class source ) {
+		boolean growthLevelUp=false;
 		if (extractionRaidID != 0) {
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile profile=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get();
+			int oldGrowth=profile.xp/25;
 			extractionXP += Math.max(0,exp);
-			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().credit(extractionRaidID,extractionXP);
+			profile.credit(extractionRaidID,extractionXP);
+			growthLevelUp=profile.xp/25>oldGrowth;
 		}
 
 		//xp granted by ascension challenge is only for on-exp gain effects
@@ -2099,12 +2110,14 @@ public class Hero extends Char {
 					buff(ElixirOfMight.HTBoost.class).onLevelUp();
 				}
 				
-				updateHT( true );
-				attackSkill++;
-				defenseSkill++;
+				if(extractionRaidID == 0){
+					updateHT( true );
+					attackSkill++;
+					defenseSkill++;
+				}
 
 			} else {
-				Buff.prolong(this, Bless.class, Bless.DURATION);
+				if(extractionRaidID == 0)Buff.prolong(this, Bless.class, Bless.DURATION);
 				this.exp = 0;
 
 				GLog.newLine();
@@ -2116,7 +2129,7 @@ public class Hero extends Char {
 		
 		if (levelUp) {
 			
-			if (sprite != null) {
+			if (sprite != null && extractionRaidID == 0) {
 				GLog.newLine();
 				GLog.p( Messages.get(this, "new_level") );
 				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, "level_up") );
@@ -2132,6 +2145,11 @@ public class Hero extends Char {
 			Item.updateQuickslot();
 			
 			Badges.validateLevelReached();
+		}
+		if(growthLevelUp&&sprite!=null){
+			GLog.p("성장 레벨이 올랐습니다. 성장 포인트로 노드를 습득하세요.");
+			sprite.showStatus(CharSprite.POSITIVE,"성장 레벨 상승");
+			Sample.INSTANCE.play(Assets.Sounds.LEVELUP);
 		}
 	}
 	

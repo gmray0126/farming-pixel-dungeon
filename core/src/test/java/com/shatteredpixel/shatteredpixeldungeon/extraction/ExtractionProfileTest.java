@@ -22,19 +22,58 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
-    @Test public void leftoverUpgradeScrollsRedeemNestedStacksOnceAndPersist() throws Exception {
+    @Test public void allPotionAndScrollVariantsRedeemAcrossNestedBags() throws Exception {
+        profile.begin();Dungeon.hero=new Hero();Dungeon.gold=0;
+        Bag outer=new Bag(),inner=new Bag();outer.items.add(inner);inner.items.add(new Food());
+        Item[] consumables={new SupplyHealingPotion().quantity(2),
+                new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength(),
+                new com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion().quantity(2),
+                new com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfCleansing(),
+                new ExtractionShop.SupplyRemoveCurse().quantity(2),
+                new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment()};
+        int expected=100;for(Item i:consumables){expected+=ExtractionShop.salePrice(i);inner.items.add(i);}
+        Dungeon.hero.belongings.backpack.items.add(outer);profile.settle(profile.raidID,true);
+        assertEquals(expected,profile.gold);assertTrue(profile.result.contains("포션 6개 · 스크롤 3장"));
+        assertEquals(6,profile.stash.size());Bag saved=(Bag)((Bag)profile.stash.get(5)).items.get(0);
+        assertEquals(1,saved.items.size());assertTrue(saved.items.get(0) instanceof Food);
+        assertEquals(7,inner.items.size());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(expected,profile.gold);
+    }
+    @Test public void restoredOldRaidRemovesAutomaticLevelBonusesButPreservesNodeHealth(){
+        Hero h=new Hero();h.extractionRaidID=1;h.lvl=8;h.HTBoost=6;h.HT=61;h.HP=55;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();h.storeInBundle(saved);
+        saved.put("attackSkill",17);saved.put("defenseSkill",12);
+        Hero restored=new Hero();restored.restoreFromBundle(saved);Dungeon.hero=restored;
+        assertEquals(8,restored.lvl);assertEquals(26,restored.HT);assertEquals(26,restored.HP);
+        assertEquals(10,restored.attackSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
+        assertEquals(5,restored.defenseSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
+        restored.lvl=20;restored.updateHT(true);assertEquals(26,restored.HT);assertEquals(26,restored.HP);
+    }
+    @Test public void spiritBowAndTemporaryArmorDoNotScaleWithExtractionLevel(){
+        Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow bow=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow();
+        int min=bow.min(),max=bow.max(),level=bow.level();
+        com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfMight.HTBoost boost=
+                com.watabou.utils.Reflection.newInstance(com.shatteredpixel.shatteredpixeldungeon.items.potions.elixirs.ElixirOfMight.HTBoost.class);
+        boost.attachTo(h);boost.reset();int healthBonus=boost.boost();
+        h.lvl=30;assertEquals(min,bow.min());assertEquals(max,bow.max());assertEquals(level,bow.level());
+        assertEquals(healthBonus,boost.boost());
+        h.extractionRaidID=0;assertEquals(30,h.combatLevel());assertTrue(bow.max()>max);
+    }
+    @Test public void leftoverScrollsRedeemNestedStacksOnceAndPersist() throws Exception {
         profile.begin();int id=profile.raidID;Dungeon.hero=new Hero();Dungeon.gold=17;
         Bag bag=new Bag();bag.items.add(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().quantity(3));
         bag.items.add(new Food());Dungeon.hero.belongings.backpack.items.add(bag);
         Dungeon.hero.belongings.backpack.items.add(new ExtractionShop.SupplyUpgrade().quantity(2));
         Dungeon.hero.belongings.backpack.items.add(new ExtractionShop.SupplyIdentify());
         profile.settle(id,true);profile.settle(id,true);
-        assertEquals(367,profile.gold);assertEquals(7,profile.stash.size());assertTrue(profile.result.contains("5장"));
+        assertEquals(397,profile.gold);assertEquals(6,profile.stash.size());assertTrue(profile.result.contains("6장"));
         assertEquals(1,((Bag)profile.stash.get(5)).items.size());
         assertEquals(3,Dungeon.hero.belongings.backpack.items.size()); // live run bag remains intact
         assertEquals(2,bag.items.size());
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(367,profile.gold);
-        assertTrue(profile.stash.get(6) instanceof ExtractionShop.SupplyIdentify);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(397,profile.gold);
+        assertEquals(6,profile.stash.size());
     }
     @Test public void failedRedemptionKeepsRunScrollsAndDeathPaysNothing() throws Exception {
         profile.begin();int id=profile.raidID;Dungeon.hero=new Hero();Dungeon.gold=0;
@@ -161,11 +200,21 @@ public class ExtractionProfileTest {
         assertEquals(1.15f,ExtractionUtility.lowHealthMultiplier(h,ExtractionGrowth.Stat.LOW_HP_DAMAGE),0.001f);
         h.HP=15;assertEquals(1f,ExtractionUtility.lowHealthMultiplier(h,ExtractionGrowth.Stat.LOW_HP_DAMAGE),0.001f);
     }
-    @Test public void raidExperienceAdvancesOriginalCombatLevelAndPermanentProgress(){
+    @Test public void raidExperienceGivesPointsWithoutChangingStats(){
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         h.earnExp(10,com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat.class);
         assertEquals(2,h.lvl);assertEquals(10,profile.xp);assertEquals(10,h.extractionXP);
         assertEquals(0,h.talents.get(0).size());
+        assertEquals(20,h.HT);assertEquals(10,h.attackSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
+        assertEquals(5,h.defenseSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
+        h.HP=7;h.earnExp(15,com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat.class);
+        assertEquals(25,profile.xp);assertEquals(4,profile.points);assertEquals(7,h.HP);assertEquals(20,h.HT);
+        assertEquals(Hero.STARTING_STR,h.STR);assertEquals(1,h.combatLevel());
+        profile.settle(profile.raidID,false);assertEquals(25,profile.xp);assertEquals(4,profile.points);
+        profile.learn(ExtractionGrowth.index("vital"));profile.learn(ExtractionGrowth.index("power"));
+        profile.learn(ExtractionGrowth.index("combat_right_1"));profile.begin();
+        Hero next=new Hero();next.extractionRaidID=profile.raidID;Dungeon.hero=next;profile.initialize(next);
+        assertEquals(26,next.HT);assertEquals(11,next.attackSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
     }
     @Rule public TemporaryFolder folder = new TemporaryFolder();
     private ExtractionProfile profile;

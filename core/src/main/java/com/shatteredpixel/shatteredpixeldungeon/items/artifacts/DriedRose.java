@@ -593,7 +593,7 @@ public class DriedRose extends Artifact {
 			}
 			
 			//same dodge as the hero
-			defenseSkill = (Dungeon.hero.lvl+4);
+			defenseSkill = (Dungeon.hero.combatLevel()+4);
 			if (rose == null) return;
 			HT = 40 + 10*rose.level();
 		}
@@ -633,7 +633,7 @@ public class DriedRose extends Artifact {
 		public int attackSkill(Char target) {
 			
 			//same accuracy as the hero.
-			int acc = Dungeon.hero.lvl + 9;
+			int acc = Dungeon.hero.combatLevel() + 9;
 			
 			if (weapon() != null){
 				acc *= weapon().accuracyFactor( this, target );

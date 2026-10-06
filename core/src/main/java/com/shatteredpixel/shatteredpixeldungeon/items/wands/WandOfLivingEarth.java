@@ -393,7 +393,7 @@ public class WandOfLivingEarth extends DamageWand {
 			}
 			HP = Math.min(HT, HP + healthToAdd);
 			//half of hero's evasion
-			defenseSkill = (hero.lvl + 4)/2;
+			defenseSkill = (hero.combatLevel() + 4)/2;
 		}
 
 		@Override
