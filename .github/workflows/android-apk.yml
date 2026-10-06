@@ -100,7 +100,8 @@ jobs:
           api-level: 29
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -gpu swiftshader -noaudio -no-boot-anim -camera-back none
+          emulator-build: '12414864' # Android Emulator 35.2.10 stable
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: python3 scripts/android-smoke.py
       - name: Upload runtime evidence
         if: always()
