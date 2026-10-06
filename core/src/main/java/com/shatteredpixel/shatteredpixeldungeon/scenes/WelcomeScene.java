@@ -82,7 +82,7 @@ public class WelcomeScene extends PixelScene {
 		}
 
 		if (ShatteredPixelDungeon.versionCode == previousVersion && !SPDSettings.intro()) {
-			ShatteredPixelDungeon.switchNoFade(TitleScene.class);
+			ShatteredPixelDungeon.switchNoFade(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 			return;
 		}
 
@@ -158,13 +158,13 @@ public class WelcomeScene extends PixelScene {
 					GamesInProgress.curSlot = GamesInProgress.firstEmpty();
 					if (GamesInProgress.curSlot == -1 || Rankings.INSTANCE.totalNumber > 0){
 						SPDSettings.intro(false);
-						ShatteredPixelDungeon.switchScene(TitleScene.class);
+						ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 					} else {
-						ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
+						ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 					}
 				} else {
 					updateVersion(previousVersion);
-					ShatteredPixelDungeon.switchScene(TitleScene.class);
+					ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 				}
 			}
 		};

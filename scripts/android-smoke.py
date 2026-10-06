@@ -1,4 +1,4 @@
-"""Install and launch the actual APK in an isolated CI Android emulator."""
+"""Exercise the actual libGDX touch UI, persistent loadout and permanent growth."""
 import gzip
 import json
 from pathlib import Path
@@ -17,56 +17,77 @@ def screenshot(name):
 
 def profile():
     data = adb('exec-out', 'run-as', PACKAGE, 'cat', 'files/extraction-profile.dat')
-    if data[:2] == b'\x1f\x8b':
-        data = gzip.decompress(data)
+    if data[:2] == b'\x1f\x8b': data = gzip.decompress(data)
     return json.loads(data)
+
+def tap(x, y, delay=1):
+    adb('shell', 'input', 'tap', str(x), str(y))
+    time.sleep(delay)
 
 def launch():
     adb('shell', 'am', 'start', '-W', '-n', PACKAGE + '/com.shatteredpixel.shatteredpixeldungeon.android.AndroidLauncher')
     time.sleep(8)
-    adb('shell', 'input', 'tap', '360', '642')
-    time.sleep(4)
+
+def screen(width, height, scale):
+    adb('shell', 'am', 'force-stop', PACKAGE)
+    adb('shell', 'wm', 'size', f'{width}x{height}')
+    adb('shell', 'wm', 'density', '160')
+    adb('shell', 'run-as', PACKAGE, 'mkdir', '-p', 'shared_prefs')
+    # Do not suppress an intro or seed a version: first-run class selection must really be gone.
+    prefs = f'<map><boolean name="fullscreen" value="true"/><int name="scale" value="{scale}"/><string name="language">ko</string></map>'.encode()
+    adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > shared_prefs/ShatteredPixelDungeon.xml'", input=prefs)
+    launch()
 
 try:
     adb('install', '-r', 'apk/android-debug.apk')
-    adb('shell', 'wm', 'size', '720x1280')
-    adb('shell', 'wm', 'density', '160')
-    adb('shell', 'run-as', PACKAGE, 'mkdir', '-p', 'shared_prefs')
-    prefs = b'<map><int name="version" value="921"/><boolean name="intro" value="false"/><boolean name="fullscreen" value="true"/><int name="scale" value="4"/><string name="language">ko</string></map>'
-    adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > shared_prefs/ShatteredPixelDungeon.xml'", input=prefs)
     adb('logcat', '-c')
-    launch()
-    # Dismiss Android's first-use immersive-mode notice.
-    adb('shell', 'input', 'tap', '470', '202')
-    time.sleep(1)
-    screenshot('01-hub')
+    screen(540, 900, 4)
+    tap(350, 155)  # Dismiss the system immersive-mode notice if present.
+    screenshot('01-minimum-inventory')
     initial = profile()
     assert not initial['active'] and len(initial['stash']) == 5, initial
-    # Prepare the sword and armor through the same touch UI as a player.
-    adb('shell', 'input', 'tap', '360', '468')
-    time.sleep(2)
-    screenshot('02-stash')
-    adb('shell', 'input', 'tap', '360', '500')
-    time.sleep(1)
-    screenshot('02b-item-actions')
-    adb('shell', 'input', 'tap', '360', '630')
-    time.sleep(2)
-    assert len(profile()['prepared']) == 1, 'Sword was not prepared through the UI'
-    adb('shell', 'input', 'tap', '360', '468')
-    time.sleep(1)
-    adb('shell', 'input', 'tap', '360', '540')
-    time.sleep(1)
-    adb('shell', 'input', 'tap', '360', '630')
-    time.sleep(2)
-    assert len(profile()['prepared']) == 2, 'Armor was not prepared through the UI'
-    screenshot('03-prepared-hub')
-    adb('shell', 'input', 'tap', '360', '368')
-    time.sleep(15)
-    screenshot('04-raid')
+    tap(270, 194)
+    screenshot('02-minimum-all-nodes')
+    # Tall phone similar to the user's screenshot; logical width is only 144px.
+    screen(720, 1560, 5)
+    screenshot('03-phone-inventory')
+    # Tap stock sword, then armor. No option dialog or injected equipment.
+    tap(109, 430)
+    assert len(profile()['prepared']) == 1, 'Sword not moved into loadout'
+    tap(109, 430)
+    assert len(profile()['prepared']) == 2, 'Armor not moved into loadout'
+    screenshot('04-equipped-loadout')
+    # Put sword back into the stash, then take it again from fourth stash slot.
+    tap(109, 805)
+    assert len(profile()['prepared']) == 1 and len(profile()['stash']) == 4, 'Return to stash failed'
+    tap(611, 430)
+    assert len(profile()['prepared']) == 2 and len(profile()['stash']) == 3, 'Take sword back failed'
+    screenshot('05-reversible-inventory')
+    # Buy supply through the native button.
+    tap(550, 325)
+    assert profile()['gold'] == 70 and len(profile()['stash']) == 4, 'Supply purchase failed'
+    # All nine nodes are visible in one tab, with prerequisite connectors.
+    tap(360, 243)
+    screenshot('06-growth-tree')
+    tap(133, 590)
+    screenshot('07-node-details')
+    tap(360, 835)
+    assert 'power' in profile()['nodes'] and profile()['points'] == 2, 'Root node learning failed'
+    screenshot('08-learned-node')
+    # Restart at hub must preserve the grid transfers and unlocked node.
+    screen(720, 1560, 5)
+    assert len(profile()['prepared']) == 2 and 'power' in profile()['nodes'], 'Hub persistence failed'
+    screenshot('09-reloaded-loadout')
+    tap(360, 1475, 15)
+    screenshot('10-raid')
     state = profile()
-    assert state['active'] and len(state['prepared']) == 0 and len(state['escrow']) == 2, state
-    assert adb('shell', 'pidof', PACKAGE).strip(), 'Game process exited'
-    # Pausing the real scene must persist a resumable native run.
+    assert state['active'] and not state['prepared'] and len(state['escrow']) == 2, state
+    assert adb('shell', 'pidof', PACKAGE).strip(), 'Game exited'
+    # Hero portrait now opens expedition statistics and the same permanent tree.
+    tap(80, 80)
+    screenshot('11-expedition-info')
+    adb('shell', 'input', 'keyevent', '4')
+    time.sleep(1)
     adb('shell', 'input', 'keyevent', '3')
     time.sleep(3)
     run = adb('exec-out', 'run-as', PACKAGE, 'cat', 'files/game1/game.dat')
@@ -74,20 +95,18 @@ try:
     raid_id = state['raid']
     adb('shell', 'am', 'force-stop', PACKAGE)
     launch()
-    screenshot('05-resume-hub')
-    adb('shell', 'input', 'tap', '360', '368')
-    time.sleep(12)
-    screenshot('06-resumed-raid')
-    assert profile()['raid'] == raid_id, 'Resume created a duplicate raid'
-    assert adb('shell', 'pidof', PACKAGE).strip(), 'Game process exited on resume'
+    screenshot('12-resume-hub')
+    tap(360, 1475, 12)
+    screenshot('13-resumed-raid')
+    assert profile()['raid'] == raid_id, 'Resume duplicated raid'
+    assert adb('shell', 'pidof', PACKAGE).strip(), 'Game exited on resume'
     logs = adb('logcat', '-d').decode(errors='replace')
     assert 'FATAL EXCEPTION' not in logs, 'Android runtime crashed'
-    (OUT / 'result.json').write_text(json.dumps({'installed': True, 'hub': True, 'raid_with_equipment': True, 'saved_run': True, 'resumed_same_raid': True, 'raid_id': raid_id}, indent=2))
+    (OUT / 'result.json').write_text(json.dumps({'installed': True, 'minimum_layout': '135x225', 'phone_layout': '144x312', 'inventory_round_trip': True, 'supply_purchase': True, 'node_learned': True, 'hub_saved': True, 'raid_with_equipment': True, 'saved_run': True, 'resumed_same_raid': True, 'raid_id': raid_id}, indent=2))
 except Exception as error:
+    screenshot('failure')
     (OUT / 'error.txt').write_text(str(error))
     raise
 finally:
-    try:
-        (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))
-    except Exception as error:
-        (OUT / 'logcat-error.txt').write_text(str(error))
+    try: (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))
+    except Exception as error: (OUT / 'logcat-error.txt').write_text(str(error))

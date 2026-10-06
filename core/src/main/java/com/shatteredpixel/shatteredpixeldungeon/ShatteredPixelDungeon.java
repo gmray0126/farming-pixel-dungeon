@@ -46,7 +46,7 @@ public class ShatteredPixelDungeon extends Game {
 	public static final int v4_0_0 = 911;
 	
 	public ShatteredPixelDungeon( PlatformSupport platform ) {
-		super( sceneClass == null ? WelcomeScene.class : sceneClass, platform );
+		super( sceneClass == null ? com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class : sceneClass, platform );
 
 		//pre-v3.3.0
 		com.watabou.utils.Bundle.addAlias(
@@ -77,7 +77,7 @@ public class ShatteredPixelDungeon extends Game {
 			super.finish();
 		} else {
 			//can't exit on iOS (Apple guidelines), so just go to title screen
-			switchScene(TitleScene.class);
+			switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 		}
 	}
 

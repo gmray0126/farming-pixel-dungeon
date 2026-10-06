@@ -225,7 +225,7 @@ public class GameScene extends PixelScene {
 	public void create() {
 		
 		if (Dungeon.hero == null || Dungeon.level == null){
-			ShatteredPixelDungeon.switchNoFade(TitleScene.class);
+			ShatteredPixelDungeon.switchNoFade(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 			return;
 		}
 
@@ -1580,7 +1580,7 @@ public class GameScene extends PixelScene {
 			protected void onClick() {
 				GamesInProgress.selectedClass = Dungeon.hero.heroClass;
 				GamesInProgress.curSlot = GamesInProgress.firstEmpty();
-				ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
+				ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
 			}
 
 			@Override
@@ -1817,7 +1817,7 @@ public class GameScene extends PixelScene {
 
 	public static void examineObject(Object o){
 		if (o == Dungeon.hero){
-			GameScene.show( new WndHero() );
+			GameScene.show( new com.shatteredpixel.shatteredpixeldungeon.windows.WndExpedition() );
 		} else if ( o instanceof Mob && ((Mob) o).isActive() ){
 			GameScene.show(new WndInfoMob((Mob) o));
 			if (o instanceof Snake && !Document.ADVENTURERS_GUIDE.isPageRead(Document.GUIDE_SURPRISE_ATKS)){

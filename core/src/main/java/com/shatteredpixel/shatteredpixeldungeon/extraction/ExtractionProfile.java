@@ -74,7 +74,7 @@ public final class ExtractionProfile {
     }
     public void prepare(final Item i, final boolean take) {
         if (active) throw new IllegalStateException("진행 중인 원정이 있습니다.");
-        if (take && prepared.size() >= 12) throw new IllegalStateException("준비 물품은 최대 12개입니다.");
+        if (take && prepared.size() >= capacity()) throw new IllegalStateException("출격 가방이 가득 찼습니다.");
         change(() -> { if (take && stash.remove(i)) prepared.add(i); else if (!take && prepared.remove(i)) stash.add(i); });
     }
     public void begin() {

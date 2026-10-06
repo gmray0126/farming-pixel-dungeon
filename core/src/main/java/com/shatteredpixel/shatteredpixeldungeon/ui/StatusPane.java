@@ -111,7 +111,7 @@ public class StatusPane extends Component {
 			@Override
 			protected void onClick () {
 				Camera.main.panTo( Dungeon.hero.sprite.center(), 5f );
-				GameScene.show( new WndHero() );
+				GameScene.show( new com.shatteredpixel.shatteredpixeldungeon.windows.WndExpedition() );
 			}
 			
 			@Override
@@ -156,7 +156,7 @@ public class StatusPane extends Component {
 			@Override
 			protected void onClick () {
 				Camera.main.panTo( Dungeon.hero.sprite.center(), 5f );
-				GameScene.show( new WndHero() );
+				GameScene.show( new com.shatteredpixel.shatteredpixeldungeon.windows.WndExpedition() );
 			}
 		};
 		add(heroInfoOnBar);
@@ -342,28 +342,31 @@ public class StatusPane extends Component {
 			oldMax = max;
 		}
 
+		int growthXP = Dungeon.hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().xp % 25 : Dungeon.hero.exp;
+		int growthMax = Dungeon.hero.extractionRaidID != 0 ? 25 : Dungeon.hero.maxExp();
 		if (large) {
-			exp.scale.x = (128 / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
+			exp.scale.x = (128 / exp.width) * growthXP / growthMax;
 
 			hpText.measure();
 			hpText.x = hp.x + (128 - hpText.width())/2f;
 
-			expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
+			expText.text(growthXP + "/" + growthMax);
 			expText.measure();
 			expText.x = hp.x + (128 - expText.width())/2f;
 
 		} else {
-			exp.scale.x = ((17 + heroPaneExtraWidth) / exp.width) * Dungeon.hero.exp / Dungeon.hero.maxExp();
-			expText.text(Dungeon.hero.exp + "/" + Dungeon.hero.maxExp());
+			exp.scale.x = ((17 + heroPaneExtraWidth) / exp.width) * growthXP / growthMax;
+			expText.text(growthXP + "/" + growthMax);
 		}
 
-		if (Dungeon.hero.lvl != lastLvl) {
+		int shownLevel = Dungeon.hero.extractionRaidID != 0 ? 1 + com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().xp / 25 : Dungeon.hero.lvl;
+		if (shownLevel != lastLvl) {
 
 			if (lastLvl != -1) {
 				showStarParticles();
 			}
 
-			lastLvl = Dungeon.hero.lvl;
+			lastLvl = shownLevel;
 
 			if (large){
 				level.text( "lv. " + lastLvl );

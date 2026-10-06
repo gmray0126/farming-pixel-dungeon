@@ -32,8 +32,8 @@ public class ExtractionProfileTest {
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
         GdxNativesLoader.load();
-        Game.version = "0.1.0-extraction-INDEV";
-        Game.versionCode = 921;
+        Game.version = "0.2.0-extraction-INDEV";
+        Game.versionCode = 922;
         SPDSettings.set(new HeadlessPreferences("test-preferences.xml", folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, folder.getRoot().getAbsolutePath()+"/");
         Dungeon.hero = null;
@@ -118,5 +118,27 @@ public class ExtractionProfileTest {
         catch (IllegalStateException expected) { }
         assertEquals(5, profile.stash.size());
         assertTrue(profile.prepared.isEmpty());
+    }
+    @Test public void inventoryRoundTripSurvivesReload() throws Exception {
+        Item sword = profile.stash.get(0);
+        profile.prepare(sword, true);
+        profile.prepare(sword, false);
+        forgetProfile();
+        profile = ExtractionProfile.get();
+        assertEquals(5, profile.stash.size());
+        assertTrue(profile.prepared.isEmpty());
+    }
+    @Test public void preparationCapacityUsesLearnedPackNodes() throws Exception {
+        profile.learn(6);
+        assertEquals(14, profile.capacity());
+        for (int n = 0; n < 13; n++) {
+            Food item = new Food();
+            profile.stash.add(item);
+            profile.prepare(item, true);
+        }
+        forgetProfile();
+        profile = ExtractionProfile.get();
+        assertEquals(13, profile.prepared.size());
+        assertEquals(14, profile.capacity());
     }
 }
