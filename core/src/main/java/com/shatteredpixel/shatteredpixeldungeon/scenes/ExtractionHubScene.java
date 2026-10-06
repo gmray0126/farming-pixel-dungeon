@@ -233,12 +233,20 @@ public class ExtractionHubScene extends PixelScene {
         label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.maxTier(chapter,difficulty)
             +" · 정예 적과 추가 보스 병력",6,left+5,y+63,width-10,TEXT);
         label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지\n각 난이도 탈출로 다음 단계 해금",6,left,y+99,width,TEXT);
-        button("난이도 / 유물 안내",left,y+130,width,17,()->add(new WndMessage(
-            "난이도는 장비와 무관하게 출격 시 고정됩니다.\n높은 단계일수록 적의 체력·피해·명중·밀도와 정예 확률이 증가합니다. 난이도 3부터 보스 강화 패턴과 지원 병력이 등장합니다.\n\n"
-            +"하수도: 1~3단계 T2, 4~6단계 T3, 7~9단계 T4, 10단계 T5.\n감옥: 1~3단계 T3, 4~6단계 T4, 7~10단계 T5.\n보스는 현재 단계의 최상위 티어 무기를 보장합니다.\n\n"
-            +"피의 등불: 처치 회복 / 물약 회복 감소\n탐욕의 주머니: 좋은 장비 / 골드에 따른 피해 증가\n깨진 모래시계: 시간 가속 / 이후 둔화\n사냥꾼의 표식: 지정 적 피해 / 다른 적 피해 감소\n불안정한 나침반: 비밀 감지 / 주변 적 유인\n\n"
-            +"동시 착용은 유물 최대 2개, 같은 유물 중복 착용 불가. 유물은 적 처치로 성장하며 +5가 상한입니다. 상점은 보급품과 T1~T2 장비만 판매합니다.")),false);
+        button("난이도 / 유물 안내",left,y+120,width,12,this::expeditionGuide,false);
         if(!p.result.isEmpty()&&y+156+35<bottom-27)label(p.result,6,left,y+156,width,GREEN);
+    }
+    private void expeditionGuide(){
+        add(new WndOptions("원정 안내","확인할 내용을 선택하세요.","난이도 / 보상","신규 유물","착용 / 상점"){
+            @Override protected void onSelect(int index){
+                String[] pages={
+                    "난이도는 출격 시 고정됩니다. 높은 단계일수록 적의 체력·피해·명중·밀도와 정예 확률이 증가합니다. 3단계부터 보스 강화와 지원 병력이 등장합니다.\n\n하수도 최대 티어: 1~3단계 T2 / 4~6 T3 / 7~9 T4 / 10 T5\n감옥: 1~3단계 T3 / 4~6 T4 / 7~10 T5\n보스는 해당 단계 최상위 티어 무기를 보장합니다.",
+                    "피의 등불: 처치 회복 / 물약 회복 감소\n\n탐욕의 주머니: 좋은 장비 / 골드에 따른 피해 증가\n\n깨진 모래시계: 시간 가속 / 이후 둔화\n\n사냥꾼의 표식: 지정 적 피해 증가 / 다른 적 피해 감소\n\n불안정한 나침반: 비밀 감지 / 주변 적 유인",
+                    "유물은 최대 2개 착용하며 같은 유물은 중복 착용할 수 없습니다. 창고나 가방에 있는 유물은 효과가 없습니다.\n\n준비 화면에서 유물을 길게 눌러 착용할 물품을 선택하세요. 유물은 적 처치로 성장하며 +5가 상한입니다.\n\n상점은 보급품과 T1~T2 장비만 판매합니다."
+                };
+                if(index>=0&&index<pages.length)add(new WndMessage(pages[index]));
+            }
+        });
     }
     private void depart(){
         ExtractionProfile p=ExtractionProfile.get();p.begin();
