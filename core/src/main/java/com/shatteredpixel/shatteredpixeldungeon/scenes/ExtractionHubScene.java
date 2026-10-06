@@ -4,6 +4,7 @@ package com.shatteredpixel.shatteredpixeldungeon.scenes;
 import com.shatteredpixel.shatteredpixeldungeon.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass;
 import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile;
+import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionShop;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
@@ -15,7 +16,8 @@ import java.util.ArrayList;
 
 /** Responsive native hub: simultaneous stash/loadout grids and a complete node tree. */
 public class ExtractionHubScene extends PixelScene {
-    private static int tab=0, stashPage=0, bagPage=0;
+    private static int tab=0, stashPage=0, bagPage=0, shopCategory=0, shopPage=0;
+    private static boolean shopSelling=false;
     private Group body;
     private float left, top, width, bottom;
     private int stashRows;
@@ -44,15 +46,15 @@ public class ExtractionHubScene extends PixelScene {
         label("파밍 픽셀 던전",9,left,top,width-34,GOLD);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
         label(p.gold+" G  ·  "+p.points+" P  ·  성장 "+(1+p.xp/25),7,left,top+20,width,TEXT);
-        float tw=(width-4)/3f;
-        String[] titles={"장비 준비","성장","원정"};
-        for(int i=0;i<3;i++){
+        float tw=(width-6)/4f;
+        String[] titles={"준비","성장","원정","상점"};
+        for(int i=0;i<4;i++){
             final int n=i;
             HubButton b=button(titles[i],left+i*(tw+2),top+33,tw,19,()->{tab=n;refresh();if(n==1)add(new WndGrowthAtlas(this::refresh));},i==tab);
             if(i==tab)b.textColor(GOLD);
         }
         float y=top+58;
-        if(tab==0)equipment(y);else if(tab==1)growth(y);else expedition(y);
+        if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else shop(y);
         button(p.active?"원정 이어하기":"하수도로 출격",left,bottom-22,width,22,this::depart,true);
     }
     private void equipment(float y){
@@ -112,14 +114,84 @@ public class ExtractionHubScene extends PixelScene {
         options.add(bag?"창고로 빼기":"출격 가방에 넣기");
         options.add("성능 / 상세 보기");
         if(gear&&!worn)options.add("출격 시 착용하기");
-        if(!bag)options.add("판매 · "+i.value()+" G");
+        if(!bag)options.add("판매 메뉴 · "+ExtractionShop.salePrice(i)+" G");
         options.add("닫기");
         add(new WndOptions(i.title(),bag?(worn?"출격 시 착용하는 장비입니다.":"출격 가방에 준비한 물품입니다."):"창고 보관 물품입니다. 출격에 가져간 물품은 사망하면 잃습니다.",options.toArray(new String[0])){
             @Override protected void onSelect(int c){try{
                 if(c==0){p.prepare(i,!bag);refresh();}
                 else if(c==1)ExtractionHubScene.this.add(new WndInfoItem(i));
                 else if(c==2&&gear&&!worn){p.selectEquipment(i);refresh();}
-                else if(c==2&&!bag){p.sell(i);refresh();}
+                else if(c==2&&!bag){saleDetails(i);}
+            }catch(RuntimeException e){error(e);}}
+        });
+    }
+    private void shop(float y){
+        ExtractionProfile p=ExtractionProfile.get();
+        if(p.active){label("원정 중에는 상점을 이용할 수 없습니다.",7,left,y,width,TEXT);return;}
+        float half=(width-2)/2f;
+        button("구매",left,y,half,18,()->{shopSelling=false;shopPage=0;refresh();},!shopSelling);
+        button("판매",left+half+2,y,half,18,()->{shopSelling=true;shopPage=0;refresh();},shopSelling);
+        ArrayList<Item> items=new ArrayList<>();ArrayList<Integer> offers=new ArrayList<>();
+        if(shopSelling){
+            label("창고 물품 · 준비한 물품은 먼저 빼 주세요",6,left,y+24,width,MUTED);
+            items.addAll(p.stash);
+        }else{
+            float cw=(width-4)/3f;
+            for(int c=0;c<3;c++){final int category=c;
+                button(ExtractionShop.CATEGORIES[c],left+c*(cw+2),y+22,cw,16,()->{shopCategory=category;shopPage=0;refresh();},c==shopCategory);
+            }
+            for(int n=0;n<ExtractionShop.OFFERS.size();n++)if(ExtractionShop.OFFERS.get(n).category==shopCategory){
+                offers.add(n);items.add(ExtractionShop.OFFERS.get(n).item());
+            }
+        }
+        float gy=y+43, step=33, cw=(width-6)/4f;
+        int rows=Math.max(1,Math.min(5,(int)((bottom-43-gy)/step))), count=rows*4;
+        int pages=Math.max(1,(items.size()+count-1)/count);shopPage=Math.min(shopPage,pages-1);
+        for(int j=0;j<count;j++){
+            final int index=shopPage*count+j;float x=left+(j%4)*(cw+2),sy=gy+(j/4)*step;
+            panel(x,sy,cw,step-2);
+            if(index>=items.size())continue;
+            final Item item=items.get(index);final int offerIndex=shopSelling?-1:offers.get(index);
+            final boolean selling=shopSelling;
+            ItemSlot slot=new ItemSlot(item){
+                @Override protected void onClick(){if(selling)saleDetails(item);else purchaseDetails(offerIndex,item);}
+                @Override protected boolean onLongClick(){ExtractionHubScene.this.add(new WndInfoItem(item));return true;}
+            };
+            slot.setRect(x+1,sy+1,cw-2,22);body.add(slot);
+            int price=selling?ExtractionShop.salePrice(item):ExtractionShop.OFFERS.get(offerIndex).price;
+            centered(price+" G",5,x,sy+24,cw,selling||p.gold>=price?GOLD:MUTED);
+        }
+        float pager=gy+rows*step+2;
+        button("<",left,pager,22,13,()->{shopPage=Math.max(0,shopPage-1);refresh();},false);
+        centered((shopPage+1)+" / "+pages,6,left+24,pager+3,width-48,MUTED);
+        button(">",left+width-22,pager,22,13,()->{shopPage=Math.min(pages-1,shopPage+1);refresh();},false);
+        if(pager+25<bottom-25)label("탭: 거래 · 길게: 성능 / 상세 보기",6,left,pager+19,width,MUTED);
+    }
+    private void purchaseDetails(final int offerIndex,final Item item){
+        ExtractionProfile p=ExtractionProfile.get();int price=ExtractionShop.OFFERS.get(offerIndex).price;
+        boolean can=p.gold>=price;
+        String description="구매가 "+price+" G · 보유 "+p.gold+" G\n구매한 물품은 창고에 보관됩니다."
+                +(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon?"\n착용에 필요한 힘과 성능은 상세에서 확인하세요.":"");
+        add(new WndOptions(item.title(),description,can?new String[]{"구매 · "+price+" G","성능 / 상세 보기","닫기"}:new String[]{"성능 / 상세 보기","닫기"}){
+            @Override protected void onSelect(int c){try{
+                if(can&&c==0){p.buy(offerIndex);refresh();}
+                else if(c==(can?1:0))ExtractionHubScene.this.add(new WndInfoItem(item));
+            }catch(RuntimeException e){error(e);}}
+        });
+    }
+    private void saleDetails(final Item item){
+        ExtractionProfile p=ExtractionProfile.get();int price=ExtractionShop.salePrice(item);
+        boolean one=ExtractionShop.canSellOne(item), can=price>0;
+        ArrayList<String> choices=new ArrayList<>();
+        if(can&&one)choices.add("1개 판매 · "+ExtractionShop.salePrice(item.duplicate().quantity(1))+" G");
+        if(can)choices.add((one?"전부 판매":"판매")+" · "+price+" G");
+        int detail=choices.size();choices.add("성능 / 상세 보기");choices.add("닫기");
+        String description=(can?"판매하면 창고에서 제거되고 골드로 정산됩니다.":"판매할 수 없는 물품입니다.")
+                +(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag?"\n가방 안의 물품도 함께 판매합니다.":"");
+        add(new WndOptions(item.title(),description,choices.toArray(new String[0])){
+            @Override protected void onSelect(int c){try{
+                if(c==detail)ExtractionHubScene.this.add(new WndInfoItem(item));
+                else if(can&&c<detail){p.sell(item,!(one&&c==0));refresh();}
             }catch(RuntimeException e){error(e);}}
         });
     }
@@ -148,8 +220,8 @@ public class ExtractionHubScene extends PixelScene {
         label("하수도 1~5층을 탐사하세요.\n5층 보스 처치 후 다음 계단에서 탈출.",7,left+8,y+27,width-16,TEXT);
         label(p.active?"상태: 원정 진행 중":"상태: 출격 가능",6,left+8,y+57,width-16,GREEN);
         label("원정 규칙",8,left,y+82,width,GOLD);
-        label("탈출: 장비와 전리품을 창고로\n사망: 가져간 물품과 전리품 손실\n유지: 창고 · 성장 노드 · 경험치",7,left,y+97,width,TEXT);
-        float after=y+135;
+        label("탈출: 장비와 전리품을 창고로\n남은 강화 스크롤: 장당 50 G 정산\n사망: 가져간 물품과 전리품 손실\n유지: 창고 · 성장 노드 · 경험치",7,left,y+97,width,TEXT);
+        float after=y+148;
         if(!p.result.isEmpty()&&after+30<bottom-27)label(p.result,6,left,after,width,GREEN);
         if(after+45<bottom-27)button("제작자 / 원본 크레딧",left,bottom-46,width,17,()->ShatteredPixelDungeon.switchScene(AboutScene.class),false);
     }
@@ -161,7 +233,7 @@ public class ExtractionHubScene extends PixelScene {
         else{Dungeon.hero=null;Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();InterlevelScene.mode=InterlevelScene.Mode.DESCEND;}
         ShatteredPixelDungeon.switchScene(InterlevelScene.class);
     }
-    private void error(RuntimeException e){add(new WndMessage(e.getMessage()==null?"작업을 완료하지 못했습니다.":e.getMessage()));}
+    private void error(RuntimeException e){refresh();add(new WndMessage(e.getMessage()==null?"작업을 완료하지 못했습니다.":e.getMessage()));}
     private void panel(float x,float y,float w,float h){ColorBlock bg=new ColorBlock(w,h,0xEC15212D);bg.x=x;bg.y=y;body.add(bg);}
     private RenderedTextBlock label(String s,int size,float x,float y,float w,int color){
         RenderedTextBlock t=renderTextBlock(s,size);t.maxWidth((int)w);t.hardlight(color);t.setPos(x,y);body.add(t);return t;

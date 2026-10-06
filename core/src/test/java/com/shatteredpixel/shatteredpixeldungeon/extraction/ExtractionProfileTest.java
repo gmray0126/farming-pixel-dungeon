@@ -22,6 +22,64 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void leftoverUpgradeScrollsRedeemNestedStacksOnceAndPersist() throws Exception {
+        profile.begin();int id=profile.raidID;Dungeon.hero=new Hero();Dungeon.gold=17;
+        Bag bag=new Bag();bag.items.add(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().quantity(3));
+        bag.items.add(new Food());Dungeon.hero.belongings.backpack.items.add(bag);
+        Dungeon.hero.belongings.backpack.items.add(new ExtractionShop.SupplyUpgrade().quantity(2));
+        Dungeon.hero.belongings.backpack.items.add(new ExtractionShop.SupplyIdentify());
+        profile.settle(id,true);profile.settle(id,true);
+        assertEquals(367,profile.gold);assertEquals(7,profile.stash.size());assertTrue(profile.result.contains("5장"));
+        assertEquals(1,((Bag)profile.stash.get(5)).items.size());
+        assertEquals(3,Dungeon.hero.belongings.backpack.items.size()); // live run bag remains intact
+        assertEquals(2,bag.items.size());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(367,profile.gold);
+        assertTrue(profile.stash.get(6) instanceof ExtractionShop.SupplyIdentify);
+    }
+    @Test public void failedRedemptionKeepsRunScrollsAndDeathPaysNothing() throws Exception {
+        profile.begin();int id=profile.raidID;Dungeon.hero=new Hero();Dungeon.gold=0;
+        Item scroll=new ExtractionShop.SupplyUpgrade().quantity(2);Dungeon.hero.belongings.backpack.items.add(scroll);
+        java.io.File blocker=folder.newFile("settlement-blocker");
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.settle(id,true);fail("Saving must fail");}catch(IllegalStateException expected){}
+        assertTrue(profile.active);assertEquals(100,profile.gold);assertEquals(5,profile.stash.size());
+        assertSame(scroll,Dungeon.hero.belongings.backpack.items.get(0));assertEquals(2,scroll.quantity());
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        profile.settle(id,false);assertEquals(100,profile.gold);assertFalse(profile.active);
+    }
+    @Test public void shopPurchasesStackSalesAndSupplyIdentitySurviveReload() throws Exception {
+        for(ExtractionShop.Offer offer:ExtractionShop.OFFERS){
+            Item item=offer.item();assertTrue(item.isIdentified());assertTrue(offer.price>ExtractionShop.salePrice(item));
+        }
+        profile.gold=1000;profile.buy(4);profile.buy(1);
+        assertEquals(730,profile.gold);Item food=profile.stash.get(6);food.quantity(3);
+        profile.sell(food,false);assertEquals(740,profile.gold);assertEquals(2,food.quantity());
+        profile.sell(food,true);assertEquals(760,profile.gold);assertFalse(profile.stash.contains(food));
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(760,profile.gold);
+        assertTrue(profile.stash.get(5) instanceof ExtractionShop.SupplyUpgrade);
+        assertTrue(((ExtractionShop.SupplyUpgrade)profile.stash.get(5)).isKnown());
+        assertEquals("보급 강화 스크롤",profile.stash.get(5).name());
+        profile.begin();try{profile.buy(0);fail("Active raids block purchases");}catch(IllegalStateException expected){}
+        try{profile.sell(profile.stash.get(0));fail("Active raids block sales");}catch(IllegalStateException expected){}
+    }
+    @Test public void failedShopSavesRollBackGoldAndStackQuantities() throws Exception {
+        Item food=new Food().quantity(3);profile.stash.add(food);profile.buy(1);int gold=profile.gold;
+        java.io.File blocker=folder.newFile("shop-blocker");
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.buy(0);fail("Saving must fail");}catch(IllegalStateException expected){}
+        assertEquals(gold,profile.gold);assertEquals(7,profile.stash.size());
+        Item restored=profile.stash.get(5);
+        try{profile.sell(restored,false);fail("Saving must fail");}catch(IllegalStateException expected){}
+        assertEquals(gold,profile.gold);assertEquals(3,profile.stash.get(5).quantity());
+    }
+    @Test public void emptyGoldAndPreparedItemsCannotBeSoldOrBoughtAway() {
+        profile.gold=0;try{profile.buy(1);fail("Gold is required");}catch(IllegalStateException expected){}
+        assertEquals(5,profile.stash.size());
+        Item gear=profile.stash.get(0);profile.prepare(gear,true);profile.sell(gear);
+        assertEquals(0,profile.gold);assertTrue(profile.prepared.contains(gear));
+        Bag bag=new Bag();bag.items.add(new Food().quantity(3));profile.stash.add(bag);
+        profile.sell(bag);assertEquals(30,profile.gold);assertFalse(profile.stash.contains(bag));
+    }
     @Test public void permanentWeaponCapsAreThreeTimesEveryTier(){
         com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon[] weapons={
             new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword(),

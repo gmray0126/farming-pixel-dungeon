@@ -172,22 +172,45 @@ public final class ExtractionProfile {
                 // nested contents, which would otherwise be deposited twice.
                 com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings b = Dungeon.hero.belongings;
                 Item[] worn = {b.weapon,b.armor,b.artifact,b.misc,b.ring,b.secondWep};
-                for (Item i : worn) if (i != null) stash.add(i);
-                stash.addAll(b.backpack.items);
+                ArrayList<Item> loot=new ArrayList<>();
+                for (Item i : worn) if (i != null) loot.add(i);
+                loot.addAll(b.backpack.items);
+                // Work on a copy so failed settlement never removes scrolls from the run save.
+                Bundle copied=new Bundle();copied.put("loot",loot);loot.clear();
+                for(Bundlable item:copied.getCollection("loot"))loot.add((Item)item);
+                int scrolls=ExtractionShop.redeemUpgradeScrolls(loot);
+                stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f));
+                gold+=scrolls*ExtractionShop.UPGRADE_REFUND;
                 int old=xp/25; xp+=10; points+=xp/25-old;
+                result="탈출 성공! 장비와 전리품을 창고에 보관했습니다."
+                        +(scrolls>0?"\n강화 스크롤 "+scrolls+"장 정산 · +"+(scrolls*ExtractionShop.UPGRADE_REFUND)+" G":"");
             }
             active=false; escrow.clear();
-            result=success?"탈출 성공! 장비와 전리품을 창고에 보관했습니다.":"사망했습니다. 출격 물품은 잃었지만 창고와 성장 노드는 남았습니다.";
+            if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고와 성장 노드는 남았습니다.";
         });
         Dungeon.deleteGame(GamesInProgress.curSlot, true);
     }
     public void buyPotion() {
-        if (active || gold<30) throw new IllegalStateException("골드가 부족하거나 원정 중입니다.");
-        change(() -> { gold-=30; stash.add(new SupplyHealingPotion().identify(false)); });
+        buy(0);
+    }
+    public void buy(final int offerIndex) {
+        if(active)throw new IllegalStateException("원정 중에는 거점 상점을 이용할 수 없습니다.");
+        if(offerIndex<0||offerIndex>=ExtractionShop.OFFERS.size())throw new IllegalArgumentException("없는 상품입니다.");
+        ExtractionShop.Offer offer=ExtractionShop.OFFERS.get(offerIndex);
+        if(gold<offer.price)throw new IllegalStateException("골드가 부족합니다.");
+        change(() -> { gold-=offer.price;stash.add(offer.item()); });
     }
     public void sell(final Item i) {
-        if (active || !stash.contains(i)) return;
-        change(() -> { gold+=Math.max(0,i.value()); stash.remove(i); });
+        sell(i,true);
+    }
+    public void sell(final Item i,final boolean all) {
+        if(active)throw new IllegalStateException("원정 중에는 거점 상점을 이용할 수 없습니다.");
+        if(!stash.contains(i))return;
+        boolean one=!all&&ExtractionShop.canSellOne(i);
+        Item sold=one?i.duplicate().quantity(1):i;
+        final int price=ExtractionShop.salePrice(sold);
+        if(price<=0)throw new IllegalStateException("이 물품은 판매할 수 없습니다.");
+        change(() -> { gold+=price;if(one)i.quantity(i.quantity()-1);else stash.remove(i); });
     }
 }
