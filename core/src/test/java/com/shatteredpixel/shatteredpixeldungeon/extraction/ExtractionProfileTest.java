@@ -36,6 +36,7 @@ public class ExtractionProfileTest {
         Game.versionCode = 922;
         SPDSettings.set(new HeadlessPreferences("test-preferences.xml", folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, folder.getRoot().getAbsolutePath()+"/");
+        com.shatteredpixel.shatteredpixeldungeon.Badges.reset();
         Dungeon.hero = null;
         GamesInProgress.curSlot = 1;
         forgetProfile();
