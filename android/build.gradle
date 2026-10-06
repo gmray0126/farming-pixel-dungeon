@@ -23,8 +23,19 @@ android {
         targetSdkVersion appAndroidTargetSDK
     }
 
+    // Public development key, used only for debug builds so APK updates keep app data.
+    signingConfigs {
+        extractionDebug {
+            storeFile file('extraction-debug.p12')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+            storeType 'PKCS12'
+        }
+    }
     buildTypes {
         debug {
+            signingConfig signingConfigs.extractionDebug
             applicationIdSuffix ".indev"
             versionNameSuffix '-INDEV'
             dependencies {
@@ -43,8 +54,8 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 
             dependencies {
-                releaseImplementation project(':services:updates:githubUpdates')
-                releaseImplementation project(':services:news:shatteredNews')
+                releaseImplementation project(':services:updates:debugUpdates')
+                releaseImplementation project(':services:news:debugNews')
             }
         }
     }

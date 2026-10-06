@@ -144,16 +144,10 @@ public class TitleScene extends PixelScene {
 
 		final Chrome.Type GREY_TR = Chrome.Type.GREY_BUTTON_TR;
 		
-		btnPlay = new StyledButton(GREY_TR, Messages.get(this, "enter")){
+		btnPlay = new StyledButton(GREY_TR, "거점으로"){
 			@Override
 			protected void onClick() {
-				if (GamesInProgress.checkAll().size() == 0){
-					GamesInProgress.selectedClass = null;
-					GamesInProgress.curSlot = 1;
-					ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
-				} else {
-					ShatteredPixelDungeon.switchNoFade( StartScene.class );
-				}
+				ShatteredPixelDungeon.switchScene(ExtractionHubScene.class);
 			}
 			
 			@Override
@@ -162,7 +156,7 @@ public class TitleScene extends PixelScene {
 				if (DeviceCompat.isDebug()) {
 					GamesInProgress.selectedClass = null;
 					GamesInProgress.curSlot = 1;
-					ShatteredPixelDungeon.switchScene(HeroSelectScene.class);
+					ShatteredPixelDungeon.switchScene(ExtractionHubScene.class);
 					return true;
 				}
 				return super.onLongClick();

@@ -195,6 +195,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 
 public class Hero extends Char {
+	public int extractionRaidID = 0;
+	public int extractionXP = 0;
 
 	{
 		actPriority = HERO_PRIO;
@@ -304,6 +306,8 @@ public class Hero extends Char {
 	
 	@Override
 	public void storeInBundle( Bundle bundle ) {
+		bundle.put("extraction_raid", extractionRaidID);
+		bundle.put("extraction_xp", extractionXP);
 
 		super.storeInBundle( bundle );
 
@@ -327,6 +331,8 @@ public class Hero extends Char {
 	
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
+		extractionRaidID=bundle.getInt("extraction_raid");
+		extractionXP=bundle.getInt("extraction_xp");
 
 		lvl = bundle.getInt( LEVEL );
 		exp = bundle.getInt( EXPERIENCE );
@@ -391,6 +397,7 @@ public class Hero extends Char {
 	}
 
 	public int talentPointsAvailable(int tier){
+		if (extractionRaidID != 0) return 0;
 		if (lvl < (Talent.tierLevelThresholds[tier] - 1)
 			|| (tier == 3 && subClass == HeroSubClass.NONE)
 			|| (tier == 4 && armorAbility == null)) {
@@ -416,7 +423,7 @@ public class Hero extends Char {
 	}
 	
 	public String className() {
-		return subClass == null || subClass == HeroSubClass.NONE ? heroClass.title() : subClass.title();
+		return extractionRaidID != 0 ? "원정자" : (subClass == null || subClass == HeroSubClass.NONE ? heroClass.title() : subClass.title());
 	}
 
 	@Override
@@ -662,7 +669,7 @@ public class Hero extends Char {
 			dr += buff(HoldFast.class).armorBonus();
 		}
 		
-		return dr;
+		return dr + (extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().defenseBonus() : 0);
 	}
 	
 	@Override
@@ -698,7 +705,7 @@ public class Hero extends Char {
 		}
 
 		if (dmg < 0) dmg = 0;
-		return dmg;
+		return dmg + (extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackBonus() : 0);
 	}
 
 	//damage rolls that come from the hero can have their RNG influenced by clover
@@ -2008,6 +2015,11 @@ public class Hero extends Char {
 	}
 	
 	public void earnExp( int exp, Class source ) {
+		if (extractionRaidID != 0) {
+			extractionXP += Math.max(0,exp);
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().credit(extractionRaidID,extractionXP);
+			return;
+		}
 
 		//xp granted by ascension challenge is only for on-exp gain effects
 		if (source != AscensionChallenge.class) {
@@ -2169,6 +2181,14 @@ public class Hero extends Char {
 
 	@Override
 	public void die( Object cause ) {
+		if (extractionRaidID != 0) {
+			curAction=null;
+			Actor.fixTime();
+			super.die(cause);
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(extractionRaidID,false);
+			Game.runOnRenderThread(() -> ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class));
+			return;
+		}
 		
 		curAction = null;
 

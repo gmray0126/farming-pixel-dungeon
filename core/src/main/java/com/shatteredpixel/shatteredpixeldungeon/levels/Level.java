@@ -592,6 +592,16 @@ public abstract class Level implements Bundlable {
 
 	//returns true if we immediately transition, false otherwise
 	public boolean activateTransition(Hero hero, LevelTransition transition){
+		if (hero.extractionRaidID != 0) {
+			if (transition.type != LevelTransition.Type.REGULAR_EXIT) {
+				com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("아래쪽 계단이 탈출구입니다. 전리품을 챙겨 출구를 찾으세요.");
+				return false;
+			}
+			if (locked) return false;
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(hero.extractionRaidID,true);
+			ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
+			return true;
+		}
 		if (locked){
 			return false;
 		}

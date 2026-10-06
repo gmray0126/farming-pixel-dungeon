@@ -283,7 +283,12 @@ public class Dungeon {
 		
 		Badges.reset();
 		
-		GamesInProgress.selectedClass.initHero( hero );
+		GamesInProgress.selectedClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
+		hero.heroClass = GamesInProgress.selectedClass;
+		com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
+		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile profile = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get();
+		profile.initialize(hero);
+		hero.extractionRaidID = profile.raidID;
 	}
 
 	public static boolean isChallenged( int mask ) {
