@@ -48,7 +48,7 @@ public class ExtractionProfileTest {
         assertTrue(Dungeon.level.heaps.size>heapCount);assertTrue(profile.xp>0);
         h.sprite=null;
     }
-    @Test public void drinkingNonHazardousPotionsExecutesTheirRealEffects(){
+    @Test public void drinkingNonHazardousPotionsExecutesTheirRealEffects() throws Exception {
         profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
         Dungeon.level=Dungeon.newLevel();Hero h=Dungeon.hero;h.pos=Dungeon.level.entrance();
         h.sprite=new EffectSprite();h.sprite.visible=false;new com.watabou.noosa.Group().add(h.sprite);
@@ -61,8 +61,9 @@ public class ExtractionProfileTest {
             new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility(),
             new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste(),
             new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity()};
+        Field user=Item.class.getDeclaredField("curUser");user.setAccessible(true);user.set(null,h);
         for(com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion potion:potions){
-            potion.execute(h,"SET_TEST_USER");potion.apply(h);assertTrue(potion.isKnown());
+            potion.apply(h);assertTrue(potion.isKnown());
         }
         assertEquals(11,h.STR);assertEquals(20,h.HT);assertEquals(10,profile.xp);
         h.sprite=null;
@@ -407,6 +408,7 @@ public class ExtractionProfileTest {
     }
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
+        new Game(com.watabou.noosa.Scene.class,null);
         Gdx.app=(com.badlogic.gdx.Application)java.lang.reflect.Proxy.newProxyInstance(
                 com.badlogic.gdx.Application.class.getClassLoader(),new Class[]{com.badlogic.gdx.Application.class},(proxy,method,args)->{
                     if(method.getName().equals("getType"))return com.badlogic.gdx.Application.ApplicationType.Desktop;
