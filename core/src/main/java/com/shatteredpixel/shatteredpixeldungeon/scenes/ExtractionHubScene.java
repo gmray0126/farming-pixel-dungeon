@@ -48,7 +48,7 @@ public class ExtractionHubScene extends PixelScene {
         String[] titles={"장비 준비","성장","원정"};
         for(int i=0;i<3;i++){
             final int n=i;
-            HubButton b=button(titles[i],left+i*(tw+2),top+33,tw,19,()->{tab=n;refresh();},i==tab);
+            HubButton b=button(titles[i],left+i*(tw+2),top+33,tw,19,()->{tab=n;refresh();if(n==1)add(new WndGrowthAtlas(this::refresh));},i==tab);
             if(i==tab)b.textColor(GOLD);
         }
         float y=top+58;
@@ -126,9 +126,9 @@ public class ExtractionHubScene extends PixelScene {
     private void growth(float y){
         ExtractionProfile p=ExtractionProfile.get();
         label("성장 노드  "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+"  ·  "+p.points+" P",8,left,y,width,GOLD);
-        label("전체 지도 → 계통 선택 → 노드 습득",6,left,y+12,width,MUTED);
-        ExtractionNodeTree tree=new ExtractionNodeTree(this::node);
-        tree.setRect(left,y+26,width,Math.min(166,bottom-27-(y+26)));body.add(tree);
+        label("밀어서 이동 · 두 손가락 확대 · 노드 선택",6,left,y+12,width,MUTED);
+        ExtractionNodeTree tree=new ExtractionNodeTree(this::node,()->add(new WndGrowthAtlas(this::refresh)));
+        body.add(tree);tree.setRect(left,y+26,width,Math.min(166,bottom-27-(y+26)));
         float after=tree.bottom()+7;
         if(after+9<bottom-26)label("습득 노드는 사망해도 유지 · 25 XP = 1 P",6,left,after,width,GREEN);
     }

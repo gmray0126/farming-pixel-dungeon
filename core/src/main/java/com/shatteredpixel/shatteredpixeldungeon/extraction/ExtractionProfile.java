@@ -147,11 +147,15 @@ public final class ExtractionProfile {
             if(result.length()>0)result.append(" · ");
             result.append(NAMES[parent]).append(nodes.contains(IDS[parent])?" (습득)":" (필요)");
         }
+                if(ExtractionGrowth.NODES[index].alternatives.length>0){
+            result.append("\n또는 연결 경로: ");
+            for(int p:ExtractionGrowth.NODES[index].alternatives)result.append(NAMES[p]).append(nodes.contains(IDS[p])?" (습득)":" (필요)").append(' ');
+        }
         return result.length()==0?"없음":result.toString();
     }
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
-        if (!unlocked(index)) throw new IllegalStateException("선행 노드를 모두 배워 주세요.");
+        if (!unlocked(index)) throw new IllegalStateException("선행 경로나 연결된 계통의 노드를 먼저 배워 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
         change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); });
     }

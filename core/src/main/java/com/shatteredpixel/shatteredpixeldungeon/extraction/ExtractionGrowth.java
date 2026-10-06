@@ -28,6 +28,7 @@ public final class ExtractionGrowth {
         public final String id, name; public final int branch, row, col, cost;
         private final String[] required;
         public int[] parents;
+        public int[] alternatives=new int[0];
         public final EnumMap<Stat,Float> effects=new EnumMap<>(Stat.class);
         Node(String id,String name,int branch,int row,int col,int cost,String[] required,Object... effects) {
             this.id=id;this.name=name;this.branch=branch;this.row=row;this.col=col;this.cost=cost;this.required=required;
@@ -43,6 +44,7 @@ public final class ExtractionGrowth {
             if(branch>=3)text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
+            if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
             if(parents.length>1)text.append("\n\n양쪽 갈래의 선행 노드를 모두 습득해야 합니다.");
             return text.toString();
         }
@@ -197,8 +199,22 @@ public final class ExtractionGrowth {
         for(int i=0;i<NODES.length;i++){
             Node n=NODES[i];n.parents=new int[n.required.length];
             for(int j=0;j<n.parents.length;j++)n.parents[j]=index.get(n.required[j]);
-            PARENTS[i]=n.parents.length==0?-1:n.parents[0];DESCS[i]=n.description();
+            PARENTS[i]=n.parents.length==0?-1:n.parents[0];
         }
+        String[] order={"sword","greatsword","axe","blunt","spear","ranged","dagger","fist","magic"};
+        for(int i=0;i<order.length;i++){
+            String a=order[i]+"_2",b=order[(i+1)%order.length]+"_5";
+            alternative(a,b);alternative(b,a);
+        }
+        alternative("blunt_0","guard");
+        alternative("ranged_0","pack");
+        alternative("fist_0","strength");
+        for(int i=0;i<NODES.length;i++)DESCS[i]=NODES[i].description();
+    }
+    private static void alternative(String target,String source){
+        Node node=NODES[index(target)];
+        node.alternatives=Arrays.copyOf(node.alternatives,node.alternatives.length+1);
+        node.alternatives[node.alternatives.length-1]=index(source);
     }
     private static void add(ArrayList<Node> list,String id,String name,int b,int row,int col,int cost,String[] p,Object... effects){
         list.add(new Node(id,name,b,row,col,cost,p,effects));
@@ -208,8 +224,11 @@ public final class ExtractionGrowth {
         throw new IllegalArgumentException(id);
     }
     public static boolean unlocked(Node node,Set<String> learned){
-        for(int p:node.parents)if(!learned.contains(NODES[p].id))return false;
-        return true;
+        boolean primary=true;
+        for(int p:node.parents)if(!learned.contains(NODES[p].id))primary=false;
+        if(primary)return true;
+        for(int p:node.alternatives)if(learned.contains(NODES[p].id))return true;
+        return false;
     }
     public static int family(KindOfWeapon weapon){
         if(weapon==null||weapon instanceof Gloves||weapon instanceof Gauntlet)return FIST;

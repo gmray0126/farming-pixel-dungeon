@@ -194,7 +194,7 @@ public class ExtractionProfileTest {
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[i];
             assertTrue(ids.add(node.id));
             assertFalse(node.effects.isEmpty());
-            for(int parent:node.parents)assertTrue("Graph must be acyclic", parent<i);
+            for(int parent:node.parents)assertTrue("Primary paths must be acyclic", parent<i);
             if(node.parents.length==2)convergences++;
             totalCost+=node.cost;
         }
@@ -266,5 +266,16 @@ public class ExtractionProfileTest {
         assertEquals(16,profile.capacity());assertEquals(6f,profile.bonus(ExtractionGrowth.Stat.HEALTH),0.001f);
         assertEquals(2f,profile.bonus(ExtractionGrowth.Stat.STRENGTH),0.001f);
         assertEquals(123,profile.gold);assertEquals(9,profile.nodes.size());
+    }
+    @Test public void connectedWeaponRouteUnlocksAcrossSpecializations() throws Exception {
+        profile.points=1000;
+        learnPath("sword_2");
+        int connected=ExtractionGrowth.index("greatsword_5");
+        assertFalse(profile.nodes.contains("greatsword_4"));
+        assertTrue(profile.unlocked(connected));
+        profile.learn(connected);
+        forgetProfile();profile=ExtractionProfile.get();
+        assertTrue(profile.nodes.contains("greatsword_5"));
+        assertEquals(1,profile.defenseBonus(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword()));
     }
 }

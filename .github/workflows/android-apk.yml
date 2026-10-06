@@ -20,6 +20,7 @@ on:
       - 'android/**'
       - 'core/**'
       - 'scripts/android-smoke.py'
+      - 'scripts/android-atlas.py'
       - 'EXTRACTION_README_KO.md'
       - 'SPD-classes/**'
       - 'services/**'
@@ -118,4 +119,37 @@ jobs:
         with:
           name: extraction-android-runtime-${{ matrix.layout }}
           path: android-smoke/
+          if-no-files-found: ignore
+
+  atlas:
+    name: Check native growth atlas
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[atlas]')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          path: apk
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Render and operate the atlas once
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swangle -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: python3 scripts/android-atlas.py
+      - name: Save native atlas screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: farming-growth-atlas-runtime
+          path: android-atlas/
           if-no-files-found: ignore

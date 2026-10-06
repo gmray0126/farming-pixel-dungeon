@@ -1,112 +1,204 @@
-/* Farming Pixel Dungeon fork. GPL-3.0-or-later. */
+/* Farming Pixel Dungeon. GPL-3.0-or-later. */
 package com.shatteredpixel.shatteredpixeldungeon.ui;
 
-import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile;
-import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth;
+import com.shatteredpixel.shatteredpixeldungeon.extraction.*;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
-import com.watabou.noosa.ColorBlock;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
+import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
+import com.badlogic.gdx.graphics.Pixmap;
+import com.watabou.gltextures.SmartTexture;
+import com.watabou.gltextures.TextureCache;
+import com.watabou.input.PointerEvent;
+import com.watabou.input.ScrollEvent;
+import com.watabou.noosa.*;
 import com.watabou.noosa.ui.Component;
+import com.watabou.utils.Point;
+import com.watabou.utils.PointF;
 
-/** Complete graph overview plus readable branch diagrams, without scrolling through menus. */
+/** One continuous, clipped native growth atlas with drag and two-finger zoom. */
 public class ExtractionNodeTree extends Component {
-    public static final int GOLD=0xE4C583, GREEN=0x83C9B5, MUTED=0x88969D;
+    public static final int GOLD=0xE4C583,GREEN=0x83C9B5,MUTED=0x88969D;
     public interface Selection { void accept(int index); }
-    private static int focusedBranch=-1;
+    private static float rememberedScale=-1,rememberedX=380,rememberedY=380;
+    private static int rememberedSelection=-1;
+    private final GrowthAtlasViewport lens=new GrowthAtlasViewport();
     private final Selection select;
-    public ExtractionNodeTree(Selection select) { this.select=select; }
-    @Override protected void layout() {
+    private final Runnable enlarge;
+    private Camera mapCamera;
+    private Group world;
+    private Image selectionRing;
+    private RenderedTextBlock zoomText;
+    private float baseZoom;
+    private boolean restored;
+    public ExtractionNodeTree(Selection select){this(select,null);}
+    public ExtractionNodeTree(Selection select,Runnable enlarge){this.select=select;this.enlarge=enlarge;}
+    @Override protected void layout(){
         super.layout();
-        for(com.watabou.noosa.Gizmo g:members.toArray(new com.watabou.noosa.Gizmo[0]))g.destroy();
-        clear();
-        if(focusedBranch<0)overview();else branch();
+        if(width<=0||height<=15)return;
+        if(mapCamera!=null){Camera.remove(mapCamera);mapCamera.destroy();mapCamera=null;}
+        for(Gizmo member:members.toArray(new Gizmo[0]))member.destroy();clear();
+        lens.bounds((int)width,(int)(height-15));
+        if(!restored&&rememberedScale>0){
+            lens.scale=rememberedScale;lens.centerX=rememberedX;lens.centerY=rememberedY;
+            lens.bounds(lens.width,lens.height);
+        }
+        restored=true;baseZoom=camera().zoom;
+        float bx=x;
+        nav("전체",bx,21,()->{lens.fit();apply();});bx+=23;
+        nav("-",bx,14,()->{lens.zoomAt(lens.scale/1.5f,lens.width/2,lens.height/2);apply();});bx+=16;
+        nav("+",bx,14,()->{lens.zoomAt(lens.scale*1.5f,lens.width/2,lens.height/2);apply();});bx+=16;
+        nav("시작",bx,21,()->{lens.origin();apply();});bx+=23;
+        if(enlarge!=null){nav("크게",bx,24,enlarge);bx+=26;}
+        zoomText=null;
+        if(width-(bx-x)>=22){zoomText=PixelScene.renderTextBlock(5);zoomText.hardlight(MUTED);zoomText.setPos(bx+1,y+3);add(zoomText);}
+        Point screen=camera().cameraToScreen(x,y+15);
+        mapCamera=new Camera(screen.x,screen.y,(int)lens.width,(int)lens.height,baseZoom);
+        Camera.add(mapCamera);world=new Group();world.camera=mapCamera;add(world);
+        ColorBlock background=new ColorBlock(GrowthAtlasLayout.SIZE,GrowthAtlasLayout.SIZE,0xFF101315);world.add(background);
+        buildAtlas();
+        add(new Gestures());apply();
     }
-    private void overview(){
-        text(this,"전체 지도 · 108 노드",6,x,y,width,GOLD);
-        float gap=3,cw=(width-gap*2)/3f,ch=(height-14-gap*3)/4f;
+    private void buildAtlas(){
         ExtractionProfile p=ExtractionProfile.get();
-        for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++){
-            final int branch=b;
-            float bx=x+(b%3)*(cw+gap),by=y+14+(b/3)*(ch+gap);
-            int learned=0;boolean available=false;
-            for(int n:ExtractionGrowth.BRANCH_NODES[b]){
-                if(p.nodes.contains(ExtractionGrowth.IDS[n]))learned++;
-                else if(p.unlocked(n)&&p.points>=ExtractionGrowth.COSTS[n]&&!p.active)available=true;
+        for(int b=0;b<12;b++)circle(GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b],42,GrowthAtlasLayout.COLORS[b],false,0.13f);
+        for(int n=0;n<ExtractionGrowth.NODES.length;n++){
+            ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];
+            for(int parent:node.parents)edge(parent,n,false);
+            for(int parent:node.alternatives){
+                boolean reverse=false;
+                for(int other:ExtractionGrowth.NODES[parent].alternatives)if(other==n)reverse=true;
+                if(!reverse||parent<n)edge(parent,n,true);
             }
-            Button card=card(bx,by,cw,ch,learned==9?GREEN:available?GOLD:MUTED,()->{focusedBranch=branch;layout();});
-            text(card,ExtractionGrowth.BRANCHES[b],5,bx+1,by+2,cw-2,learned>0?GREEN:GOLD);
-            float graphW=Math.min(20,cw-16),graphH=Math.max(7,ch-10);
-            float gx=bx+3,gy=by+9;
-            miniGraph(card,b,gx,gy,graphW,graphH);
-            text(card,learned+"/9",4,bx+cw-14,by+ch-7,13,MUTED);
+            if(node.parents.length==0)line(380,380,GrowthAtlasLayout.X[n],GrowthAtlasLayout.Y[n],GOLD,0.7f);
+        }
+        circle(380,380,18,GOLD,true,1);circle(380,380,22,GOLD,false,0.8f);
+        icon(ItemSpriteSheet.ARTIFACT_TALISMAN,380,380,21,1);
+        label("시작점",8,380,406,70,GOLD);
+        for(int b=0;b<12;b++){
+            int learned=0;for(int n:ExtractionGrowth.BRANCH_NODES[b])if(p.nodes.contains(ExtractionGrowth.IDS[n]))learned++;
+            label(ExtractionGrowth.BRANCHES[b],6,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]-5,70,GrowthAtlasLayout.COLORS[b]);
+            label(learned+" / 9",4,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]+7,52,MUTED);
+        }
+        for(int n=0;n<ExtractionGrowth.NODES.length;n++){
+            ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];boolean learned=p.nodes.contains(node.id);
+            boolean ready=p.unlocked(n)&&p.points>=node.cost&&!p.active;
+            int color=learned?GrowthAtlasLayout.COLORS[node.branch]:ready?GOLD:0x555A58;
+            float nx=GrowthAtlasLayout.X[n],ny=GrowthAtlasLayout.Y[n],r=GrowthAtlasLayout.RADIUS[n];
+            circle(nx,ny,r,color,true,1);
+            if(node.row>=4)circle(nx,ny,r+3,color,false,learned||ready?0.8f:0.35f);
+            icon(nodeIcon(node),nx,ny,r*1.3f,learned?1:ready?0.9f:0.5f);
+        }
+        selectionRing=new Image(circleTexture(false));selectionRing.hardlight(0xF6E6B7);world.add(selectionRing);
+        selectedRing();
+    }
+    private void edge(int from,int to,boolean bridge){
+        ExtractionProfile p=ExtractionProfile.get();boolean a=p.nodes.contains(ExtractionGrowth.IDS[from]),b=p.nodes.contains(ExtractionGrowth.IDS[to]);
+        int color=bridge?0x9A9B80:GrowthAtlasLayout.COLORS[ExtractionGrowth.NODES[to].branch];
+        line(GrowthAtlasLayout.X[from],GrowthAtlasLayout.Y[from],GrowthAtlasLayout.X[to],GrowthAtlasLayout.Y[to],color,a&&b?0.95f:a||b?0.6f:0.27f);
+    }
+    private void line(float ax,float ay,float bx,float by,int color,float alpha){
+        float dx=bx-ax,dy=by-ay;ColorBlock line=new ColorBlock((float)Math.sqrt(dx*dx+dy*dy),1.4f,0xFF000000|color);
+        line.x=ax;line.y=ay;line.angle=(float)Math.toDegrees(Math.atan2(dy,dx));line.alpha(alpha);world.add(line);
+    }
+    private static SmartTexture circleTexture(boolean filled){
+        String key=filled?"growth-atlas-disk-v1":"growth-atlas-ring-v1";
+        if(TextureCache.contains(key))return TextureCache.get(key);
+        SmartTexture texture=TextureCache.create(key,64,64);texture.bitmap.setBlending(Pixmap.Blending.None);
+        for(int py=0;py<64;py++)for(int px=0;px<64;px++){
+            double r=Math.hypot(px-31.5,py-31.5);
+            if(r<=29&&(filled||r>=26.5))texture.bitmap.drawPixel(px,py,0xFFFFFFFF);
+        }
+        return texture;
+    }
+    private void circle(float cx,float cy,float radius,int color,boolean filled,float alpha){
+        if(filled){Image disk=new Image(circleTexture(true));disk.scale.set(radius*2/64f);disk.x=cx-radius;disk.y=cy-radius;disk.hardlight(0x182023);world.add(disk);}
+        Image ring=new Image(circleTexture(false));ring.scale.set(radius*2/64f);ring.x=cx-radius;ring.y=cy-radius;ring.hardlight(color);ring.alpha(alpha);world.add(ring);
+    }
+    private void icon(int image,float cx,float cy,float size,float alpha){
+        ItemSprite sprite=new ItemSprite(image);sprite.scale.set(size/Math.max(sprite.width(),sprite.height()));
+        sprite.x=cx-sprite.width()/2;sprite.y=cy-sprite.height()/2;sprite.alpha(alpha);world.add(sprite);
+    }
+    private int nodeIcon(ExtractionGrowth.Node node){
+        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE};
+        if(node.row==0||node.row>=4)return family[node.branch];
+        ExtractionGrowth.Stat stat=node.effects.keySet().iterator().next();
+        switch(stat){
+            case HEALTH:return ItemSpriteSheet.ARTIFACT_CHALICE1;
+            case DEFENSE:return ItemSpriteSheet.ROUND_SHIELD;
+            case CAPACITY:return ItemSpriteSheet.BACKPACK;
+            case STRENGTH:return ItemSpriteSheet.GREATAXE;
+            case ACCURACY:return ItemSpriteSheet.SPIRIT_BOW;
+            case CRIT_CHANCE:case CRIT_POWER:return ItemSpriteSheet.DAGGER;
+            case ATTACK_SPEED:return ItemSpriteSheet.SAI;
+            case PIERCE:return ItemSpriteSheet.PICKAXE;
+            case REACH:return ItemSpriteSheet.SPEAR;
+            case MOVE_SPEED:case EVASION:return ItemSpriteSheet.ARTIFACT_BOOTS;
+            case GOLD:return ItemSpriteSheet.GOLD;
+            case WAND_DAMAGE:case WAND_POWER:case WAND_CHARGE:return ItemSpriteSheet.WAND_MAGIC_MISSILE;
+            default:return family[node.branch];
         }
     }
-    private void miniGraph(Button card,int branch,float bx,float by,float w,float h){
-        ExtractionProfile p=ExtractionProfile.get();
-        float dot=h<14?1:2;
-        float stepX=(w-dot)/2f,stepY=(h-dot)/5f;
-        for(int index:ExtractionGrowth.BRANCH_NODES[branch]){
-            ExtractionGrowth.Node n=ExtractionGrowth.NODES[index];
-            for(int parent:n.parents){
-                ExtractionGrowth.Node from=ExtractionGrowth.NODES[parent];
-                if(from.branch==branch)link(card,bx+from.col*stepX+1,by+from.row*stepY+dot,bx+n.col*stepX+1,by+n.row*stepY,p.nodes.contains(from.id)?GREEN:0x34434C);
+    private void label(String value,int size,float cx,float cy,int width,int color){
+        RenderedTextBlock text=PixelScene.renderTextBlock(value,size);text.maxWidth(width);text.align(RenderedTextBlock.CENTER_ALIGN);
+        text.hardlight(color);text.setPos(cx-text.width()/2,cy);world.add(text);
+    }
+    private void nav(String value,float bx,float w,Runnable action){
+        Button button=new Button(){@Override protected void onClick(){action.run();}};button.setRect(bx,y,w,12);add(button);
+        ColorBlock bg=new ColorBlock(w,12,0xFF283138);bg.x=bx;bg.y=y;button.add(bg);
+        RenderedTextBlock text=PixelScene.renderTextBlock(value,5);text.hardlight(GOLD);text.setPos(bx+(w-text.width())/2,y+3);button.add(text);
+    }
+    private void apply(){
+        if(mapCamera==null)return;
+        mapCamera.zoom(baseZoom*lens.scale);
+        mapCamera.scroll.set(lens.centerX-lens.width/(2*lens.scale),lens.centerY-lens.height/(2*lens.scale));
+        rememberedScale=lens.scale;rememberedX=lens.centerX;rememberedY=lens.centerY;
+        if(zoomText!=null)zoomText.text(Math.round(lens.scale*100)+"%");
+        selectedRing();
+    }
+    private void selectedRing(){
+        if(selectionRing==null)return;selectionRing.visible=rememberedSelection>=0;
+        if(rememberedSelection>=0){int n=rememberedSelection;float r=GrowthAtlasLayout.RADIUS[n]+5;selectionRing.scale.set(r*2/64f);selectionRing.x=GrowthAtlasLayout.X[n]-r;selectionRing.y=GrowthAtlasLayout.Y[n]-r;}
+    }
+    private PointF local(PointF screen){PointF p=camera().screenToCamera((int)screen.x,(int)screen.y);return p.offset(-x,-y-15);}
+    private class Gestures extends ScrollArea {
+        private PointerEvent another;
+        private boolean pinching,dragging;
+        private float startSpan,startScale,anchorX,anchorY;
+        private final PointF last=new PointF();
+        Gestures(){super(x,y+15,width,height-15);}
+        @Override protected void onPointerDown(PointerEvent event){
+            if(event==curEvent){dragging=false;last.set(event.current);}
+            else if(another==null&&curEvent!=null){
+                another=event;pinching=true;dragging=true;startSpan=Math.max(1,PointF.distance(curEvent.current,another.current));startScale=lens.scale;
+                PointF midpoint=local(new PointF((curEvent.current.x+another.current.x)/2,(curEvent.current.y+another.current.y)/2));
+                anchorX=lens.worldX(midpoint.x);anchorY=lens.worldY(midpoint.y);
             }
         }
-        for(int index:ExtractionGrowth.BRANCH_NODES[branch]){
-            ExtractionGrowth.Node n=ExtractionGrowth.NODES[index];
-            block(card,bx+n.col*stepX,by+n.row*stepY,dot,dot,p.nodes.contains(n.id)?GREEN:p.unlocked(index)?GOLD:MUTED);
-        }
-    }
-    private void branch(){
-        ExtractionProfile p=ExtractionProfile.get();final int b=focusedBranch;
-        nav("전체",x,y,23,11,()->{focusedBranch=-1;layout();});
-        nav("<",x+25,y,12,11,()->{focusedBranch=(b+11)%12;layout();});
-        nav(">",x+width-12,y,12,11,()->{focusedBranch=(b+1)%12;layout();});
-        int learned=0;for(int n:ExtractionGrowth.BRANCH_NODES[b])if(p.nodes.contains(ExtractionGrowth.IDS[n]))learned++;
-        text(this,ExtractionGrowth.BRANCHES[b]+" "+learned+"/9",6,x+39,y+2,width-53,GOLD);
-        float gap=2,cw=(width-2*gap)/3f,ch=(height-15-5*gap)/6f;
-        for(int index:ExtractionGrowth.BRANCH_NODES[b]){
-            ExtractionGrowth.Node n=ExtractionGrowth.NODES[index];
-            for(int parent:n.parents){
-                ExtractionGrowth.Node from=ExtractionGrowth.NODES[parent];
-                if(from.branch==b)link(this,x+from.col*(cw+gap)+cw/2f,y+15+from.row*(ch+gap)+ch,
-                    x+n.col*(cw+gap)+cw/2f,y+15+n.row*(ch+gap),p.nodes.contains(from.id)?GREEN:0x34434C);
+        @Override protected void onDrag(PointerEvent event){
+            if(pinching&&another!=null&&curEvent!=null){
+                float span=PointF.distance(curEvent.current,another.current);
+                PointF midpoint=local(new PointF((curEvent.current.x+another.current.x)/2,(curEvent.current.y+another.current.y)/2));
+                lens.zoomAt(startScale*span/startSpan,midpoint.x,midpoint.y);lens.anchor(anchorX,anchorY,midpoint.x,midpoint.y);apply();
+            }else if(PointF.distance(event.current,event.start)>camera().zoom*3||dragging){
+                dragging=true;lens.pan((event.current.x-last.x)/camera().zoom,(event.current.y-last.y)/camera().zoom);last.set(event.current);apply();
             }
         }
-        for(int index:ExtractionGrowth.BRANCH_NODES[b]){
-            final int selected=index;ExtractionGrowth.Node n=ExtractionGrowth.NODES[index];
-            float bx=x+n.col*(cw+gap),by=y+15+n.row*(ch+gap);
-            boolean learnedNode=p.nodes.contains(n.id),ready=p.unlocked(index)&&p.points>=n.cost&&!p.active;
-            int color=learnedNode?GREEN:ready?GOLD:MUTED;
-            Button card=card(bx,by,cw,ch,color,()->select.accept(selected));
-            text(card,n.name,5,bx+1,by+1,cw-2,color);
-            text(card,n.summary(),4,bx+1,by+ch-5,cw-2,0xCED8DD);
-            if(ch>=21)text(card,learnedNode?"습득":n.cost+" P",4,bx+1,by+ch/2f-1,cw-2,color);
+        @Override protected void onPointerUp(PointerEvent event){
+            if(pinching&&(event==curEvent||event==another)){
+                pinching=false;dragging=true;if(event==curEvent)curEvent=another;another=null;
+                if(curEvent!=null)last.set(curEvent.current);
+            }
         }
-        // The empty side space makes convergence requirements visible without a second menu.
-        if(ch>=19){
-            text(this,"양쪽 갈래\n모두 습득\n↓ 합류",4,x,y+15+4*(ch+gap)+2,cw,MUTED);
-            text(this,"노드를 눌러\n효과·비용\n선행 확인",4,x+2*(cw+gap),y+15+4*(ch+gap)+2,cw,MUTED);
+        @Override protected void onClick(PointerEvent event){
+            if(dragging){dragging=false;return;}
+            PointF point=local(event.current);int n=GrowthAtlasLayout.nearest(lens.worldX(point.x),lens.worldY(point.y),8/lens.scale);
+            if(n<0)return;rememberedSelection=n;
+            if(lens.scale<0.4f){lens.focus(GrowthAtlasLayout.X[n],GrowthAtlasLayout.Y[n]);apply();}
+            else{selectedRing();select.accept(n);}
+        }
+        @Override protected void onScroll(ScrollEvent event){
+            PointF point=local(event.pos);lens.zoomAt(lens.scale*(float)Math.pow(1.2,-event.amount),point.x,point.y);apply();
         }
     }
-    private Button card(float bx,float by,float w,float h,int color,Runnable action){
-        Button button=new Button(){@Override protected void onClick(){action.run();}};
-        button.setRect(bx,by,w,h);add(button);
-        block(button,bx,by,w,h,color);block(button,bx+1,by+1,w-2,h-2,color==GREEN?0x19342F:0x151F28);return button;
-    }
-    private void nav(String label,float bx,float by,float w,float h,Runnable action){
-        Button button=card(bx,by,w,h,MUTED,action);text(button,label,5,bx,by+2,w,GOLD);
-    }
-    private void link(com.watabou.noosa.Group group,float ax,float ay,float bx,float by,int color){
-        float mid=(ay+by)/2f;
-        block(group,ax,Math.min(ay,mid),1,Math.max(1,Math.abs(mid-ay)),color);
-        block(group,Math.min(ax,bx),mid,Math.max(1,Math.abs(bx-ax)),1,color);
-        block(group,bx,Math.min(mid,by),1,Math.max(1,Math.abs(by-mid)),color);
-    }
-    private void block(com.watabou.noosa.Group group,float bx,float by,float w,float h,int color){
-        ColorBlock line=new ColorBlock(w,h,0xFF000000|color);line.x=PixelScene.align(bx);line.y=PixelScene.align(by);group.add(line);
-    }
-    private void text(com.watabou.noosa.Group group,String value,int size,float bx,float by,float w,int color){
-        RenderedTextBlock text=PixelScene.renderTextBlock(value,size);text.maxWidth(Math.max(1,(int)w));
-        text.align(RenderedTextBlock.CENTER_ALIGN);text.hardlight(color);text.setPos(bx+(w-text.width())/2f,by);group.add(text);
-    }
+    @Override public void destroy(){if(mapCamera!=null){Camera.remove(mapCamera);mapCamera.destroy();mapCamera=null;}super.destroy();}
 }
