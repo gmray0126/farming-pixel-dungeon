@@ -197,6 +197,8 @@ import java.util.LinkedHashMap;
 public class Hero extends Char {
 	public int extractionRaidID = 0;
 	public int extractionXP = 0;
+	public int extractionVisited = 0;
+	public boolean extractionBossDefeated = false, extractionSecondWindUsed = false;
 
 	{
 		actPriority = HERO_PRIO;
@@ -308,6 +310,9 @@ public class Hero extends Char {
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put("extraction_raid", extractionRaidID);
 		bundle.put("extraction_xp", extractionXP);
+		bundle.put("extraction_visited",extractionVisited);
+		bundle.put("extraction_boss",extractionBossDefeated);
+		bundle.put("extraction_second_wind",extractionSecondWindUsed);
 
 		super.storeInBundle( bundle );
 
@@ -333,6 +338,9 @@ public class Hero extends Char {
 	public void restoreFromBundle( Bundle bundle ) {
 		extractionRaidID=bundle.getInt("extraction_raid");
 		extractionXP=bundle.getInt("extraction_xp");
+		extractionVisited=bundle.getInt("extraction_visited");
+		extractionBossDefeated=bundle.getBoolean("extraction_boss");
+		extractionSecondWindUsed=bundle.getBoolean("extraction_second_wind");
 
 		lvl = bundle.getInt( LEVEL );
 		exp = bundle.getInt( EXPERIENCE );
@@ -586,7 +594,7 @@ public class Hero extends Char {
 		}
 		
 		float evasion = defenseSkill;
-		if(extractionRaidID != 0)evasion *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().evasionMultiplier(growthWeapon());
+		if(extractionRaidID != 0)evasion *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().evasionMultiplier(growthWeapon())*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_EVASION);
 		
 		evasion *= RingOfEvasion.evasionMultiplier( this );
 
@@ -744,7 +752,7 @@ public class Hero extends Char {
 
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
 		
-		if(extractionRaidID != 0)speed *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier();
+		if(extractionRaidID != 0)speed *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier()*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_SPEED);
 		return speed;
 		
 	}
@@ -1535,6 +1543,7 @@ public class Hero extends Char {
 	
 	@Override
 	public int attackProc( final Char enemy, int damage ) {
+		damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.attack(this,enemy,damage);
 		damage = super.attackProc( enemy, damage );
 
 		KindOfWeapon wep;
@@ -1692,6 +1701,8 @@ public class Hero extends Char {
 
 		int preHP = HP + shielding();
 		if (src instanceof Hunger) preHP -= shielding();
+		dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.incoming(this,dmg,src);
+		if (com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.rescue(this,dmg,src)) return;
 		super.damage( dmg, src );
 		int postHP = HP + shielding();
 		if (src instanceof Hunger) postHP -= shielding();
@@ -2024,7 +2035,6 @@ public class Hero extends Char {
 		if (extractionRaidID != 0) {
 			extractionXP += Math.max(0,exp);
 			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().credit(extractionRaidID,extractionXP);
-			return;
 		}
 
 		//xp granted by ascension challenge is only for on-exp gain effects
@@ -2111,7 +2121,7 @@ public class Hero extends Char {
 				GLog.p( Messages.get(this, "new_level") );
 				sprite.showStatus( CharSprite.POSITIVE, Messages.get(Hero.class, "level_up") );
 				Sample.INSTANCE.play( Assets.Sounds.LEVELUP );
-				if (lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
+				if (extractionRaidID == 0 && lvl < Talent.tierLevelThresholds[Talent.MAX_TALENT_TIERS+1]){
 					GLog.newLine();
 					GLog.p( Messages.get(this, "new_talent") );
 					StatusPane.talentBlink = 10f;
@@ -2522,6 +2532,7 @@ public class Hero extends Char {
 		boolean circular = pointsInTalent(Talent.WIDE_SEARCH) == 1;
 		int distance = heroClass == HeroClass.ROGUE ? 2 : 1;
 		if (hasTalent(Talent.WIDE_SEARCH)) distance++;
+		distance = Math.min(5,distance+(int)com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.value(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.SEARCH_RANGE));
 		
 		boolean foresight = buff(Foresight.class) != null;
 		boolean foresightScan = foresight && !Dungeon.level.mapped[pos];
@@ -2602,6 +2613,7 @@ public class Hero extends Char {
 							chance = 0.2f - (Dungeon.depth / 100f);
 						}
 
+						if (!intentional && !cursed && (trap==null||trap.canBeSearched)) chance += com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.value(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.SEARCH_CHANCE)/100f;
 						//don't want to let the player search though hidden doors in tutorial
 						if (SPDSettings.intro()){
 							chance = 0;
@@ -2643,7 +2655,7 @@ public class Hero extends Char {
 					Buff.affect(this, Hunger.class).affectHunger(TIME_TO_SEARCH - HUNGER_FOR_SEARCH);
 				}
 			}
-			spendAndNext(TIME_TO_SEARCH);
+			spendAndNext(TIME_TO_SEARCH*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.timeMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.SEARCH_SPEED));
 			
 		}
 		

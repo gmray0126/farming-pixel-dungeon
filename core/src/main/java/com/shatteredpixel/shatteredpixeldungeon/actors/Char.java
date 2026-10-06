@@ -1287,6 +1287,7 @@ public abstract class Char extends Actor {
 
 		stealth += Obfuscation.stealthBoost(this, glyphLevel(Obfuscation.class));
 
+		if (this instanceof Hero) stealth += com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.value((Hero)this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.STEALTH);
 		return stealth;
 	}
 

@@ -11,7 +11,7 @@ import java.util.*;
 public final class ExtractionGrowth {
     private ExtractionGrowth() {}
     public static final int MAGIC = 11, FIST = 9;
-    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도"};
+    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응"};
     public enum Stat {
         DAMAGE("공격 피해", false), DAMAGE_PERCENT("공격 피해", true),
         ACCURACY("명중", true), ATTACK_SPEED("공격 속도", true),
@@ -20,7 +20,15 @@ public final class ExtractionGrowth {
         HEALTH("출격 최대 체력", false), DEFENSE("피해 감소", false),
         EVASION("회피", true), MOVE_SPEED("이동 속도", true),
         CAPACITY("가방 칸", false), STRENGTH("출격 힘", false), GOLD("탈출 전리품 골드", true),
-        WAND_DAMAGE("마법 막대 직접 피해", false), WAND_POWER("마법 막대 직접 피해", true), WAND_CHARGE("마법 막대 충전 속도", true);
+        WAND_DAMAGE("마법 막대 직접 피해", false), WAND_POWER("마법 막대 직접 피해", true), WAND_CHARGE("마법 막대 충전 속도", true),
+        VISION("시야 거리",false), SEARCH_RANGE("탐색 반경",false), SEARCH_CHANCE("자동 탐색 발견 확률",true), SEARCH_SPEED("수동 탐색 시간 감소",true),
+        FLOOR_AWARENESS("새 층 첫 진입 시 물품 감지 지속 턴",false), FLOOR_MINDVISION("새 층 첫 진입 시 주변 적 감지 지속 턴",false), FLOOR_FORESIGHT("새 층 첫 진입 시 비밀 탐색 지속 턴",false),
+        POTION_HEAL("회복 물약 회복량",true), POTION_SHIELD("회복 물약 사용 시 보호막",false), POTION_RECHARGE("회복 물약 사용 시 마법 충전 지속 턴",false), POTION_HASTE("회복 물약 사용 시 가속 지속 턴",false),
+        FLOOR_HEAL("새 층 첫 진입 시 체력 회복",false), FLOOR_SHIELD("새 층 첫 진입 시 보호막",false), SECOND_WIND("원정당 한 번 치명상 방지 시 회복할 최대 체력 비율",true),
+        FOOD_VALUE("음식 포만감",true), FOOD_HEAL("식사 시 체력 회복",false), FOOD_SHIELD("식사 시 보호막",false), FOOD_HASTE("식사 시 가속 지속 턴",false), FOOD_RECHARGE("식사 시 마법 충전 지속 턴",false), FOOD_INVIS("식사 시 투명화 지속 턴",false), EAT_SPEED("식사 시간 감소",true), HUNGER_SLOW("허기 증가량 감소",true),
+        STEALTH("은밀성",false), SURPRISE_DAMAGE("기습 피해",true), SURPRISE_RECHARGE("기습 시 마법 충전 지속 턴",false), TRAP_REDUCTION("함정 직접 피해 감소",true), FALL_REDUCTION("추락 직접 피해 감소",true), FLOOR_INVIS("새 층 첫 진입 시 투명화 지속 턴",false),
+        KILL_HEAL("주변 적 처치 시 체력 회복",false), KILL_SHIELD("주변 적 처치 시 보호막",false), KILL_HASTE("주변 적 처치 시 가속 지속 턴",false), KILL_RECHARGE("주변 적 처치 시 마법 충전 지속 턴",false), LOW_HP_EVASION("체력 35% 이하 회피",true), LOW_HP_DAMAGE("체력 35% 이하 공격 피해",true), LOW_HP_SPEED("체력 35% 이하 이동 속도",true),
+        DOT_REDUCTION("독·화상·출혈·산성 피해 감소",true), POISON_REDUCTION("독 피해 감소",true), BURN_REDUCTION("화상 피해 감소",true), BLEED_REDUCTION("출혈 피해 감소",true), BOSS_REDUCTION("보스 직접 피해 감소",true), RANGED_REDUCTION("멀리 있는 적의 직접 피해 감소",true);
         public final String label; public final boolean percent;
         Stat(String label, boolean percent) { this.label=label; this.percent=percent; }
     }
@@ -41,8 +49,10 @@ public final class ExtractionGrowth {
                 text.append(e.getKey().label).append(" +").append(Math.round(e.getValue()));
                 if(e.getKey().percent)text.append('%');
             }
-            if(branch>=3)text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
+            if(branch>=3&&branch<12)text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
+            if(branch>=12)text.append("\n\n무기 종류와 관계없이 적용됩니다. 보호막은 누적되지 않으며, 새 층 효과는 원정 중 해당 층의 첫 방문에만 발동합니다.");
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
+            if(effects.containsKey(Stat.SECOND_WIND))text.append("\n두 생존 최종 특성은 원정당 한 번의 발동 횟수를 공유합니다.");
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
             if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
             if(parents.length>1)text.append("\n\n양쪽 갈래의 선행 노드를 모두 습득해야 합니다.");
@@ -186,6 +196,60 @@ public final class ExtractionGrowth {
         add(list, "magic_6", "고속 충전", 11, 3, 2, 3, new String[]{"magic_5"}, Stat.WAND_CHARGE, 20f);
         add(list, "magic_7", "마도 완성", 11, 4, 1, 4, new String[]{"magic_3", "magic_6"}, Stat.WAND_POWER, 10f, Stat.WAND_CHARGE, 10f, Stat.ATTACK_SPEED, 8f);
         add(list, "magic_8", "마도의 달인", 11, 5, 1, 5, new String[]{"magic_7"}, Stat.WAND_DAMAGE, 2f, Stat.WAND_POWER, 20f, Stat.DAMAGE_PERCENT, 15f);
+        add(list, "scout_0", "등불의 눈", 12, 0, 1, 1, new String[]{"pack"}, Stat.VISION, 1.0f);
+        add(list, "scout_1", "넓은 수색", 12, 1, 0, 1, new String[]{"scout_0"}, Stat.SEARCH_RANGE, 1.0f);
+        add(list, "scout_2", "수상한 흔적", 12, 2, 0, 2, new String[]{"scout_1"}, Stat.SEARCH_CHANCE, 20.0f);
+        add(list, "scout_3", "노련한 수색", 12, 3, 0, 3, new String[]{"scout_2"}, Stat.SEARCH_CHANCE, 25.0f, Stat.SEARCH_SPEED, 50.0f);
+        add(list, "scout_4", "보물의 기척", 12, 1, 2, 1, new String[]{"scout_0"}, Stat.FLOOR_AWARENESS, 8.0f);
+        add(list, "scout_5", "생명의 기척", 12, 2, 2, 2, new String[]{"scout_4"}, Stat.FLOOR_MINDVISION, 5.0f);
+        add(list, "scout_6", "위험 예감", 12, 3, 2, 3, new String[]{"scout_5"}, Stat.FLOOR_FORESIGHT, 8.0f);
+        add(list, "scout_7", "길잡이", 12, 4, 1, 4, new String[]{"scout_3", "scout_6"}, Stat.VISION, 1.0f, Stat.SEARCH_RANGE, 1.0f);
+        add(list, "scout_8", "심층 정찰", 12, 5, 1, 5, new String[]{"scout_7"}, Stat.FLOOR_AWARENESS, 12.0f, Stat.FLOOR_MINDVISION, 10.0f, Stat.FLOOR_FORESIGHT, 8.0f);
+        add(list, "medic_0", "응급 약제", 13, 0, 1, 1, new String[]{"vital"}, Stat.POTION_HEAL, 15.0f);
+        add(list, "medic_1", "보호 처방", 13, 1, 0, 1, new String[]{"medic_0"}, Stat.POTION_SHIELD, 5.0f);
+        add(list, "medic_2", "마력 처방", 13, 2, 0, 2, new String[]{"medic_1"}, Stat.POTION_RECHARGE, 4.0f);
+        add(list, "medic_3", "신속 처방", 13, 3, 0, 3, new String[]{"medic_2"}, Stat.POTION_HASTE, 3.0f);
+        add(list, "medic_4", "숨 돌리기", 13, 1, 2, 1, new String[]{"medic_0"}, Stat.FLOOR_HEAL, 3.0f);
+        add(list, "medic_5", "회복 거점", 13, 2, 2, 2, new String[]{"medic_4"}, Stat.FLOOR_HEAL, 3.0f);
+        add(list, "medic_6", "정비의 장막", 13, 3, 2, 3, new String[]{"medic_5"}, Stat.FLOOR_SHIELD, 6.0f);
+        add(list, "medic_7", "야전 의무관", 13, 4, 1, 4, new String[]{"medic_3", "medic_6"}, Stat.POTION_HEAL, 20.0f, Stat.FLOOR_HEAL, 2.0f);
+        add(list, "medic_8", "마지막 처방", 13, 5, 1, 5, new String[]{"medic_7"}, Stat.SECOND_WIND, 25.0f, Stat.POTION_SHIELD, 5.0f);
+        add(list, "food_0", "알뜰한 식량", 14, 0, 1, 1, new String[]{"pack"}, Stat.FOOD_VALUE, 15.0f);
+        add(list, "food_1", "치유의 식사", 14, 1, 0, 1, new String[]{"food_0"}, Stat.FOOD_HEAL, 3.0f);
+        add(list, "food_2", "든든한 한 끼", 14, 2, 0, 2, new String[]{"food_1"}, Stat.FOOD_SHIELD, 5.0f);
+        add(list, "food_3", "활력 식사", 14, 3, 0, 3, new String[]{"food_2"}, Stat.FOOD_HASTE, 3.0f);
+        add(list, "food_4", "절약 대사", 14, 1, 2, 1, new String[]{"food_0"}, Stat.HUNGER_SLOW, 10.0f);
+        add(list, "food_5", "빠른 식사", 14, 2, 2, 2, new String[]{"food_4"}, Stat.EAT_SPEED, 50.0f);
+        add(list, "food_6", "마력의 식사", 14, 3, 2, 3, new String[]{"food_5"}, Stat.FOOD_RECHARGE, 8.0f);
+        add(list, "food_7", "원정 요리사", 14, 4, 1, 4, new String[]{"food_3", "food_6"}, Stat.FOOD_VALUE, 20.0f, Stat.FOOD_HEAL, 3.0f);
+        add(list, "food_8", "조용한 만찬", 14, 5, 1, 5, new String[]{"food_7"}, Stat.FOOD_INVIS, 5.0f, Stat.HUNGER_SLOW, 10.0f);
+        add(list, "stealth_0", "조용한 발걸음", 15, 0, 1, 1, new String[]{"explore_right_1"}, Stat.STEALTH, 1.0f);
+        add(list, "stealth_1", "빈틈 노리기", 15, 1, 0, 1, new String[]{"stealth_0"}, Stat.SURPRISE_DAMAGE, 15.0f);
+        add(list, "stealth_2", "어둠의 일격", 15, 2, 0, 2, new String[]{"stealth_1"}, Stat.SURPRISE_DAMAGE, 15.0f);
+        add(list, "stealth_3", "마력 탈취", 15, 3, 0, 3, new String[]{"stealth_2"}, Stat.SURPRISE_RECHARGE, 3.0f);
+        add(list, "stealth_4", "함정 대비", 15, 1, 2, 1, new String[]{"stealth_0"}, Stat.TRAP_REDUCTION, 20.0f);
+        add(list, "stealth_5", "낙법", 15, 2, 2, 2, new String[]{"stealth_4"}, Stat.FALL_REDUCTION, 35.0f);
+        add(list, "stealth_6", "은밀한 진입", 15, 3, 2, 3, new String[]{"stealth_5"}, Stat.FLOOR_INVIS, 3.0f);
+        add(list, "stealth_7", "그림자 보행", 15, 4, 1, 4, new String[]{"stealth_3", "stealth_6"}, Stat.STEALTH, 1.0f, Stat.TRAP_REDUCTION, 15.0f);
+        add(list, "stealth_8", "그림자 원정자", 15, 5, 1, 5, new String[]{"stealth_7"}, Stat.SURPRISE_DAMAGE, 20.0f, Stat.FLOOR_INVIS, 5.0f);
+        add(list, "momentum_0", "전투 회복", 16, 0, 1, 1, new String[]{"power"}, Stat.KILL_HEAL, 1.0f);
+        add(list, "momentum_1", "승리의 장막", 16, 1, 0, 1, new String[]{"momentum_0"}, Stat.KILL_SHIELD, 3.0f);
+        add(list, "momentum_2", "추격 본능", 16, 2, 0, 2, new String[]{"momentum_1"}, Stat.KILL_HASTE, 2.0f);
+        add(list, "momentum_3", "마력 수확", 16, 3, 0, 3, new String[]{"momentum_2"}, Stat.KILL_RECHARGE, 3.0f);
+        add(list, "momentum_4", "위기의 몸놀림", 16, 1, 2, 1, new String[]{"momentum_0"}, Stat.LOW_HP_EVASION, 15.0f);
+        add(list, "momentum_5", "궁지의 일격", 16, 2, 2, 2, new String[]{"momentum_4"}, Stat.LOW_HP_DAMAGE, 15.0f);
+        add(list, "momentum_6", "탈출 본능", 16, 3, 2, 3, new String[]{"momentum_5"}, Stat.LOW_HP_SPEED, 15.0f);
+        add(list, "momentum_7", "끊기지 않는 기세", 16, 4, 1, 4, new String[]{"momentum_3", "momentum_6"}, Stat.KILL_HEAL, 1.0f, Stat.KILL_SHIELD, 2.0f);
+        add(list, "momentum_8", "역전의 기세", 16, 5, 1, 5, new String[]{"momentum_7"}, Stat.KILL_HASTE, 2.0f, Stat.LOW_HP_DAMAGE, 15.0f);
+        add(list, "ward_0", "환경 적응", 17, 0, 1, 1, new String[]{"vital"}, Stat.DOT_REDUCTION, 10.0f);
+        add(list, "ward_1", "독 내성", 17, 1, 0, 1, new String[]{"ward_0"}, Stat.POISON_REDUCTION, 20.0f);
+        add(list, "ward_2", "화상 내성", 17, 2, 0, 2, new String[]{"ward_1"}, Stat.BURN_REDUCTION, 25.0f);
+        add(list, "ward_3", "출혈 억제", 17, 3, 0, 3, new String[]{"ward_2"}, Stat.BLEED_REDUCTION, 25.0f);
+        add(list, "ward_4", "보스 대비", 17, 1, 2, 1, new String[]{"ward_0"}, Stat.BOSS_REDUCTION, 10.0f);
+        add(list, "ward_5", "원거리 대비", 17, 2, 2, 2, new String[]{"ward_4"}, Stat.RANGED_REDUCTION, 15.0f);
+        add(list, "ward_6", "안전 진입", 17, 3, 2, 3, new String[]{"ward_5"}, Stat.FLOOR_SHIELD, 6.0f);
+        add(list, "ward_7", "원정 방호", 17, 4, 1, 4, new String[]{"ward_3", "ward_6"}, Stat.DOT_REDUCTION, 10.0f, Stat.BOSS_REDUCTION, 5.0f);
+        add(list, "ward_8", "생존 안전망", 17, 5, 1, 5, new String[]{"ward_7"}, Stat.SECOND_WIND, 10.0f, Stat.FLOOR_SHIELD, 8.0f);
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];
@@ -209,6 +273,14 @@ public final class ExtractionGrowth {
         alternative("blunt_0","guard");
         alternative("ranged_0","pack");
         alternative("fist_0","strength");
+        String[] utility={"scout","medic","food","stealth","momentum","ward"};
+        for(int i=0;i<utility.length;i++){
+            String a=utility[i]+"_2",b=utility[(i+1)%utility.length]+"_5";
+            alternative(a,b);alternative(b,a);
+        }
+        alternative("scout_0","ranged_4");alternative("medic_0","magic_4");
+        alternative("food_0","strength");alternative("stealth_0","dagger_4");
+        alternative("momentum_0","fist_4");alternative("ward_0","blunt_4");
         for(int i=0;i<NODES.length;i++)DESCS[i]=NODES[i].description();
     }
     private static void alternative(String target,String source){

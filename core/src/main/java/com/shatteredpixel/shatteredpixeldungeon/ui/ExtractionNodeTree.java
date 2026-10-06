@@ -19,7 +19,7 @@ import com.watabou.utils.PointF;
 public class ExtractionNodeTree extends Component {
     public static final int GOLD=0xE4C583,GREEN=0x83C9B5,MUTED=0x88969D;
     public interface Selection { void accept(int index); }
-    private static float rememberedScale=-1,rememberedX=380,rememberedY=380;
+    private static float rememberedScale=-1,rememberedX=GrowthAtlasLayout.CENTER,rememberedY=GrowthAtlasLayout.CENTER;
     private static int rememberedSelection=-1;
     private final GrowthAtlasViewport lens=new GrowthAtlasViewport();
     private final Selection select;
@@ -60,7 +60,7 @@ public class ExtractionNodeTree extends Component {
     }
     private void buildAtlas(){
         ExtractionProfile p=ExtractionProfile.get();
-        for(int b=0;b<12;b++)circle(GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b],42,GrowthAtlasLayout.COLORS[b],false,0.13f);
+        for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++)circle(GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b],42,GrowthAtlasLayout.COLORS[b],false,0.13f);
         for(int n=0;n<ExtractionGrowth.NODES.length;n++){
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];
             for(int parent:node.parents)edge(parent,n,false);
@@ -69,12 +69,12 @@ public class ExtractionNodeTree extends Component {
                 for(int other:ExtractionGrowth.NODES[parent].alternatives)if(other==n)reverse=true;
                 if(!reverse||parent<n)edge(parent,n,true);
             }
-            if(node.parents.length==0)line(380,380,GrowthAtlasLayout.X[n],GrowthAtlasLayout.Y[n],GOLD,0.7f);
+            if(node.parents.length==0)line(GrowthAtlasLayout.CENTER,GrowthAtlasLayout.CENTER,GrowthAtlasLayout.X[n],GrowthAtlasLayout.Y[n],GOLD,0.7f);
         }
-        circle(380,380,18,GOLD,true,1);circle(380,380,22,GOLD,false,0.8f);
-        icon(ItemSpriteSheet.ARTIFACT_TALISMAN,380,380,21,1);
-        label("시작점",8,380,406,70,GOLD);
-        for(int b=0;b<12;b++){
+        circle(GrowthAtlasLayout.CENTER,GrowthAtlasLayout.CENTER,18,GOLD,true,1);circle(GrowthAtlasLayout.CENTER,GrowthAtlasLayout.CENTER,22,GOLD,false,0.8f);
+        icon(ItemSpriteSheet.ARTIFACT_TALISMAN,GrowthAtlasLayout.CENTER,GrowthAtlasLayout.CENTER,21,1);
+        label("시작점",8,GrowthAtlasLayout.CENTER,GrowthAtlasLayout.CENTER+26,70,GOLD);
+        for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++){
             int learned=0;for(int n:ExtractionGrowth.BRANCH_NODES[b])if(p.nodes.contains(ExtractionGrowth.IDS[n]))learned++;
             label(ExtractionGrowth.BRANCHES[b],6,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]-5,70,GrowthAtlasLayout.COLORS[b]);
             label(learned+" / 9",4,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]+7,52,MUTED);
@@ -119,8 +119,8 @@ public class ExtractionNodeTree extends Component {
         sprite.x=cx-sprite.width()/2;sprite.y=cy-sprite.height()/2;sprite.alpha(alpha);world.add(sprite);
     }
     private int nodeIcon(ExtractionGrowth.Node node){
-        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE};
-        if(node.row==0||node.row>=4)return family[node.branch];
+        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD};
+        if(node.branch>=12||node.row==0||node.row>=4)return family[node.branch];
         ExtractionGrowth.Stat stat=node.effects.keySet().iterator().next();
         switch(stat){
             case HEALTH:return ItemSpriteSheet.ARTIFACT_CHALICE1;

@@ -145,7 +145,7 @@ public class ExtractionHubScene extends PixelScene {
         ExtractionProfile p=ExtractionProfile.get();
         panel(left,y,width,71);
         label("01  하수도",11,left+8,y+8,width-16,GOLD);
-        label("낡은 수로에서 물품을 회수하세요.\n아래 계단이 탈출 지점입니다.",7,left+8,y+27,width-16,TEXT);
+        label("하수도 1~5층을 탐사하세요.\n5층 보스 처치 후 다음 계단에서 탈출.",7,left+8,y+27,width-16,TEXT);
         label(p.active?"상태: 원정 진행 중":"상태: 출격 가능",6,left+8,y+57,width-16,GREEN);
         label("원정 규칙",8,left,y+82,width,GOLD);
         label("탈출: 장비와 전리품을 창고로\n사망: 가져간 물품과 전리품 손실\n유지: 창고 · 성장 노드 · 경험치",7,left,y+97,width,TEXT);

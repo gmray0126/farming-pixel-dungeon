@@ -114,7 +114,7 @@ public final class ExtractionProfile {
     public float bonus(ExtractionGrowth.Stat stat, int family) {
         float result=0;
         for(ExtractionGrowth.Node n:ExtractionGrowth.NODES){
-            if((n.branch<3||n.branch==family)&&nodes.contains(n.id)){ Float value=n.effects.get(stat);if(value!=null)result+=value; }
+            if((n.branch<3||n.branch>=12||n.branch==family)&&nodes.contains(n.id)){ Float value=n.effects.get(stat);if(value!=null)result+=value; }
         }
         return result;
     }

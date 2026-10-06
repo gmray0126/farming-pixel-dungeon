@@ -510,6 +510,7 @@ public class Dungeon {
 		Light light = hero.buff( Light.class );
 		hero.viewDistance = light == null ? level.viewDistance : Math.max( Light.DISTANCE, level.viewDistance );
 		
+		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.floor(hero,depth);
 		hero.curAction = hero.lastAction = null;
 
 		observe();

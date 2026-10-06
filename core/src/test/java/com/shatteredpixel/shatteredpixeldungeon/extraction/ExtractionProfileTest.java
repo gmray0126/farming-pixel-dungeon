@@ -22,6 +22,50 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void utilitiesApplyAcrossWeaponsAndRemainRaidOnly(){
+        profile.nodes.add("scout_0");profile.nodes.add("food_0");
+        assertEquals(1,profile.bonus(ExtractionGrowth.Stat.VISION,3),0.001f);
+        assertEquals(1,profile.bonus(ExtractionGrowth.Stat.VISION,11),0.001f);
+        Hero h=new Hero();assertEquals(0,ExtractionUtility.value(h,ExtractionGrowth.Stat.VISION),0.001f);
+        h.extractionRaidID=1;assertEquals(1,ExtractionUtility.value(h,ExtractionGrowth.Stat.VISION),0.001f);
+        assertFalse(ExtractionGrowth.DESCS[ExtractionGrowth.index("scout_0")].contains("계통의 무기를 사용할 때"));
+    }
+    @Test public void foodAndKillEffectsHealAndRefreshShieldInsteadOfStacking(){
+        Hero h=new Hero();h.extractionRaidID=1;h.HT=40;h.HP=10;
+        profile.nodes.add("food_1");profile.nodes.add("food_2");profile.nodes.add("momentum_0");profile.nodes.add("momentum_1");
+        ExtractionUtility.food(h);assertEquals(13,h.HP);assertEquals(5,h.shielding());
+        ExtractionUtility.food(h);assertEquals(16,h.HP);assertEquals(5,h.shielding());
+        ExtractionUtility.kill(h);assertEquals(17,h.HP);assertEquals(5,h.shielding());
+    }
+    @Test public void newFloorRewardsAndEmergencyRescueSurviveHeroReload(){
+        Hero h=new Hero();h.extractionRaidID=1;h.HT=40;h.HP=10;
+        profile.nodes.add("medic_4");profile.nodes.add("medic_8");
+        assertTrue(ExtractionUtility.floor(h,2));assertEquals(13,h.HP);
+        assertFalse(ExtractionUtility.floor(h,2));assertEquals(13,h.HP);
+        assertFalse(ExtractionUtility.rescue(h,12,new Object()));
+        assertTrue(ExtractionUtility.rescue(h,13,new Object()));assertEquals(10,h.HP);
+        h.extractionBossDefeated=true;
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();h.storeInBundle(saved);
+        Hero loaded=new Hero();loaded.restoreFromBundle(saved);
+        assertTrue(loaded.extractionBossDefeated);assertTrue(loaded.extractionSecondWindUsed);
+        loaded.HP=1;assertFalse(ExtractionUtility.floor(loaded,2));assertEquals(1,loaded.HP);
+        assertFalse(ExtractionUtility.rescue(loaded,100,new Object()));
+        assertTrue(ExtractionUtility.floor(loaded,3));assertEquals(4,loaded.HP);
+    }
+    @Test public void utilityDamageReductionAndLowHealthEffectsChangeCombat(){
+        Hero h=new Hero();h.extractionRaidID=1;h.HT=40;h.HP=14;
+        profile.nodes.add("ward_0");profile.nodes.add("ward_1");profile.nodes.add("stealth_4");profile.nodes.add("momentum_5");
+        assertEquals(7,ExtractionUtility.incoming(h,10,new com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Poison()));
+        assertEquals(10,ExtractionUtility.incoming(h,10,new Object()));
+        assertEquals(1.15f,ExtractionUtility.lowHealthMultiplier(h,ExtractionGrowth.Stat.LOW_HP_DAMAGE),0.001f);
+        h.HP=15;assertEquals(1f,ExtractionUtility.lowHealthMultiplier(h,ExtractionGrowth.Stat.LOW_HP_DAMAGE),0.001f);
+    }
+    @Test public void raidExperienceAdvancesOriginalCombatLevelAndPermanentProgress(){
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
+        h.earnExp(10,com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat.class);
+        assertEquals(2,h.lvl);assertEquals(10,profile.xp);assertEquals(10,h.extractionXP);
+        assertEquals(0,h.talents.get(0).size());
+    }
     @Rule public TemporaryFolder folder = new TemporaryFolder();
     private ExtractionProfile profile;
     private void forgetProfile() throws Exception {
@@ -186,8 +230,8 @@ public class ExtractionProfileTest {
         for(int parent:ExtractionGrowth.NODES[index].parents)learnPath(ExtractionGrowth.IDS[parent]);
         if(!profile.nodes.contains(id))profile.learn(index);
     }
-    @Test public void graphHas108UniqueNodesWithBranchingAndConvergence() {
-        assertEquals(108, ExtractionGrowth.NODES.length);
+    @Test public void graphHas162UniqueNodesWithBranchingAndConvergence() {
+        assertEquals(162, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
@@ -198,8 +242,8 @@ public class ExtractionProfileTest {
             if(node.parents.length==2)convergences++;
             totalCost+=node.cost;
         }
-        assertEquals(12,convergences);
-        assertEquals(264,totalCost);
+        assertEquals(18,convergences);
+        assertEquals(396,totalCost);
         for(int[] branch:ExtractionGrowth.BRANCH_NODES)assertEquals(9,branch.length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {

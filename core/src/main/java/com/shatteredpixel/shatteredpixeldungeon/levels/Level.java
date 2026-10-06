@@ -593,15 +593,17 @@ public abstract class Level implements Bundlable {
 	//returns true if we immediately transition, false otherwise
 	public boolean activateTransition(Hero hero, LevelTransition transition){
 		if (hero.extractionRaidID != 0) {
-			if (transition.type != LevelTransition.Type.REGULAR_EXIT) {
-				com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("아래쪽 계단이 탈출구입니다. 전리품을 챙겨 출구를 찾으세요.");
-				return false;
-			}
-			if (locked) return false;
-			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(hero.extractionRaidID,true);
-			ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
-			return true;
-		}
+            com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action action =
+                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(Dungeon.depth,Dungeon.branch,transition.type,transition.destDepth,hero.extractionBossDefeated,locked);
+            if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.BLOCK){
+                com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("하수도 5층 보스를 처치한 뒤 아래 계단으로 탈출하세요.");return false;
+            }
+            if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.EXTRACT){
+                beforeTransition();
+                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(hero.extractionRaidID,true);
+                ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);return true;
+            }
+        }
 		if (locked){
 			return false;
 		}
@@ -1371,6 +1373,7 @@ public abstract class Level implements Bundlable {
 			}
 
 			float viewDist = c.viewDistance;
+			if (c instanceof Hero) viewDist += com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.value((Hero)c,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.VISION);
 			if (c instanceof Hero){
 				viewDist *= 1f + 0.25f*((Hero) c).pointsInTalent(Talent.FARSIGHT);
 				viewDist *= EyeOfNewt.visionRangeMultiplier();

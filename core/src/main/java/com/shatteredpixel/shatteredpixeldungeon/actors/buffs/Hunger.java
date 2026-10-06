@@ -92,7 +92,7 @@ public class Hunger extends Buff implements Hero.Doom {
 				}
 				hungerDelay /= SaltCube.hungerGainMultiplier();
 
-				float newLevel = level + (1f/hungerDelay);
+				float newLevel = level + (1f/hungerDelay)*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.timeMultiplier(hero,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.HUNGER_SLOW);
 				if (newLevel >= STARVING) {
 
 					GLog.n( Messages.get(this, "onstarving") );

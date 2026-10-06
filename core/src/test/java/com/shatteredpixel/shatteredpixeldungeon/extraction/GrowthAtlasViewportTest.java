@@ -5,11 +5,11 @@ import static org.junit.Assert.*;
 public class GrowthAtlasViewportTest {
     @Test public void fitShowsTheWholeGraphAndNodeSelectionMatchesPositions(){
         GrowthAtlasViewport view=new GrowthAtlasViewport();view.bounds(128,230);
-        assertTrue(view.worldX(0)<=0.001f);assertTrue(view.worldX(128)>=759.999f);
-        assertTrue(view.worldY(0)<=0);assertTrue(view.worldY(230)>=760);
-        for(int n=0;n<108;n++){
-            assertTrue(GrowthAtlasLayout.X[n]>0&&GrowthAtlasLayout.X[n]<760);
-            assertTrue(GrowthAtlasLayout.Y[n]>0&&GrowthAtlasLayout.Y[n]<760);
+        assertTrue(view.worldX(0)<=0.001f);assertTrue(view.worldX(128)>=999.999f);
+        assertTrue(view.worldY(0)<=0);assertTrue(view.worldY(230)>=1000);
+        for(int n=0;n<ExtractionGrowth.NODES.length;n++){
+            assertTrue(GrowthAtlasLayout.X[n]>0&&GrowthAtlasLayout.X[n]<1000);
+            assertTrue(GrowthAtlasLayout.Y[n]>0&&GrowthAtlasLayout.Y[n]<1000);
             assertEquals(n,GrowthAtlasLayout.nearest(GrowthAtlasLayout.X[n],GrowthAtlasLayout.Y[n],0));
         }
     }
@@ -21,10 +21,10 @@ public class GrowthAtlasViewportTest {
     }
     @Test public void dragMovesTheMapWithTheFingerAndBoundsPreventLosingIt(){
         GrowthAtlasViewport view=new GrowthAtlasViewport();view.bounds(128,230);view.origin();
-        float before=view.localX(380);view.pan(20,0);assertEquals(before+20,view.localX(380),0.001f);
+        float before=view.localX(500);view.pan(20,0);assertEquals(before+20,view.localX(500),0.001f);
         view.pan(100000,-100000);
-        assertTrue(view.centerX>=0&&view.centerX<=760);assertTrue(view.centerY>=0&&view.centerY<=760);
-        view.fit();assertEquals(380,view.centerX,0.001f);assertEquals(380,view.centerY,0.001f);
+        assertTrue(view.centerX>=0&&view.centerX<=1000);assertTrue(view.centerY>=0&&view.centerY<=1000);
+        view.fit();assertEquals(500,view.centerX,0.001f);assertEquals(500,view.centerY,0.001f);
     }
     @Test public void pinchAnchorAndZoomLimitsRemainStable(){
         GrowthAtlasViewport view=new GrowthAtlasViewport();view.bounds(128,230);view.origin();

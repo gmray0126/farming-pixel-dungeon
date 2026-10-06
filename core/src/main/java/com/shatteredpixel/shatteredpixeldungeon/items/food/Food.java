@@ -99,6 +99,7 @@ public class Food extends Item {
 	}
 
 	protected float eatingTime(){
+		if (Dungeon.hero.extractionRaidID != 0) return TIME_TO_EAT*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.timeMultiplier(Dungeon.hero,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.EAT_SPEED);
 		if (Dungeon.hero.hasTalent(Talent.IRON_STOMACH)
 			|| Dungeon.hero.hasTalent(Talent.ENERGIZING_MEAL)
 			|| Dungeon.hero.hasTalent(Talent.MYSTICAL_MEAL)
@@ -123,7 +124,9 @@ public class Food extends Item {
 			GLog.n( Messages.get(Hunger.class, "cursedhorn") );
 		}
 
+		foodVal *= 1+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.value(hero,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.FOOD_VALUE)/100f;
 		Buff.affect(hero, Hunger.class).satisfy(foodVal);
+		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.food(hero);
 	}
 	
 	@Override

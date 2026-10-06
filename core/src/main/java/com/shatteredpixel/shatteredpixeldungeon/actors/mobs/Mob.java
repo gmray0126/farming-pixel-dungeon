@@ -1019,6 +1019,7 @@ public abstract class Mob extends Char {
 	
 	@Override
 	public void die( Object cause ) {
+		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.defeated(Dungeon.hero,this);
 
 		if (cause == Chasm.class){
 			//50% chance to round up, 50% to round down
