@@ -41,7 +41,7 @@ public class ExtractionHubScene extends PixelScene {
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);
         ExtractionProfile p=ExtractionProfile.get();
-        label("잔향 원정대",11,left,top,width-34,GOLD);
+        label("파밍 픽셀 던전",9,left,top,width-34,GOLD);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
         label(p.gold+" G  ·  "+p.points+" P  ·  성장 "+(1+p.xp/25),7,left,top+20,width,TEXT);
         float tw=(width-4)/3f;
@@ -126,7 +126,7 @@ public class ExtractionHubScene extends PixelScene {
     private void growth(float y){
         ExtractionProfile p=ExtractionProfile.get();
         label("성장 노드  "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+"  ·  "+p.points+" P",8,left,y,width,GOLD);
-        label("노드를 눌러 효과와 해금 조건을 확인",6,left,y+12,width,MUTED);
+        label("전체 지도 → 계통 선택 → 노드 습득",6,left,y+12,width,MUTED);
         ExtractionNodeTree tree=new ExtractionNodeTree(this::node);
         tree.setRect(left,y+26,width,Math.min(166,bottom-27-(y+26)));body.add(tree);
         float after=tree.bottom()+7;
@@ -134,10 +134,10 @@ public class ExtractionHubScene extends PixelScene {
     }
     private void node(final int n){
         ExtractionProfile p=ExtractionProfile.get();boolean learned=p.nodes.contains(ExtractionProfile.IDS[n]);
-        int parent=ExtractionProfile.PARENTS[n];boolean unlocked=parent<0||p.nodes.contains(ExtractionProfile.IDS[parent]);
-        String state=learned?"이미 습득했습니다.":!unlocked?"선행: "+ExtractionProfile.NAMES[parent]:p.active?"거점으로 돌아온 뒤 배울 수 있습니다.":"비용 "+ExtractionProfile.COSTS[n]+" P · 보유 "+p.points+" P";
+        boolean unlocked=p.unlocked(n);
+        String state=learned?"이미 습득했습니다.":!unlocked?"선행: "+p.prerequisites(n):p.active?"거점으로 돌아온 뒤 배울 수 있습니다.":"비용 "+ExtractionProfile.COSTS[n]+" P · 보유 "+p.points+" P";
         boolean can=!learned&&unlocked&&!p.active&&p.points>=ExtractionProfile.COSTS[n];
-        add(new WndOptions(ExtractionProfile.NAMES[n],ExtractionProfile.DESCS[n]+"\n\n"+state,can?new String[]{"습득 · "+ExtractionProfile.COSTS[n]+" P","닫기"}:new String[]{"닫기"}){
+        add(new WndOptions(ExtractionProfile.NAMES[n],ExtractionProfile.DESCS[n]+"\n\n선행: "+p.prerequisites(n)+"\n\n"+state,can?new String[]{"습득 · "+ExtractionProfile.COSTS[n]+" P","닫기"}:new String[]{"닫기"}){
             @Override protected void onSelect(int c){if(can&&c==0)try{p.learn(n);refresh();}catch(RuntimeException e){error(e);}}
         });
     }

@@ -181,4 +181,90 @@ public class ExtractionProfileTest {
         for (java.util.Map<?, ?> tier : hero.talents) assertTrue(tier.isEmpty());
         assertFalse(hero.hasTalent(talent));
     }
+    private void learnPath(String id) {
+        int index=ExtractionGrowth.index(id);
+        for(int parent:ExtractionGrowth.NODES[index].parents)learnPath(ExtractionGrowth.IDS[parent]);
+        if(!profile.nodes.contains(id))profile.learn(index);
+    }
+    @Test public void graphHas108UniqueNodesWithBranchingAndConvergence() {
+        assertEquals(108, ExtractionGrowth.NODES.length);
+        java.util.HashSet<String> ids=new java.util.HashSet<>();
+        int totalCost=0,convergences=0;
+        for(int i=0;i<ExtractionGrowth.NODES.length;i++){
+            ExtractionGrowth.Node node=ExtractionGrowth.NODES[i];
+            assertTrue(ids.add(node.id));
+            assertFalse(node.effects.isEmpty());
+            for(int parent:node.parents)assertTrue("Graph must be acyclic", parent<i);
+            if(node.parents.length==2)convergences++;
+            totalCost+=node.cost;
+        }
+        assertEquals(12,convergences);
+        assertEquals(264,totalCost);
+        for(int[] branch:ExtractionGrowth.BRANCH_NODES)assertEquals(9,branch.length);
+    }
+    @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
+        profile.points=1000;
+        learnPath("sword_3");
+        int merge=ExtractionGrowth.index("sword_7"),before=profile.points;
+        try { profile.learn(merge); fail("Both paths are required"); }
+        catch(IllegalStateException expected) { }
+        assertEquals(before,profile.points);
+        learnPath("sword_6");
+        profile.learn(merge);
+        forgetProfile();profile=ExtractionProfile.get();
+        assertTrue(profile.nodes.contains("sword_7"));
+        assertTrue(profile.unlocked(ExtractionGrowth.index("sword_8")));
+    }
+    @Test public void weaponSpecializationChangesWhenWeaponChanges() {
+        profile.points=1000;learnPath("sword_2");
+        assertEquals(14,profile.physicalDamage(10,new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),1f));
+        assertEquals(11,profile.physicalDamage(10,new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger(),1f));
+        assertEquals(11,profile.physicalDamage(10,null,1f));
+        assertEquals(10,profile.magicDamage(10));
+    }
+    @Test public void daggerCriticalPathUsesItsCriticalMultiplier() {
+        profile.points=1000;learnPath("dagger_3");
+        Item dagger=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger();
+        assertEquals(12,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,1f));
+        assertEquals(21,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,0f));
+        assertEquals(11,profile.physicalDamage(10,new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),0f));
+    }
+    @Test public void spearReachIsAppliedByOriginalWeaponFormula() {
+        profile.points=1000;learnPath("spear_3");
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Spear spear=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Spear();
+        Hero hero=new Hero();hero.belongings.weapon=spear;
+        assertEquals(2,spear.reachFactor(hero));
+        hero.extractionRaidID=1;
+        assertEquals(3,spear.reachFactor(hero));
+        assertEquals(1,profile.armorPierce(spear));
+        assertEquals(1,new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword().reachFactor(hero));
+    }
+    @Test public void magicAndExplorationPathsAffectTheirOwnSystems() throws Exception {
+        profile.points=1000;learnPath("magic_3");learnPath("magic_6");
+        assertEquals(16,profile.magicDamage(10));
+        assertEquals(1.45f,profile.wandChargeMultiplier(),0.001f);
+        learnPath("explore_cap");
+        assertEquals(20,profile.capacity());
+        assertEquals(1.1f,profile.moveSpeedMultiplier(),0.001f);
+        profile.begin();Dungeon.hero=new Hero();Dungeon.gold=50;
+        profile.settle(profile.raidID,true);
+        assertEquals(170,profile.gold);
+        forgetProfile();profile=ExtractionProfile.get();
+        assertEquals(170,profile.gold);
+        assertTrue(profile.nodes.contains("magic_3"));
+    }
+    @Test public void legacyNineNodeSaveKeepsItsOriginalBonuses() throws Exception {
+        com.watabou.utils.Bundle old=new com.watabou.utils.Bundle();
+        old.put("schema",1);old.put("stash",profile.stash);old.put("prepared",profile.prepared);
+        old.put("escrow",new java.util.ArrayList<Item>());
+        old.put("nodes",new String[]{"power","edge","master","vital","guard","iron","pack","porter","strength"});
+        old.put("gold",123);old.put("xp",200);old.put("points",4);old.put("active",false);
+        old.put("raid",0);old.put("next",1);old.put("raid_xp",0);old.put("result","");
+        FileUtils.bundleToFile(ExtractionProfile.FILE,old);
+        forgetProfile();profile=ExtractionProfile.get();
+        assertEquals(4,profile.attackBonus());assertEquals(2,profile.defenseBonus());
+        assertEquals(16,profile.capacity());assertEquals(6f,profile.bonus(ExtractionGrowth.Stat.HEALTH),0.001f);
+        assertEquals(2f,profile.bonus(ExtractionGrowth.Stat.STRENGTH),0.001f);
+        assertEquals(123,profile.gold);assertEquals(9,profile.nodes.size());
+    }
 }

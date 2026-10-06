@@ -391,6 +391,7 @@ public abstract class Char extends Actor {
 			
 			if (this instanceof Hero){
 				Hero h = (Hero)this;
+				if(h.extractionRaidID != 0)dr=Math.max(0,dr-com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().armorPierce(h.growthWeapon()));
 				if (h.belongings.attackingWeapon() instanceof MissileWeapon
 						&& h.subClass == HeroSubClass.SNIPER
 						&& !Dungeon.level.adjacent(h.pos, enemy.pos)){

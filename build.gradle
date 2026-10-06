@@ -11,12 +11,12 @@ buildscript {
 allprojects {
 
     ext {
-        appName = 'Echo Extraction Dungeon'
+        appName = '파밍 픽셀 던전'
         appPackageName = 'com.kwrousagi.echoextraction'
 
         //Full releases gets +2 on version code, needed for an F-Droid quirk
-        appVersionCode = 923
-        appVersionName = '0.3.0-extraction'
+        appVersionCode = 924
+        appVersionName = '0.4.0-farming'
 
         appJavaCompatibility = JavaVersion.VERSION_11
 

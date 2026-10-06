@@ -518,7 +518,7 @@ public class Hero extends Char {
 	public int attackSkill( Char target ) {
 		KindOfWeapon wep = belongings.attackingWeapon();
 		
-		float accuracy = 1;
+		float accuracy = extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().accuracyMultiplier(growthWeapon()) : 1;
 		accuracy *= RingOfAccuracy.accuracyMultiplier( this );
 		
 		//precise assault and liquid agility
@@ -586,6 +586,7 @@ public class Hero extends Char {
 		}
 		
 		float evasion = defenseSkill;
+		if(extractionRaidID != 0)evasion *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().evasionMultiplier(growthWeapon());
 		
 		evasion *= RingOfEvasion.evasionMultiplier( this );
 
@@ -669,7 +670,7 @@ public class Hero extends Char {
 			dr += buff(HoldFast.class).armorBonus();
 		}
 		
-		return dr + (extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().defenseBonus() : 0);
+		return dr + (extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().defenseBonus(growthWeapon()) : 0);
 	}
 	
 	@Override
@@ -705,7 +706,7 @@ public class Hero extends Char {
 		}
 
 		if (dmg < 0) dmg = 0;
-		return dmg + (extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackBonus() : 0);
+		return extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().physicalDamage(dmg,growthWeapon(),Random.Float()) : dmg;
 	}
 
 	//damage rolls that come from the hero can have their RNG influenced by clover
@@ -743,6 +744,7 @@ public class Hero extends Char {
 
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
 		
+		if(extractionRaidID != 0)speed *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier();
 		return speed;
 		
 	}
@@ -786,13 +788,17 @@ public class Hero extends Char {
 		}
 	}
 	
+	public KindOfWeapon growthWeapon() {
+		return RingOfForce.fightingUnarmed(this) ? null : belongings.attackingWeapon();
+	}
+
 	public float attackDelay() {
 		if (buff(Talent.LethalMomentumTracker.class) != null){
 			buff(Talent.LethalMomentumTracker.class).detach();
 			return 0;
 		}
 
-		float delay = 1f;
+		float delay = extractionRaidID != 0 ? 1f/com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackSpeedMultiplier(growthWeapon()) : 1f;
 
 		if (!RingOfForce.fightingUnarmed(this)) {
 			

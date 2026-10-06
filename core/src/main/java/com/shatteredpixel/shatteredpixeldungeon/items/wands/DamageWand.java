@@ -59,7 +59,7 @@ public abstract class DamageWand extends Wand{
 			}
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG, 0.75f, 1.2f);
 		}
-		return dmg;
+		return Dungeon.hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().magicDamage(dmg) : dmg;
 	}
 
 	@Override

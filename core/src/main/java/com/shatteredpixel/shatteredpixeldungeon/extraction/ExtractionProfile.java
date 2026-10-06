@@ -27,11 +27,8 @@ public final class ExtractionProfile {
     public int gold = 100, xp = 0, points = 3, raidID = 0, nextRaid = 1, raidXP = 0;
     public boolean active = false;
     public String result = "";
-    public static final String[] IDS = {"power", "edge", "master", "vital", "guard", "iron", "pack", "porter", "strength"};
-    public static final String[] NAMES = {"무기 숙련", "예리한 칼날", "전투의 기억", "튼튼한 몸", "방어 훈련", "철벽", "짐 정리", "원정 준비", "완력"};
-    public static final String[] DESCS = {"공격 피해 +1", "공격 피해 추가 +1", "공격 피해 추가 +2", "출격 최대 체력 +6", "방어 피해 감소 +1", "방어 피해 감소 추가 +1", "가방 용량 +2", "가방 용량 추가 +2", "출격 힘 +2"};
-    public static final int[] COSTS = {1, 1, 2, 1, 1, 2, 1, 1, 2};
-    public static final int[] PARENTS = {-1, 0, 1, -1, 3, 4, -1, 6, 7};
+    public static final String[] IDS=ExtractionGrowth.IDS, NAMES=ExtractionGrowth.NAMES, DESCS=ExtractionGrowth.DESCS;
+    public static final int[] COSTS=ExtractionGrowth.COSTS, PARENTS=ExtractionGrowth.PARENTS;
 
     public static synchronized ExtractionProfile get() {
         if (instance == null) {
@@ -110,16 +107,51 @@ public final class ExtractionProfile {
             else if (i instanceof Armor && h.belongings.armor == null) { h.belongings.armor=(Armor)i; h.belongings.armor.activate(h); }
             else if (!i.collect(h.belongings.backpack)) throw new IllegalStateException("준비 물품이 가방에 들어가지 않습니다.");
         }
-        h.HTBoost += nodes.contains("vital") ? 6 : 0; h.updateHT(true); h.HP=h.HT;
-        if (nodes.contains("strength")) h.STR += 2;
+        h.HTBoost += Math.round(bonus(ExtractionGrowth.Stat.HEALTH)); h.updateHT(true); h.HP=h.HT;
+        h.STR += Math.round(bonus(ExtractionGrowth.Stat.STRENGTH));
     }
-    public int attackBonus() { return (nodes.contains("power")?1:0)+(nodes.contains("edge")?1:0)+(nodes.contains("master")?2:0); }
-    public int defenseBonus() { return (nodes.contains("guard")?1:0)+(nodes.contains("iron")?1:0); }
-    public int capacity() { return 12+(nodes.contains("pack")?2:0)+(nodes.contains("porter")?2:0); }
+    public float bonus(ExtractionGrowth.Stat stat) { return bonus(stat, -1); }
+    public float bonus(ExtractionGrowth.Stat stat, int family) {
+        float result=0;
+        for(ExtractionGrowth.Node n:ExtractionGrowth.NODES){
+            if((n.branch<3||n.branch==family)&&nodes.contains(n.id)){ Float value=n.effects.get(stat);if(value!=null)result+=value; }
+        }
+        return result;
+    }
+    public int attackBonus() { return Math.round(bonus(ExtractionGrowth.Stat.DAMAGE)); }
+    public int defenseBonus() { return Math.round(bonus(ExtractionGrowth.Stat.DEFENSE)); }
+    public int defenseBonus(KindOfWeapon weapon) { return Math.round(bonus(ExtractionGrowth.Stat.DEFENSE,ExtractionGrowth.family(weapon))); }
+    public int capacity() { return 12+Math.round(bonus(ExtractionGrowth.Stat.CAPACITY)); }
+    public float accuracyMultiplier(KindOfWeapon weapon) { return 1+bonus(ExtractionGrowth.Stat.ACCURACY,ExtractionGrowth.family(weapon))/100f; }
+    public float evasionMultiplier(KindOfWeapon weapon) { return 1+bonus(ExtractionGrowth.Stat.EVASION,ExtractionGrowth.family(weapon))/100f; }
+    public float attackSpeedMultiplier(KindOfWeapon weapon) { return 1+bonus(ExtractionGrowth.Stat.ATTACK_SPEED,ExtractionGrowth.family(weapon))/100f; }
+    public float moveSpeedMultiplier() { return 1+bonus(ExtractionGrowth.Stat.MOVE_SPEED)/100f; }
+    public int armorPierce(KindOfWeapon weapon) { return Math.round(bonus(ExtractionGrowth.Stat.PIERCE,ExtractionGrowth.family(weapon))); }
+    public int reachBonus(KindOfWeapon weapon) { return Math.round(bonus(ExtractionGrowth.Stat.REACH,ExtractionGrowth.family(weapon))); }
+    public float wandChargeMultiplier() { return 1+bonus(ExtractionGrowth.Stat.WAND_CHARGE,ExtractionGrowth.MAGIC)/100f; }
+    public int magicDamage(int damage) {
+        return Math.round((damage+bonus(ExtractionGrowth.Stat.WAND_DAMAGE,ExtractionGrowth.MAGIC))*(1+bonus(ExtractionGrowth.Stat.WAND_POWER,ExtractionGrowth.MAGIC)/100f));
+    }
+    /** Deterministic roll parameter makes critical/weapon specialization rules testable. */
+    public int physicalDamage(int damage,KindOfWeapon weapon,float criticalRoll) {
+        int family=ExtractionGrowth.family(weapon);
+        float value=(damage+bonus(ExtractionGrowth.Stat.DAMAGE,family))*(1+bonus(ExtractionGrowth.Stat.DAMAGE_PERCENT,family)/100f);
+        float chance=Math.min(0.65f,bonus(ExtractionGrowth.Stat.CRIT_CHANCE,family)/100f);
+        if(criticalRoll<chance)value*=1.5f+bonus(ExtractionGrowth.Stat.CRIT_POWER,family)/100f;
+        return Math.max(0,Math.round(value));
+    }
+    public boolean unlocked(int index) { return ExtractionGrowth.unlocked(ExtractionGrowth.NODES[index],nodes); }
+    public String prerequisites(int index) {
+        StringBuilder result=new StringBuilder();
+        for(int parent:ExtractionGrowth.NODES[index].parents){
+            if(result.length()>0)result.append(" · ");
+            result.append(NAMES[parent]).append(nodes.contains(IDS[parent])?" (습득)":" (필요)");
+        }
+        return result.length()==0?"없음":result.toString();
+    }
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
-        int parent=PARENTS[index];
-        if (parent>=0 && !nodes.contains(IDS[parent])) throw new IllegalStateException("선행 노드를 먼저 배워 주세요.");
+        if (!unlocked(index)) throw new IllegalStateException("선행 노드를 모두 배워 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
         change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); });
     }
@@ -138,7 +170,7 @@ public final class ExtractionProfile {
                 Item[] worn = {b.weapon,b.armor,b.artifact,b.misc,b.ring,b.secondWep};
                 for (Item i : worn) if (i != null) stash.add(i);
                 stash.addAll(b.backpack.items);
-                gold+=Dungeon.gold;
+                gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f));
                 int old=xp/25; xp+=10; points+=xp/25-old;
             }
             active=false; escrow.clear();
