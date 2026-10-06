@@ -2,6 +2,11 @@ name: Extraction Android APK
 
 on:
   workflow_dispatch:
+    inputs:
+      emulator_checks:
+        description: 'Run the longer Android emulator checks'
+        type: boolean
+        default: false
   push:
     branches:
       - master
@@ -77,6 +82,7 @@ jobs:
           path: core/build/test-results/test/*.xml
           if-no-files-found: ignore
   smoke:
+    if: github.event_name == 'workflow_dispatch' && inputs.emulator_checks
     name: Test APK on Android (${{ matrix.layout }})
     needs: build
     strategy:

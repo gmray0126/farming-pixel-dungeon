@@ -81,6 +81,25 @@ public final class ExtractionProfile {
         if (active) return; // retry the same escrow if first map creation was interrupted
         change(() -> { active=true; raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
     }
+    public Item preparedWeapon() {
+        for (Item i : prepared) if (i instanceof KindOfWeapon) return i;
+        return null;
+    }
+    public Item preparedArmor() {
+        for (Item i : prepared) if (i instanceof Armor) return i;
+        return null;
+    }
+    /** Selected gear goes first, preserving the existing profile/escrow format. */
+    public void selectEquipment(final Item i) {
+        if (active) throw new IllegalStateException("원정 중에는 착용 장비를 바꿀 수 없습니다.");
+        if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor)) return;
+        change(() -> { prepared.remove(i); prepared.add(0, i); });
+    }
+    public void returnPrepared() {
+        if (active) throw new IllegalStateException("원정 중에는 물품을 돌려놓을 수 없습니다.");
+        if (prepared.isEmpty()) return;
+        change(() -> { stash.addAll(prepared); prepared.clear(); });
+    }
     public void initialize(Hero h) {
         h.belongings.clear();
         // Reconstruct escrow items so equipped mutations cannot alter the persistent escrow.

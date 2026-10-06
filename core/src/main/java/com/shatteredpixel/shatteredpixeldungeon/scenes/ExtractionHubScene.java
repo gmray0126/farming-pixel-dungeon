@@ -26,7 +26,7 @@ public class ExtractionHubScene extends PixelScene {
         super.create();uiCamera.visible=false;
         SPDSettings.intro(false);SPDSettings.version(ShatteredPixelDungeon.versionCode);
         add(new TitleBackground(Camera.main.width,Camera.main.height));
-        add(new ColorBlock(Camera.main.width,Camera.main.height,0xCE080F18));
+        add(new ColorBlock(Camera.main.width,Camera.main.height,0xEA080F18));
         RectF insets=getCommonInsets();
         width=Math.min(180,Camera.main.width-insets.left-insets.right-12);
         left=insets.left+(Camera.main.width-insets.left-insets.right-width)/2f;
@@ -61,7 +61,7 @@ public class ExtractionHubScene extends PixelScene {
             label("진행 중인 원정",9,left,y,width,GOLD);
             label("원정 중에는 장비를 바꿀 수 없습니다.\n아래 버튼으로 원정을 이어가세요.",7,left,y+20,width,TEXT);return;
         }
-        label("창고  "+p.stash.size(),7,left,y,width-57,GOLD);
+        label("보관 창고  "+p.stash.size(),7,left,y,width-57,GOLD);
         button("물약 + · 30 G",left+width-56,y-3,56,14,()->{p.buyPotion();refresh();},false);
         int count=4*stashRows, pages=Math.max(1,(p.stash.size()+count-1)/count);
         stashPage=Math.min(stashPage,pages-1);
@@ -71,17 +71,23 @@ public class ExtractionHubScene extends PixelScene {
         centered("창고 "+(stashPage+1)+" / "+pages,6,left+24,pager+3,width-48,MUTED);
         button(">",left+width-22,pager,22,13,()->{stashPage=Math.min(pages-1,stashPage+1);refresh();},false);
         float bagY=pager+17;
-        label("출격 가방  "+p.prepared.size()+" / "+p.capacity(),7,left,bagY,width-36,GREEN);
-        if(p.capacity()>12)button((bagPage+1)+" / 2 >",left+width-35,bagY-2,35,13,()->{bagPage=1-bagPage;refresh();},false);
+        label("출격  "+p.prepared.size()+" / "+p.capacity(),7,left,bagY,width-(p.capacity()>12?56:30),GREEN);
+        button("비우기",left+width-29,bagY-2,29,13,()->{p.returnPrepared();bagPage=0;refresh();},false);
+        if(p.capacity()>12)button((bagPage+1)+"/2",left+width-54,bagY-2,23,13,()->{bagPage=1-bagPage;refresh();},false);
         bagPage=Math.min(bagPage,Math.max(0,(p.capacity()-1)/12));
         grid(p.prepared,bagPage*12,3,bagY+12,true);
         float after=bagY+12+3*cellStep;
-        if(after+10<bottom-26)label("탭: 넣기 / 빼기 · 길게: 상세 / 판매",6,left,after+3,width,MUTED);
+        if(after+10<bottom-26)label("탭: 넣기 / 빼기 · 길게: 착용 / 상세",6,left,after+3,width,MUTED);
+        if(after+51<bottom-26){
+            panel(left,after+16,width,33);
+            Item weapon=p.preparedWeapon(), armor=p.preparedArmor();
+            label("착용 무기  "+(weapon==null?"맨손":weapon.title()),6,left+5,after+20,width-10,GOLD);
+            label("착용 갑옷  "+(armor==null?"없음":armor.title()),6,left+5,after+34,width-10,GREEN);
+        }
     }
     private void grid(ArrayList<Item> items,int offset,int rows,float y,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();float cw=(width-6)/4f;
-        Item weapon=null,armor=null;
-        for(Item i:p.prepared){if(weapon==null&&i instanceof KindOfWeapon)weapon=i;if(armor==null&&i instanceof Armor)armor=i;}
+        Item weapon=p.preparedWeapon(),armor=p.preparedArmor();
         for(int j=0;j<rows*4;j++){
             int index=offset+j;float x=left+(j%4)*(cw+2),sy=y+(j/4)*cellStep;
             boolean usable=!bag||index<p.capacity();
@@ -94,22 +100,35 @@ public class ExtractionHubScene extends PixelScene {
                     @Override protected boolean onLongClick(){itemDetails(i,bag);return true;}
                 };
                 slot.setRect(x+1,sy+1,cw-2,cellStep-4);body.add(slot);
-                if(bag&&(i==weapon||i==armor))label(i==weapon?"무":"갑",5,x+2,sy+cellStep-10,7,GREEN);
+                if(bag&&(i==weapon||i==armor))label("착용",5,x+2,sy+cellStep-10,cw-4,GREEN);
             }
         }
     }
     private void itemDetails(final Item i,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();
-        add(new WndOptions(i.title(),bag?"준비한 물품입니다. 첫 무기와 갑옷을 착용하고 출격합니다.":"창고 보관 물품입니다. 출격 가방의 물품은 사망하면 잃습니다.",bag?new String[]{"창고로 빼기","닫기"}:new String[]{"출격 가방에 넣기","판매 · "+i.value()+" G","닫기"}){
-            @Override protected void onSelect(int c){try{if(c==0)p.prepare(i,!bag);else if(c==1&&!bag)p.sell(i);refresh();}catch(RuntimeException e){error(e);}}
+        boolean gear=bag&&(i instanceof KindOfWeapon||i instanceof Armor);
+        boolean worn=i==p.preparedWeapon()||i==p.preparedArmor();
+        ArrayList<String> options=new ArrayList<>();
+        options.add(bag?"창고로 빼기":"출격 가방에 넣기");
+        options.add("성능 / 상세 보기");
+        if(gear&&!worn)options.add("출격 시 착용하기");
+        if(!bag)options.add("판매 · "+i.value()+" G");
+        options.add("닫기");
+        add(new WndOptions(i.title(),bag?(worn?"출격 시 착용하는 장비입니다.":"출격 가방에 준비한 물품입니다."):"창고 보관 물품입니다. 출격에 가져간 물품은 사망하면 잃습니다.",options.toArray(new String[0])){
+            @Override protected void onSelect(int c){try{
+                if(c==0){p.prepare(i,!bag);refresh();}
+                else if(c==1)ExtractionHubScene.this.add(new WndInfoItem(i));
+                else if(c==2&&gear&&!worn){p.selectEquipment(i);refresh();}
+                else if(c==2&&!bag){p.sell(i);refresh();}
+            }catch(RuntimeException e){error(e);}}
         });
     }
     private void growth(float y){
         ExtractionProfile p=ExtractionProfile.get();
-        label("기억의 성장판  ·  "+p.points+" P",8,left,y,width,GOLD);
+        label("성장 노드  "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+"  ·  "+p.points+" P",8,left,y,width,GOLD);
         label("노드를 눌러 효과와 해금 조건을 확인",6,left,y+12,width,MUTED);
         ExtractionNodeTree tree=new ExtractionNodeTree(this::node);
-        tree.setRect(left,y+26,width,Math.min(144,bottom-27-(y+26)));body.add(tree);
+        tree.setRect(left,y+26,width,Math.min(166,bottom-42-(y+26)));body.add(tree);
         float after=tree.bottom()+7;
         if(after+9<bottom-26)label("습득 노드는 사망해도 유지 · 25 XP = 1 P",6,left,after,width,GREEN);
     }

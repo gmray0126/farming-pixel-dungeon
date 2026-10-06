@@ -34,13 +34,14 @@ public class ExtractionNodeTree extends Component {
                 }
                 boolean learned=p.nodes.contains(ExtractionProfile.IDS[n]);
                 boolean unlocked=ExtractionProfile.PARENTS[n]<0 || p.nodes.contains(ExtractionProfile.IDS[ExtractionProfile.PARENTS[n]]);
+                boolean available=unlocked&&!p.active&&p.points>=ExtractionProfile.COSTS[n];
                 Button card=new Button(){@Override protected void onClick(){select.accept(n);}};
                 card.setRect(bx,by,cw,ch);add(card);
-                ColorBlock border=new ColorBlock(cw,ch,learned?0xFF83C9B5:unlocked?0xFF947F55:0xFF34434C);
+                ColorBlock border=new ColorBlock(cw,ch,learned?0xFF83C9B5:available?0xFFE4C583:0xFF34434C);
                 border.x=bx;border.y=by;card.add(border);
                 ColorBlock fill=new ColorBlock(cw-2,ch-2,learned?0xFF19342F:0xFF151F28);
                 fill.x=bx+1;fill.y=by+1;card.add(fill);
-                cardText(card,ExtractionProfile.NAMES[n],6,bx,by+4,cw,learned?GREEN:unlocked?GOLD:MUTED);
+                cardText(card,ExtractionProfile.NAMES[n],6,bx,by+4,cw,learned?GREEN:available?GOLD:MUTED);
                 cardText(card,EFFECTS[n],5,bx,by+ch/2f,cw,0xCED8DD);
                 cardText(card,learned?"습득":unlocked?ExtractionProfile.COSTS[n]+" P":"선행 필요",5,bx,by+ch-8,cw,learned?GREEN:MUTED);
             }

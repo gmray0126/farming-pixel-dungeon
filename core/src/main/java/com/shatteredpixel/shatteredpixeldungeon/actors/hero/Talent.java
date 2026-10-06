@@ -960,6 +960,11 @@ public enum Talent {
 	public static final int MAX_TALENT_TIERS = 4;
 
 	public static void initClassTalents( Hero hero ){
+		if (hero.extractionRaidID != 0) {
+			hero.talents.clear();
+			while (hero.talents.size() < MAX_TALENT_TIERS) hero.talents.add(new LinkedHashMap<>());
+			return;
+		}
 		initClassTalents( hero.heroClass, hero.talents, hero.metamorphedTalents );
 	}
 
@@ -1176,6 +1181,11 @@ public enum Talent {
 	}
 
 	public static void restoreTalentsFromBundle( Bundle bundle, Hero hero ){
+		if (hero.extractionRaidID != 0) {
+			hero.metamorphedTalents.clear();
+			initClassTalents(hero);
+			return;
+		}
 		if (bundle.contains("replacements")){
 			Bundle replacements = bundle.getBundle("replacements");
 			for (String key : replacements.getKeys()){

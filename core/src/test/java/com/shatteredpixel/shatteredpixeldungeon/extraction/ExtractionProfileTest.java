@@ -141,4 +141,43 @@ public class ExtractionProfileTest {
         assertEquals(13, profile.prepared.size());
         assertEquals(14, profile.capacity());
     }
+    @Test public void selectedEquipmentSurvivesReloadAndIsWornInRaid() throws Exception {
+        Item original = profile.stash.get(0);
+        Item chosen = new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword().identify().upgrade();
+        profile.stash.add(chosen);
+        profile.prepare(original, true);
+        profile.prepare(chosen, true);
+        profile.selectEquipment(chosen);
+        forgetProfile();
+        profile = ExtractionProfile.get();
+        assertEquals(1, profile.preparedWeapon().level());
+        profile.begin();
+        Dungeon.hero = new Hero();
+        Dungeon.hero.heroClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
+        profile.initialize(Dungeon.hero);
+        assertEquals(1, Dungeon.hero.belongings.weapon.level());
+        assertEquals(1, Dungeon.hero.belongings.backpack.items.size());
+    }
+    @Test public void returnAllPreservesEveryPreparedItemAfterReload() throws Exception {
+        for (Item item : new java.util.ArrayList<>(profile.stash)) profile.prepare(item, true);
+        profile.returnPrepared();
+        forgetProfile();
+        profile = ExtractionProfile.get();
+        assertEquals(5, profile.stash.size());
+        assertTrue(profile.prepared.isEmpty());
+    }
+    @Test public void expeditionDoesNotRestoreOriginalClassTalents() {
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent talent = com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.HEARTY_MEAL;
+        Hero hero = new Hero();
+        hero.heroClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
+        hero.talents.get(0).put(talent, 1);
+        com.watabou.utils.Bundle saved = new com.watabou.utils.Bundle();
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.storeTalentsInBundle(saved, hero);
+        hero.extractionRaidID = 1;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.restoreTalentsFromBundle(saved, hero);
+        assertEquals(4, hero.talents.size());
+        for (java.util.Map<?, ?> tier : hero.talents) assertTrue(tier.isEmpty());
+        assertFalse(hero.hasTalent(talent));
+    }
 }
