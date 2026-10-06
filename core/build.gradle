@@ -3,6 +3,15 @@ apply plugin: 'java-library'
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 java.sourceCompatibility = java.targetCompatibility = appJavaCompatibility
 
+test {
+    workingDir file('src/main/assets')
+    testLogging {
+        events 'passed', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams = true
+    }
+}
+
 dependencies {
     api project(':SPD-classes')
     implementation project(':services')

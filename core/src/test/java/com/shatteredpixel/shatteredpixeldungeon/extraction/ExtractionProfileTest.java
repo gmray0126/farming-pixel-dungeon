@@ -3,6 +3,8 @@ package com.shatteredpixel.shatteredpixeldungeon.extraction;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.backends.headless.HeadlessFiles;
+import com.badlogic.gdx.backends.headless.HeadlessPreferences;
+import com.shatteredpixel.shatteredpixeldungeon.SPDSettings;
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
@@ -27,6 +29,7 @@ public class ExtractionProfileTest {
     }
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
+        SPDSettings.set(new HeadlessPreferences("test-preferences.xml", folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, folder.getRoot().getAbsolutePath()+"/");
         Dungeon.hero = null;
         GamesInProgress.curSlot = 1;
