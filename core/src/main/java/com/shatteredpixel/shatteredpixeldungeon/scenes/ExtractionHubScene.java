@@ -128,7 +128,7 @@ public class ExtractionHubScene extends PixelScene {
         label("성장 노드  "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+"  ·  "+p.points+" P",8,left,y,width,GOLD);
         label("노드를 눌러 효과와 해금 조건을 확인",6,left,y+12,width,MUTED);
         ExtractionNodeTree tree=new ExtractionNodeTree(this::node);
-        tree.setRect(left,y+26,width,Math.min(166,bottom-42-(y+26)));body.add(tree);
+        tree.setRect(left,y+26,width,Math.min(166,bottom-27-(y+26)));body.add(tree);
         float after=tree.bottom()+7;
         if(after+9<bottom-26)label("습득 노드는 사망해도 유지 · 25 XP = 1 P",6,left,after,width,GREEN);
     }
