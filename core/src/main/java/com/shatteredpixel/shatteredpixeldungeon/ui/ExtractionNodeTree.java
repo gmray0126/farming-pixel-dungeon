@@ -5,14 +5,14 @@ import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.ui.Component;
-import java.util.function.IntConsumer;
 
 /** All permanent nodes, prerequisites and effects remain visible together. */
 public class ExtractionNodeTree extends Component {
     public static final int GOLD = 0xE4C583, GREEN = 0x83C9B5, MUTED = 0x88969D;
     public static final String[] EFFECTS = {"피해 +1", "피해 +1", "피해 +2", "최대 HP +6", "방어 +1", "방어 +1", "가방 +2칸", "가방 +2칸", "힘 +2"};
-    private final IntConsumer select;
-    public ExtractionNodeTree(IntConsumer select) { this.select=select; }
+    public interface Selection { void accept(int index); }
+    private final Selection select;
+    public ExtractionNodeTree(Selection select) { this.select=select; }
     @Override protected void layout() {
         super.layout();
         for (com.watabou.noosa.Gizmo g : members.toArray(new com.watabou.noosa.Gizmo[0])) g.destroy();
