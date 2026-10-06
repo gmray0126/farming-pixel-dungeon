@@ -42,7 +42,7 @@ try:
     adb('install', '-r', 'apk/android-debug.apk')
     adb('logcat', '-c')
     screen(540, 900, 4)
-    tap(350, 155)  # Dismiss the system immersive-mode notice if present.
+    tap(470, 202)  # Dismiss Android's first-use immersive notice (observed on the emulator).
     screenshot('01-minimum-inventory')
     initial = profile()
     assert not initial['active'] and len(initial['stash']) == 5, initial
