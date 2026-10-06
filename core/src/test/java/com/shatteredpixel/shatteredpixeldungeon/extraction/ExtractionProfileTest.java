@@ -22,6 +22,30 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    private static class EffectSprite extends com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite {
+        @Override public void showStatusWithIcon(int color,String text,int icon,Object... args){}
+        @Override public void add(State state){}
+        @Override public void remove(State state){}
+    }
+    @Test public void drinkingNonHazardousPotionsExecutesTheirRealEffects(){
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Dungeon.level=Dungeon.newLevel();Hero h=Dungeon.hero;h.pos=Dungeon.level.entrance();
+        h.sprite=new EffectSprite();h.sprite.visible=false;new com.watabou.noosa.Group().add(h.sprite);
+        com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion[] potions={
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHealing(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfExperience(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfMindVision(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfLevitation(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfInvisibility(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfHaste(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfPurity()};
+        for(com.shatteredpixel.shatteredpixeldungeon.items.potions.Potion potion:potions){
+            potion.execute(h,"SET_TEST_USER");potion.apply(h);assertTrue(potion.isKnown());
+        }
+        assertEquals(11,h.STR);assertEquals(20,h.HT);assertEquals(10,profile.xp);
+        h.sprite=null;
+    }
     @Test public void resumeRestoresMightRingWhileGlobalHeroIsStillNull(){
         Hero h=new Hero();h.extractionRaidID=1;
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
@@ -362,6 +386,15 @@ public class ExtractionProfileTest {
     }
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
+        Gdx.app=(com.badlogic.gdx.Application)java.lang.reflect.Proxy.newProxyInstance(
+                com.badlogic.gdx.Application.class.getClassLoader(),new Class[]{com.badlogic.gdx.Application.class},(proxy,method,args)->{
+                    if(method.getName().equals("getType"))return com.badlogic.gdx.Application.ApplicationType.Desktop;
+                    if(method.getName().equals("postRunnable")){((Runnable)args[0]).run();return null;}
+                    if(method.getReturnType()==boolean.class)return false;
+                    if(method.getReturnType()==int.class)return 0;
+                    if(method.getReturnType()==long.class)return 0L;
+                    return null;
+                });
         GdxNativesLoader.load();
         Game.version = "0.2.0-extraction-INDEV";
         Game.versionCode = 922;

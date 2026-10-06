@@ -62,7 +62,19 @@ public class ExtractionHubScene extends PixelScene {
         ExtractionProfile p=ExtractionProfile.get();
         if(p.active){
             label("진행 중인 원정",9,left,y,width,GOLD);
-            label("원정 중에는 장비를 바꿀 수 없습니다.\n아래 버튼으로 원정을 이어가세요.",7,left,y+20,width,TEXT);return;
+            label("원정 중에는 장비를 바꿀 수 없습니다.\n아래 버튼으로 원정을 이어가거나 포기하세요.",7,left,y+20,width,TEXT);
+            if(com.watabou.utils.FileUtils.fileExists("extraction-last-crash.txt"))button("최근 오류 기록",left,y+51,width,17,()->{
+                String[] lines=com.watabou.utils.FileUtils.getFileHandle("extraction-last-crash.txt").readString("UTF-8").split("\n");
+                StringBuilder details=new StringBuilder();int frames=0;
+                for(String line:lines){
+                    if(!line.startsWith("\tat ")||line.contains("shatteredpixel")){
+                        details.append(line.replace("com.shatteredpixel.shatteredpixeldungeon.","")).append('\n');
+                        if(line.startsWith("\tat ")&&++frames==3)break;
+                    }
+                }
+                add(new WndMessage(details.toString()));
+            },false);
+            return;
         }
         label("보관 창고  "+p.stash.size(),7,left,y,width-57,GOLD);
         button("물약 + · 30 G",left+width-56,y-3,56,14,()->{p.buyPotion();refresh();},false);

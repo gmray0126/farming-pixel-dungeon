@@ -76,6 +76,15 @@ public class AndroidLauncher extends AndroidApplication {
 
 		//there are some things we only need to set up on first launch
 		if (instance == null) {
+			final Thread.UncaughtExceptionHandler previous=Thread.getDefaultUncaughtExceptionHandler();
+			final java.io.File crashFile=new java.io.File(getFilesDir(),"extraction-last-crash.txt");
+			Thread.setDefaultUncaughtExceptionHandler((thread,error)->{
+				try(java.io.PrintWriter out=new java.io.PrintWriter(crashFile)){
+					out.println("원정 오류 · "+Game.version+" · "+com.shatteredpixel.shatteredpixeldungeon.Dungeon.depth+"층");
+					error.printStackTrace(out);
+				}catch(Exception ignored){}
+				if(previous!=null)previous.uncaughtException(thread,error);
+			});
 
 			instance = this;
 

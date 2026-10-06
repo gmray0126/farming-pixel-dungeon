@@ -68,14 +68,18 @@ public final class ExtractionDifficulty {
     public static void bossLoot(Mob boss){
         if(!active()||Dungeon.level==null||!(boss instanceof Goo||boss instanceof Tengu))return;
         Item gear=Generator.randomUsingDefaults(Generator.wepTiers[maxTier(chapter(),stage())-1]);
-        Dungeon.level.drop(gear,boss.pos).sprite.drop();
+        dropLoot(gear,boss.pos);
         if(Random.Float()<.12f+.035f*(stage()-1)+.1f*(chapter()-1)){
-            Artifact relic=Generator.randomArtifact();if(relic!=null)Dungeon.level.drop(relic,boss.pos).sprite.drop();
+            Artifact relic=Generator.randomArtifact();if(relic!=null)dropLoot(relic,boss.pos);
         }
     }
     public static void eliteLoot(Mob mob){
         if(!active()||mob.extractionElite==0||Dungeon.level==null)return;
-        if(Random.Float()<.3f+(ExpeditionArtifacts.has(Dungeon.hero,ExpeditionArtifacts.GreedPouch.class)?.1f:0))Dungeon.level.drop(Generator.randomWeapon(),mob.pos).sprite.drop();
+        if(Random.Float()<.3f+(ExpeditionArtifacts.has(Dungeon.hero,ExpeditionArtifacts.GreedPouch.class)?.1f:0))dropLoot(Generator.randomWeapon(),mob.pos);
+    }
+    private static void dropLoot(Item item,int cell){
+        com.shatteredpixel.shatteredpixeldungeon.items.Heap heap=Dungeon.level.drop(item,cell);
+        if(heap.sprite!=null)heap.sprite.drop();
     }
     private ExtractionDifficulty(){}
 }
