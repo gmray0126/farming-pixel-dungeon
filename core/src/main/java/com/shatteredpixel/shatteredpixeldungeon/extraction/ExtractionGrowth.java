@@ -22,7 +22,7 @@ public final class ExtractionGrowth {
         CAPACITY("가방 칸", false), STRENGTH("출격 힘", false), GOLD("탈출 전리품 골드", true),
         WAND_DAMAGE("마법 막대 직접 피해", false), WAND_POWER("마법 막대 직접 피해", true), WAND_CHARGE("마법 막대 충전 속도", true),
         VISION("시야 거리",false), SEARCH_RANGE("탐색 반경",false), SEARCH_CHANCE("자동 탐색 발견 확률",true), SEARCH_SPEED("수동 탐색 시간 감소",true),
-        FLOOR_AWARENESS("새 층 첫 진입 시 물품 감지 지속 턴",false), FLOOR_MINDVISION("새 층 첫 진입 시 주변 적 감지 지속 턴",false), FLOOR_FORESIGHT("새 층 첫 진입 시 비밀 탐색 지속 턴",false),
+        FLOOR_AWARENESS("새 층 첫 진입 시 물품 감지 지속 턴",false), FLOOR_MINDVISION("새 층 첫 진입 시 층 내 적 감지 지속 턴",false), FLOOR_FORESIGHT("새 층 첫 진입 시 비밀 탐색 지속 턴",false),
         POTION_HEAL("회복 물약 회복량",true), POTION_SHIELD("회복 물약 사용 시 보호막",false), POTION_RECHARGE("회복 물약 사용 시 마법 충전 지속 턴",false), POTION_HASTE("회복 물약 사용 시 가속 지속 턴",false),
         FLOOR_HEAL("새 층 첫 진입 시 체력 회복",false), FLOOR_SHIELD("새 층 첫 진입 시 보호막",false), SECOND_WIND("원정당 한 번 치명상 방지 시 회복할 최대 체력 비율",true),
         FOOD_VALUE("음식 포만감",true), FOOD_HEAL("식사 시 체력 회복",false), FOOD_SHIELD("식사 시 보호막",false), FOOD_HASTE("식사 시 가속 지속 턴",false), FOOD_RECHARGE("식사 시 마법 충전 지속 턴",false), FOOD_INVIS("식사 시 투명화 지속 턴",false), EAT_SPEED("식사 시간 감소",true), HUNGER_SLOW("허기 증가량 감소",true),

@@ -44,7 +44,10 @@ public class ExtractionProfileTest {
         assertFalse(ExtractionUtility.floor(h,2));assertEquals(13,h.HP);
         assertFalse(ExtractionUtility.rescue(h,12,new Object()));
         assertTrue(ExtractionUtility.rescue(h,13,new Object()));assertEquals(10,h.HP);
-        h.extractionBossDefeated=true;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
+        Dungeon.depth=5;Dungeon.branch=0;
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo boss=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo();boss.EXP=0;
+        ExtractionUtility.defeated(h,boss);assertTrue(h.extractionBossDefeated);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();h.storeInBundle(saved);
         Hero loaded=new Hero();loaded.restoreFromBundle(saved);
         assertTrue(loaded.extractionBossDefeated);assertTrue(loaded.extractionSecondWindUsed);
