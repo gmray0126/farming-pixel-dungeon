@@ -82,6 +82,39 @@ jobs:
           name: extraction-save-tests
           path: core/build/test-results/test/*.xml
           if-no-files-found: ignore
+  start:
+    name: Check Android departure and resume
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[start]')
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          path: apk
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Start and resume the native game
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          profile: pixel_2
+          emulator-options: -no-window -gpu swangle -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: python3 scripts/android-start.py
+      - name: Save runtime evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extraction-android-start
+          path: android-start/
+          if-no-files-found: ignore
+
   smoke:
     if: github.event_name == 'workflow_dispatch' && inputs.emulator_checks
     name: Test APK on Android (${{ matrix.layout }})

@@ -214,7 +214,7 @@ public class InterlevelScene extends PixelScene {
 			}
 		Random.popGenerator();
 		
-		if (DeviceCompat.isDebug() && Dungeon.hero.extractionRaidID==0){
+		if (DeviceCompat.isDebug()){
 			fadeTime = 0f;
 		}
 
