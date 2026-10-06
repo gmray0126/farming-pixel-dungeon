@@ -76,11 +76,19 @@ public class ExtractionProfileTest {
         assertEquals(6,hero.HP);assertEquals(.65f,ExpeditionArtifacts.healingMultiplier(hero),.001f);
         for(int i=0;i<200;i++)lantern.gainKill();assertEquals(5,lantern.level());lantern.upgrade(100);assertEquals(5,lantern.level());
         lantern.level(100);assertEquals(5,lantern.level());
-        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();lantern.storeInBundle(saved);
+        lantern.identify(false);com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();lantern.storeInBundle(saved);
         ExpeditionArtifacts.BloodLantern copy=new ExpeditionArtifacts.BloodLantern();copy.restoreFromBundle(saved);
         assertEquals(5,copy.level());assertEquals(lantern.status(),copy.status());
+        assertEquals("8/8",copy.status());
         profile.stash.add(copy);profile.prepare(copy,true);profile.begin();Hero next=new Hero();next.extractionRaidID=profile.raidID;
         profile.initialize(next);assertTrue(next.belongings.artifact instanceof ExpeditionArtifacts.BloodLantern);
+    }
+    @Test public void olderArtifactDeckKeepsUsedOriginalRelicsAndAddsNewRelics(){
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("artifact_probs",new float[13]);
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.restoreFromBundle(saved);
+        float[] probs=com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT.probs;
+        assertEquals(18,probs.length);for(int i=0;i<13;i++)assertEquals(0,probs[i],0);
+        for(int i=13;i<18;i++)assertEquals(1,probs[i],0);
     }
     @Test public void relicTradeoffsAndTempoApplyAndTenguUnlocksExit(){
         Hero hero=new Hero();hero.extractionRaidID=1;Dungeon.hero=hero;

@@ -102,14 +102,14 @@ public class ExtractionHubScene extends PixelScene {
                     @Override protected boolean onLongClick(){itemDetails(i,bag);return true;}
                 };
                 slot.setRect(x+1,sy+1,cw-2,cellStep-4);body.add(slot);
-                if(bag&&(i==weapon||i==armor))label("착용",5,x+2,sy+cellStep-10,cw-4,GREEN);
+                if(bag&&(i==weapon||i==armor||p.preparedRelics().contains(i)))label("착용",5,x+2,sy+cellStep-10,cw-4,GREEN);
             }
         }
     }
     private void itemDetails(final Item i,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();
-        boolean gear=bag&&(i instanceof KindOfWeapon||i instanceof Armor);
-        boolean worn=i==p.preparedWeapon()||i==p.preparedArmor();
+        boolean gear=bag&&(i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
+        boolean worn=i==p.preparedWeapon()||i==p.preparedArmor()||p.preparedRelics().contains(i);
         ArrayList<String> options=new ArrayList<>();
         options.add(bag?"창고로 빼기":"출격 가방에 넣기");
         options.add("성능 / 상세 보기");

@@ -961,7 +961,9 @@ public class Generator {
 				}
 
 				//pre-v3.3.0 conversion for artifacts (addition of tome and key)
-				if (cat == Category.ARTIFACT && probs.length != cat.defaultProbs.length){
+				if(cat==Category.ARTIFACT&&probs.length>=13&&probs.length<cat.defaultProbs.length){
+					System.arraycopy(probs,0,cat.probs,0,probs.length);
+				}else if (cat == Category.ARTIFACT && probs.length != cat.defaultProbs.length){
 					int keyIDX = 9;
 					int j = 0;
 					for (int i = 0; i < probs.length; i++){

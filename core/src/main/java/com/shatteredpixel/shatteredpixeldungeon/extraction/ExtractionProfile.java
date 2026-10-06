@@ -101,10 +101,16 @@ public final class ExtractionProfile {
         for (Item i : prepared) if (i instanceof Armor) return i;
         return null;
     }
+    public ArrayList<Item> preparedRelics(){
+        ArrayList<Item> result=new ArrayList<>();
+        for(Item i:prepared)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact&&result.size()<2
+                &&(result.isEmpty()||result.get(0).getClass()!=i.getClass()))result.add(i);
+        return result;
+    }
     /** Selected gear goes first, preserving the existing profile/escrow format. */
     public void selectEquipment(final Item i) {
         if (active) throw new IllegalStateException("원정 중에는 착용 장비를 바꿀 수 없습니다.");
-        if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor)) return;
+        if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor || i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)) return;
         change(() -> { prepared.remove(i); prepared.add(0, i); });
     }
     public void returnPrepared() {
