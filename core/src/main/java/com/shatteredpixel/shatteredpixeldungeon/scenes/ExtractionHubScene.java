@@ -54,7 +54,7 @@ public class ExtractionHubScene extends PixelScene {
     private void inventory(final boolean prepared,final int page){
         ExtractionProfile p=ExtractionProfile.get();ArrayList<Item> items=prepared?p.prepared:p.stash;
         final ArrayList<Item> shown=new ArrayList<>();for(int i=page*5;i<Math.min(items.size(),page*5+5);i++)shown.add(items.get(i));
-        ArrayList<String> options=new ArrayList<>();for(Item i:shown)options.add(i.toString());
+        ArrayList<String> options=new ArrayList<>();for(Item i:shown)options.add(i.title());
         final boolean more=(page+1)*5<items.size();if(more)options.add("다음 페이지");options.add("닫기");
         ExtractionHubScene.this.add(new WndOptions(prepared?"출격 준비":"영구 창고","물건을 누르면 챙기기·판매를 선택합니다.\n준비 물품도 사망하면 잃습니다.",options.toArray(new String[0])){
             @Override protected void onSelect(int index){

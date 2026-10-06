@@ -36,23 +36,29 @@ try:
     adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > shared_prefs/ShatteredPixelDungeon.xml'", input=prefs)
     adb('logcat', '-c')
     launch()
+    # Dismiss Android's first-use immersive-mode notice.
+    adb('shell', 'input', 'tap', '470', '202')
+    time.sleep(1)
     screenshot('01-hub')
     initial = profile()
     assert not initial['active'] and len(initial['stash']) == 5, initial
-    # Check the inventory window renders using actual touch input.
+    # Prepare the sword and armor through the same touch UI as a player.
     adb('shell', 'input', 'tap', '360', '468')
     time.sleep(2)
     screenshot('02-stash')
-    adb('shell', 'input', 'keyevent', '4')
+    adb('shell', 'input', 'tap', '360', '500')
+    time.sleep(1)
+    screenshot('02b-item-actions')
+    adb('shell', 'input', 'tap', '360', '630')
     time.sleep(2)
-    # Seed a prepared loadout in the isolated test profile to exercise native
-    # equipment initialization, independent of window positioning/font metrics.
-    adb('shell', 'am', 'force-stop', PACKAGE)
-    initial['prepared'] = initial['stash'][:2]
-    initial['stash'] = initial['stash'][2:]
-    data = gzip.compress(json.dumps(initial, ensure_ascii=False).encode())
-    adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > files/extraction-profile.dat'", input=data)
-    launch()
+    assert len(profile()['prepared']) == 1, 'Sword was not prepared through the UI'
+    adb('shell', 'input', 'tap', '360', '468')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '360', '540')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '360', '630')
+    time.sleep(2)
+    assert len(profile()['prepared']) == 2, 'Armor was not prepared through the UI'
     screenshot('03-prepared-hub')
     adb('shell', 'input', 'tap', '360', '368')
     time.sleep(15)
@@ -77,5 +83,11 @@ try:
     logs = adb('logcat', '-d').decode(errors='replace')
     assert 'FATAL EXCEPTION' not in logs, 'Android runtime crashed'
     (OUT / 'result.json').write_text(json.dumps({'installed': True, 'hub': True, 'raid_with_equipment': True, 'saved_run': True, 'resumed_same_raid': True, 'raid_id': raid_id}, indent=2))
+except Exception as error:
+    (OUT / 'error.txt').write_text(str(error))
+    raise
 finally:
-    (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))
+    try:
+        (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))
+    except Exception as error:
+        (OUT / 'logcat-error.txt').write_text(str(error))
