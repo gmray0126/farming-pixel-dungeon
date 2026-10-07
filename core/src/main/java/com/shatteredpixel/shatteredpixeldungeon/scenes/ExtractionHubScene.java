@@ -87,7 +87,8 @@ public class ExtractionHubScene extends PixelScene {
             return;
         }
         label("보관 창고  "+p.stash.size(),7,left,y,width-57,GOLD);
-        button("물약 + · 30 G",left+width-56,y-3,56,14,()->{p.buyPotion();refresh();},false);
+        button("물약",left+width-56,y-3,27,14,()->{p.buyPotion();refresh();},false);
+        button("연금",left+width-27,y-3,27,14,()->add(new WndHubAlchemy(this::refresh)),false);
         int count=4*stashRows, pages=Math.max(1,(p.stash.size()+count-1)/count);
         stashPage=Math.min(stashPage,pages-1);
         grid(p.stash,stashPage*count,stashRows,y+12,false);

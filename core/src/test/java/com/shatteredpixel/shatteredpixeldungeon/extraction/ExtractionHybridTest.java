@@ -149,4 +149,61 @@ public class ExtractionHybridTest {
         try{ExtractionContracts.claim(p,"hunt_1",null,1);fail("Expected save failure");}catch(IllegalStateException expected){}
         assertEquals(gold,p.gold);assertTrue(p.contracts.contains("hunt_1"));assertFalse(p.completedContracts.contains("hunt_1"));
     }
+
+    @Test public void bloodOathDrainsEveryFiveTurnsWithoutKillingAndKeepsItsRemainder(){
+        learn("blood",0);ExtractionHybridCombat.state(h).bloodOath=true;
+        Regeneration regen=Buff.affect(h,Regeneration.class);
+        for(int i=0;i<4;i++)regen.act();assertEquals(20,h.HP);
+        Bundle b=new Bundle();b.put("state",h.extractionHybrid);h.extractionHybrid=(ExtractionHybridCombat.State)b.get("state");
+        regen.act();assertEquals(19,h.HP);assertEquals(0,h.extractionHybrid.oathTurns);
+        h.extractionHybrid.bloodOath=false;for(int i=0;i<5;i++)ExtractionHybridCombat.bloodTick(h);assertEquals(19,h.HP);
+        h.extractionHybrid.bloodOath=true;h.HP=2;for(int i=0;i<5;i++)ExtractionHybridCombat.bloodTick(h);assertEquals(1,h.HP);assertFalse(h.extractionHybrid.bloodOath);
+    }
+    @Test public void purchasedFoodRemainsDroppableAndNaturalMobFoodIsBlocked(){
+        com.shatteredpixel.shatteredpixeldungeon.items.food.Food food=new com.shatteredpixel.shatteredpixeldungeon.items.food.Food();assertTrue(ExtractionFood.blockNatural(food));
+        assertNull(new Piranha().createLoot());assertNull(new Monk().createLoot());
+        p.buy(1);Item bought=p.stash.get(p.stash.size()-1);assertTrue(bought.extractionPurchasedFood);assertFalse(ExtractionFood.blockNatural(bought));
+        Bundle b=new Bundle();b.put("food",bought);assertTrue(((Item)b.get("food")).extractionPurchasedFood);
+    }
+    private java.util.ArrayList<Item> picks(Item...items){return new java.util.ArrayList<>(java.util.Arrays.asList(items));}
+    @Test public void hubCraftingNormalizesSupplyPotionsAndPreservesExpeditionHero(){
+        Item supply=p.stash.get(1);java.util.ArrayList<Item> selected=picks(supply);
+        Recipe recipe=ExtractionAlchemy.recipes(p,selected).stream().filter(r->r instanceof com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion.PotionToExotic).findFirst().get();
+        int cost=ExtractionAlchemy.cost(p,selected,recipe);assertEquals(4,cost);p.alchemyEnergy=4;
+        ExtractionAlchemy.craft(p,selected,recipe);assertEquals(0,p.alchemyEnergy);assertFalse(p.stash.contains(supply));assertSame(h,Dungeon.hero);
+        assertTrue(p.stash.get(p.stash.size()-1) instanceof com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.PotionOfShielding);
+    }
+    @Test public void hubSeedsConsumeExactlyThreeFromOneStackAndKeepOtherMaterials(){
+        Item seeds=new com.shatteredpixel.shatteredpixeldungeon.plants.Sungrass.Seed().quantity(5);p.stash.add(seeds);
+        java.util.ArrayList<Item> selected=picks(seeds,seeds,seeds);Recipe recipe=ExtractionAlchemy.recipes(p,selected).get(0);
+        int before=p.stash.size();ExtractionAlchemy.craft(p,selected,recipe);assertEquals(2,seeds.quantity());assertEquals(before+1,p.stash.size());assertTrue(p.stash.get(p.stash.size()-1) instanceof PotionOfHealing);assertSame(h,Dungeon.hero);
+    }
+    @Test public void hubCraftingRejectsOverselectedStacksAndMissingEnergy(){
+        Item supply=p.stash.get(1);int before=p.stash.size();
+        try{ExtractionAlchemy.recipes(p,picks(supply,supply));fail("Overselected stack");}catch(IllegalStateException expected){}
+        Recipe recipe=ExtractionAlchemy.recipes(p,picks(supply)).stream().filter(r->r instanceof com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion.PotionToExotic).findFirst().get();
+        try{ExtractionAlchemy.craft(p,picks(supply),recipe);fail("Missing energy");}catch(IllegalStateException expected){}assertEquals(before,p.stash.size());assertTrue(p.stash.contains(supply));
+    }
+    @Test public void hubEnergyPurchasesAndDisassemblyPersistWithoutDuplicatingValue() throws Exception{
+        ExtractionAlchemy.buyEnergy(p,5);assertEquals(50,p.gold);assertEquals(5,p.alchemyEnergy);
+        Item potion=p.stash.get(1);int energy=ExtractionAlchemy.energyValue(potion,1);assertTrue(energy>0);ExtractionAlchemy.energize(p,potion,1);assertEquals(5+energy,p.alchemyEnergy);
+        try{ExtractionAlchemy.energize(p,potion,1);fail("Already consumed");}catch(IllegalStateException expected){}
+        Field f=ExtractionProfile.class.getDeclaredField("instance");f.setAccessible(true);f.set(null,null);p=ExtractionProfile.get();assertEquals(5+energy,p.alchemyEnergy);assertEquals(50,p.gold);
+    }
+    @Test public void hubCraftSaveFailureRestoresMaterialsAndEnergy() throws Exception{
+        Item supply=p.stash.get(1);p.alchemyEnergy=4;Recipe recipe=ExtractionAlchemy.recipes(p,picks(supply)).stream().filter(r->r instanceof com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion.PotionToExotic).findFirst().get();
+        int size=p.stash.size();java.io.File blocker=folder.newFile("alchemy-write-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{ExtractionAlchemy.craft(p,picks(supply),recipe);fail("Expected save failure");}catch(IllegalStateException expected){}assertEquals(4,p.alchemyEnergy);assertEquals(size,p.stash.size());assertEquals(3,p.stash.stream().filter(i->i instanceof SupplyHealingPotion).count());assertSame(h,Dungeon.hero);
+    }
+    @Test public void catalystKeepsItsThreeChoicesAcrossReopeningAndOnlyConsumesOnCraft(){
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.fullReset();
+        Item catalyst=new com.shatteredpixel.shatteredpixeldungeon.items.trinkets.TrinketCatalyst();p.stash.add(catalyst);p.alchemyEnergy=6;
+        java.util.ArrayList<Recipe> first=ExtractionAlchemy.recipes(p,picks(catalyst)),second=ExtractionAlchemy.recipes(p,picks(catalyst));assertEquals(3,first.size());
+        for(int i=0;i<3;i++)assertEquals(ExtractionAlchemy.preview(p,picks(catalyst),first.get(i)).getClass(),ExtractionAlchemy.preview(p,picks(catalyst),second.get(i)).getClass());
+        ExtractionAlchemy.craft(p,picks(catalyst),first.get(0));assertFalse(p.stash.contains(catalyst));assertEquals(0,p.alchemyEnergy);assertTrue(p.stash.get(p.stash.size()-1) instanceof com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket);
+    }
+    @Test public void runningExpeditionCannotUseHubAlchemy(){
+        p.begin();try{ExtractionAlchemy.buyEnergy(p,1);fail("Running raid");}catch(IllegalStateException expected){}
+        try{ExtractionAlchemy.recipes(p,picks());fail("Running raid");}catch(IllegalStateException expected){}
+    }
 }

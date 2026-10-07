@@ -27,6 +27,7 @@ public final class ExtractionProfile {
     private final ArrayList<Item> escrow = new ArrayList<>();
     public final HashSet<String> nodes = new HashSet<>();
     public int gold = 100, xp = 0, points = 3, raidID = 0, nextRaid = 1, raidXP = 0;
+    public int alchemyEnergy=0;
     public boolean active = false;
     public boolean debugEnabled=false;
     public int selectedChapter=1, selectedDifficulty=1, raidChapter=1, raidDifficulty=1;
@@ -58,6 +59,7 @@ public final class ExtractionProfile {
     }
     private Bundle bundle() {
         Bundle b = new Bundle(); b.put("schema", 1); b.put("stash", stash); b.put("prepared", prepared); b.put("escrow", escrow);
+        b.put("alchemy_energy",alchemyEnergy);
         b.put("nodes", nodes.toArray(new String[0])); b.put("gold", gold); b.put("xp", xp); b.put("points", points);
         b.put("active", active); b.put("raid", raidID); b.put("next", nextRaid); b.put("raid_xp", raidXP); b.put("result", result);
         b.put("chapter",selectedChapter);b.put("difficulty",selectedDifficulty);b.put("raid_chapter",raidChapter);b.put("raid_difficulty",raidDifficulty);
@@ -77,6 +79,7 @@ public final class ExtractionProfile {
         for (Bundlable i : b.getCollection("prepared")) if (i instanceof Item) prepared.add((Item)i);
         for (Bundlable i : b.getCollection("escrow")) if (i instanceof Item) escrow.add((Item)i);
         for (String n : b.getStringArray("nodes")) nodes.add(n);
+        alchemyEnergy=Math.max(0,b.getInt("alchemy_energy"));
         gold=b.getInt("gold"); xp=b.getInt("xp"); points=b.getInt("points"); active=b.getBoolean("active");
         raidID=b.getInt("raid"); nextRaid=b.getInt("next"); raidXP=b.getInt("raid_xp"); result=b.getString("result");
         selectedChapter=b.contains("chapter")?b.getInt("chapter"):1;
@@ -358,7 +361,7 @@ public final class ExtractionProfile {
         ExtractionShop.Offer offer=ExtractionShop.OFFERS.get(offerIndex);
         if(!offer.available())throw new IllegalStateException("T3 이상 장비는 원정에서 파밍해야 합니다.");
         if(gold<offer.price)throw new IllegalStateException("골드가 부족합니다.");
-        change(() -> { gold-=offer.price;stash.add(offer.item()); });
+        change(() -> { gold-=offer.price;stash.add(ExtractionFood.purchased(offer.item())); });
     }
     public void sell(final Item i) {
         sell(i,true);

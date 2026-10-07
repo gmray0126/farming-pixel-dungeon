@@ -84,6 +84,11 @@ public class TrinketCatalyst extends Item {
 
 	private ArrayList<Trinket> rolledTrinkets = new ArrayList<>();
 
+    /** The hub uses the same saved three choices without entering a dungeon window. */
+    public ArrayList<Trinket> hubOptions(){
+        while(rolledTrinkets.size()<3)rolledTrinkets.add((Trinket)Generator.random(Generator.Category.TRINKET));
+        return new ArrayList<>(rolledTrinkets);
+    }
 	public boolean hasRolledTrinkets(){
 		return !rolledTrinkets.isEmpty();
 	}

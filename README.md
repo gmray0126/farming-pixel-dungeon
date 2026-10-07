@@ -62,6 +62,16 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 - **Builds:** [Android build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/android-apk.yml) · [Windows build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/desktop-pc.yml). Successful runs provide downloadable artifacts; GitHub may require sign-in.
 - **Source builds:** [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction) · [Android guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-android.md) · [Desktop guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-desktop.md).
 
+## 로비 연금술과 보급 / Hub alchemy and supplies
+
+로비 준비 탭의 창고 옆 **연금** 버튼에서 재료를 최대 3개 넣고 기존 연금술 제작법으로 제작합니다. 에너지 1은 10 G로 구매하거나 창고 재료를 분해하여 얻습니다. 재료·에너지·완성품은 한 번에 저장되며 원정 중에는 이용할 수 없습니다. 장신구 촉매의 세 선택지는 저장됩니다.
+
+Use **연금** beside the stash in the preparation tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 10 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
+
+원정의 음식은 구매로 마련합니다. 자연 음식 생성과 몬스터 음식 전리품은 차단하며 구매한 음식은 버리거나 다시 주울 수 있습니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
+
+Purchase food before expeditions. Natural food drops are suppressed, while purchased food can still be dropped and picked up. Blood Oath additionally drains one HP every five turns while active and turns off automatically at one HP.
+
 ## 혼합 트리와 의뢰 / Hybrid trees and contracts
 
 여섯 직업 계통 사이에 각각 15개 노드의 혼합 트리가 연결됩니다. 마검사·그림자술사·연금 사냥꾼·폭풍 유격수·성전사·혈기사로 총 90개 노드를 추가했습니다. 교대 공격, 표식 폭발, 속성 코팅, 거리 전환, 성력 소비, 체력과 출혈의 교환으로 전투 방식을 선택합니다. 원정 메뉴의 혼합 트리 기술에서 상태 확인과 활성 스킬을 사용합니다.

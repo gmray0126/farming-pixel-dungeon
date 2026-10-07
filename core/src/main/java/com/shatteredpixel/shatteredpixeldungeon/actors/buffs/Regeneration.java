@@ -46,6 +46,7 @@ public class Regeneration extends Buff {
 	@Override
 	public boolean act() {
 		if (target.isAlive()) {
+            if(target instanceof Hero)com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.bloodTick((Hero)target);
 
 			//if other trinkets ever get buffs like this should probably make the buff attaching
 			// behaviour more like wands/rings/artifacts

@@ -97,6 +97,7 @@ public class Item implements Bundlable {
 
 	// whether an item can be included in heroes remains
 	public boolean bones = false;
+    public boolean extractionPurchasedFood = false;
 
 	public int customNoteID = -1;
 	
@@ -590,6 +591,7 @@ public class Item implements Bundlable {
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put( QUANTITY, quantity );
+        if(this instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food)bundle.put("extraction_purchased_food",extractionPurchasedFood);
 		bundle.put( LEVEL, level );
 		bundle.put( LEVEL_KNOWN, levelKnown );
 		bundle.put( CURSED, cursed );
@@ -604,6 +606,7 @@ public class Item implements Bundlable {
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		quantity	= bundle.getInt( QUANTITY );
+        extractionPurchasedFood=this instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food&&(!bundle.contains("extraction_purchased_food")||bundle.getBoolean("extraction_purchased_food"));
 		levelKnown	= bundle.getBoolean( LEVEL_KNOWN );
 		cursedKnown	= bundle.getBoolean( CURSED_KNOWN );
 		

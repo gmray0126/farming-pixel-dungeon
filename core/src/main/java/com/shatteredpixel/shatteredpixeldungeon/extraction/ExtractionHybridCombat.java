@@ -19,7 +19,7 @@ public final class ExtractionHybridCombat {
     public static class State implements Bundlable {
         public boolean spellReady,bladeReady,bloodOath;
         public float spellUntil,bladeUntil,rangeUntil,coatReadyAt,stepReadyAt,shadowReadyAt;
-        public int spellChain,lastSpellKind,rangeChain,lastRangeKind,coating,coatedShots,faith;
+        public int spellChain,lastSpellKind,rangeChain,lastRangeKind,coating,coatedShots,faith,oathTurns;
         public transient boolean castEmpowered,castHit,castExtraCharge;
         public transient float castMultiplier=1;
         @Override public void storeInBundle(Bundle b){
@@ -27,14 +27,14 @@ public final class ExtractionHybridCombat {
             b.put("spell_until",spellUntil);b.put("blade_until",bladeUntil);b.put("range_until",rangeUntil);
             b.put("coat_ready",coatReadyAt);b.put("step_ready",stepReadyAt);b.put("shadow_ready",shadowReadyAt);
             b.put("spell_chain",spellChain);b.put("spell_kind",lastSpellKind);b.put("range_chain",rangeChain);b.put("range_kind",lastRangeKind);
-            b.put("coating",coating);b.put("shots",coatedShots);b.put("faith",faith);
+            b.put("coating",coating);b.put("shots",coatedShots);b.put("faith",faith);b.put("oath_turns",oathTurns);
         }
         @Override public void restoreFromBundle(Bundle b){
             spellReady=b.getBoolean("spell_ready");bladeReady=b.getBoolean("blade_ready");bloodOath=b.getBoolean("blood_oath");
             spellUntil=b.getFloat("spell_until");bladeUntil=b.getFloat("blade_until");rangeUntil=b.getFloat("range_until");
             coatReadyAt=b.getFloat("coat_ready");stepReadyAt=b.getFloat("step_ready");shadowReadyAt=b.getFloat("shadow_ready");
             spellChain=b.getInt("spell_chain");lastSpellKind=b.getInt("spell_kind");rangeChain=b.getInt("range_chain");lastRangeKind=b.getInt("range_kind");
-            coating=b.getInt("coating");coatedShots=Math.max(0,b.getInt("shots"));faith=Math.max(0,b.getInt("faith"));
+            coating=b.getInt("coating");coatedShots=Math.max(0,b.getInt("shots"));faith=Math.max(0,b.getInt("faith"));oathTurns=Math.max(0,b.getInt("oath_turns"))%5;
             castEmpowered=castHit=castExtraCharge=false;castMultiplier=1;
         }
     }
@@ -164,6 +164,13 @@ public final class ExtractionHybridCombat {
         }
         s.castHit=s.castEmpowered=s.castExtraCharge=false;s.castMultiplier=1;
     }
+    /** Regeneration advances once per dungeon turn, including waiting and resting. */
+    public static void bloodTick(Hero h){
+        if(h==null||h.extractionRaidID==0||!h.isAlive())return;
+        State s=state(h);if(!s.bloodOath)return;
+        if(!learned(h,"blood",0)||h.HP<=1){s.bloodOath=false;if(h.sprite!=null)GLog.w("체력이 부족해 피의 서약이 해제되었습니다.");return;}
+        if(++s.oathTurns>=5){s.oathTurns=0;h.HP--;h.resting=false;if(h.HP<=1){s.bloodOath=false;if(h.sprite!=null)GLog.w("체력이 부족해 피의 서약이 해제되었습니다.");}}
+    }
     public static int incoming(Hero h,int damage,Object source){
         if(h==null||h.extractionRaidID==0)return damage;
         if(learned(h,"alchemy",7)&&state(h).coatedShots>0&&(source instanceof Poison||source instanceof Burning))damage=(int)Math.ceil(damage*.75f);
@@ -213,7 +220,7 @@ public final class ExtractionHybridCombat {
     public static String status(Hero h){
         State s=state(h);float now=Actor.now();
         return "마검 준비: 주문 "+(s.spellReady&&now<=s.spellUntil?"강화":"대기")+" · 근접 "+(s.bladeReady&&now<=s.bladeUntil?"강화":"대기")
-            +"\n혈기사 서약: "+(s.bloodOath?"켜짐":"꺼짐")+"\n코팅: "+(s.coating==1?"독":s.coating==2?"냉기":s.coating==3?"화염":"없음")+" · 남은 명중 "+s.coatedShots
+            +"\n혈기사 서약: "+(s.bloodOath?"켜짐 · 5턴마다 체력 -1":"꺼짐")+"\n코팅: "+(s.coating==1?"독":s.coating==2?"냉기":s.coating==3?"화염":"없음")+" · 남은 명중 "+s.coatedShots
             +"\n성력 "+s.faith+" / "+faithCap(h)+"\n행동 버튼 옆 정보에서 조건과 재사용 시간을 확인하세요.";
     }
     public static void open(){

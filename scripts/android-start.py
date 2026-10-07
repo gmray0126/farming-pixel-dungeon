@@ -47,6 +47,13 @@ try:
     time.sleep(1)
     screenshot('01-hub')
     assert not read_state('extraction-profile.dat')['active']
+    # Hub alchemy must open without a live expedition hero or floor.
+    adb('shell', 'input', 'tap', '620', '375')
+    time.sleep(1)
+    check_crash()
+    screenshot('06-hub-alchemy')
+    adb('shell', 'input', 'keyevent', '4')
+    time.sleep(1)
     # Each selection closes WndOptions before creating the next window. Exercise
     # all three callbacks on the native scene to catch detached-window access.
     # Native contract board and guide dialogs share the updated five-tab hub.
@@ -99,6 +106,6 @@ try:
     time.sleep(3)
     restored = read_state('game1/game.dat')
     assert restored['depth'] == 1 and restored['hero']['extraction_raid'] == raid_id, 'Resume changed the raid'
-    (OUT / 'result.json').write_text(json.dumps({'guide_pages_checked': 3, 'native_start': True, 'native_cold_resume': True, 'raid_id': raid_id}, indent=2))
+    (OUT / 'result.json').write_text(json.dumps({'hub_alchemy_open': True, 'guide_pages_checked': 3, 'native_start': True, 'native_cold_resume': True, 'raid_id': raid_id}, indent=2))
 finally:
     (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))

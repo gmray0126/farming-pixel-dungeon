@@ -106,6 +106,8 @@ public abstract class Scroll extends Item {
 		handler = new ItemStatusHandler<>( (Class<? extends Scroll>[])Generator.Category.SCROLL.classes, runes );
 	}
 
+    public static void ensureHubLabels(){if(handler==null)initLabels();}
+
 	public static void clearLabels(){
 		handler = null;
 	}
