@@ -71,6 +71,9 @@ public class InventoryPane extends Component {
 
 	private ArrayList<InventorySlot> equipped;
 	private ArrayList<InventorySlot> bagItems;
+	private StyledButton pageButton;
+	private int bagPage;
+	private Bag pageBag;
 
 	private Image gold;
 	private BitmapText goldTxt;
@@ -182,6 +185,11 @@ public class InventoryPane extends Component {
 			add(btn);
 		}
 
+		pageButton=new StyledButton(Chrome.Type.GREY_BUTTON,"",5){
+			@Override protected void onClick(){bagPage++;updateInventory();}
+		};
+		add(pageButton);
+
 		bags = new ArrayList<>();
 		for (int i = 0; i < 5; i++){
 			BagButton btn = new BagButton(null, i+1);
@@ -240,10 +248,11 @@ public class InventoryPane extends Component {
 		energy.y = energyTxt.y;
 
 		for (BagButton b : bags){
-			b.setRect(left, y + 14, SLOT_WIDTH, 14);
+			b.setRect(left, y + 14, pageButton.visible?12:SLOT_WIDTH, 14);
 			left = b.right()+1;
 		}
 
+		pageButton.setRect(x+159,y+14,24,14);
 		left = x+4;
 		float top = y+4+SLOT_HEIGHT+1;
 		for (InventorySlot b : bagItems){
@@ -309,9 +318,16 @@ public class InventoryPane extends Component {
 			items.add(0, stuff.secondWep);
 		}
 
-		int j = 0;
+		items.removeIf(item -> item instanceof Bag);
+		if(pageBag!=lastBag){pageBag=lastBag;bagPage=0;}
+		int prefix=lastBag==stuff.backpack?0:1;
+		int pages=Math.max(1,(items.size()+prefix+19)/20);
+		bagPage%=pages;
+		pageButton.visible=pageButton.active=pages>1;
+		pageButton.text((bagPage+1)+"/"+pages+" ›");
+		int j = Math.max(0,bagPage*20-prefix);
 		for (int i = 0; i < 20; i++){
-			if (i == 0 && lastBag != stuff.backpack){
+			if (i == 0 && bagPage==0 && lastBag != stuff.backpack){
 				bagItems.get(i).item(lastBag);
 				continue;
 			}
@@ -372,6 +388,7 @@ public class InventoryPane extends Component {
 			b.enable(lastEnabled);
 		}
 
+		pageButton.enable(lastEnabled);
 		goldTxt.alpha( lastEnabled ? 1f : 0.3f );
 		gold.alpha( lastEnabled ? 1f : 0.3f );
 		energyTxt.alpha( lastEnabled ? 1f : 0.3f );
@@ -466,7 +483,8 @@ public class InventoryPane extends Component {
 				b.enable(lastEnabled);
 			}
 
-			goldTxt.alpha( lastEnabled ? 1f : 0.3f );
+			pageButton.enable(lastEnabled);
+		goldTxt.alpha( lastEnabled ? 1f : 0.3f );
 			gold.alpha( lastEnabled ? 1f : 0.3f );
 			energyTxt.alpha( lastEnabled ? 1f : 0.3f );
 			energy.alpha( lastEnabled ? 1f : 0.3f );

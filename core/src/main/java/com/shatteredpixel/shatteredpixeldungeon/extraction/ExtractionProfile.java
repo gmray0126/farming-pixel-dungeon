@@ -18,7 +18,9 @@ import java.util.HashSet;
 /** Separate permanent state. Run equipment is escrowed before starting a raid. */
 public final class ExtractionProfile {
     public static final String FILE = "extraction-profile.dat";
+    public static final int MAX_GROWTH_LEVEL=100, MAX_GROWTH_XP=2475, MAX_GROWTH_POINTS=102, PRESET_SLOTS=3;
     private static ExtractionProfile instance;
+    private final String[][] presets=new String[PRESET_SLOTS][];
     public final ArrayList<Item> stash = new ArrayList<>();
     public final ArrayList<Item> prepared = new ArrayList<>();
     private final ArrayList<Item> escrow = new ArrayList<>();
@@ -44,6 +46,7 @@ public final class ExtractionProfile {
                 for (int i=0; i<3; i++) p.stash.add(new SupplyHealingPotion().identify(false));
                 try { p.save(); } catch (IOException e) { throw new IllegalStateException(e); }
             }
+            p.migrateGrowthCap();
             instance = p;
         }
         return instance;
@@ -56,6 +59,7 @@ public final class ExtractionProfile {
         b.put("difficulty_unlocks",unlockedDifficulty);
         b.put("raid_rules",raidRules);
         b.put("debug_enabled",debugEnabled);
+        for(int i=0;i<PRESET_SLOTS;i++)if(presets[i]!=null)b.put("growth_preset_"+i,presets[i]);
         return b;
     }
     private void restore(Bundle b) {
@@ -73,6 +77,7 @@ public final class ExtractionProfile {
         raidDifficulty=b.contains("raid_difficulty")?b.getInt("raid_difficulty"):1;
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
+        for(int i=0;i<PRESET_SLOTS;i++)presets[i]=b.contains("growth_preset_"+i)?b.getStringArray("growth_preset_"+i):null;
         int[] unlocked=b.contains("difficulty_unlocks")?b.getIntArray("difficulty_unlocks"):new int[0];
         java.util.Arrays.fill(unlockedDifficulty,0);unlockedDifficulty[0]=1;
         for(int n=0;n<Math.min(unlockedDifficulty.length,unlocked.length);n++)unlockedDifficulty[n]=Math.max(n==0?1:0,Math.min(10,unlocked[n]));
@@ -82,7 +87,7 @@ public final class ExtractionProfile {
     public void debugResources(int addedGold,int addedXP,int addedPoints){
         requireDebug();
         if(addedGold<0||addedXP<0||addedPoints<0)throw new IllegalArgumentException("지급량은 음수일 수 없습니다.");
-        change(()->{int level=xp/25;gold=Math.addExact(gold,addedGold);xp=Math.addExact(xp,addedXP);points=Math.addExact(points,Math.addExact(addedPoints,xp/25-level));});
+        change(()->{gold=Math.addExact(gold,addedGold);awardGrowthXP(addedXP);points=(int)Math.min(Math.max(0,MAX_GROWTH_POINTS-spentPoints()),(long)points+addedPoints);});
     }
     public void debugUnlockPrison(){requireDebug();change(()->unlockedDifficulty[1]=Math.max(1,unlockedDifficulty[1]));}
     public void debugUnlockChapters(){requireDebug();change(()->java.util.Arrays.fill(unlockedDifficulty,1));}
@@ -105,6 +110,7 @@ public final class ExtractionProfile {
     public void begin() {
         if (active) return; // retry the same escrow if first map creation was interrupted
         if(!ExtractionDifficulty.validChapter(selectedChapter)||unlockedDifficulty[selectedChapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
+        migrateGrowthCap();
         change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=3;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
     }
     public void selectRaid(final int chapter){
@@ -217,22 +223,24 @@ public final class ExtractionProfile {
     public int resetNodes(){
         if(active)throw new IllegalStateException("진행 중인 원정을 끝내거나 포기한 뒤 초기화할 수 있습니다.");
         int refunded=spentPoints();if(nodes.isEmpty())return 0;
-        change(()->{points=Math.addExact(points,refunded);nodes.clear();while(prepared.size()>capacity())stash.add(prepared.remove(prepared.size()-1));});return refunded;
+        change(()->{points=(int)Math.min(MAX_GROWTH_POINTS,(long)points+refunded);nodes.clear();trimPrepared();});return refunded;
     }
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
         if (!unlocked(index)) throw new IllegalStateException("선행 경로나 연결된 계통의 노드를 먼저 배워 주세요.");
+        if (spentPoints()+COSTS[index]>MAX_GROWTH_POINTS) throw new IllegalStateException("성장 배분 한도는 총 102 P입니다. 다른 노드를 초기화하거나 프리셋을 바꿔 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
         change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); });
     }
     /** High-water credit prevents replaying an older run save from awarding the same XP twice. */
-    public int growthLevel(){return 1+xp/25;}
-    public int growthExperience(){return xp%25;}
-    public int growthExperienceRequired(){return 25;}
+    public int growthLevel(){return 1+Math.min(MAX_GROWTH_XP,Math.max(0,xp))/25;}
+    public int growthExperience(){return growthLevel()==MAX_GROWTH_LEVEL?0:Math.max(0,xp)%25;}
+    public int growthExperienceRequired(){return growthLevel()==MAX_GROWTH_LEVEL?0:25;}
+    public String growthDisplay(){return "성장 Lv. "+growthLevel()+" / 100 · "+(growthLevel()==MAX_GROWTH_LEVEL?"최대 레벨":"XP "+growthExperience()+"/25");}
     public int startingStrength(){return Hero.STARTING_STR+Math.round(bonus(ExtractionGrowth.Stat.STRENGTH));}
     public void credit(final int id, final int total) {
         if (!active || id!=raidID || total<=raidXP) return;
-        change(() -> { int level=xp/25; xp+=total-raidXP; raidXP=total; points+=xp/25-level; });
+        change(() -> { awardGrowthXP((long)total-raidXP); raidXP=total; });
     }
     public void settle(final int id, final boolean success) {
         if (!active || id!=raidID) return;
@@ -258,7 +266,7 @@ public final class ExtractionProfile {
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
                 gold+=redeemed.gold;
-                int old=xp/25; xp+=10+5*(raidDifficulty-1)+10*(raidChapter-1); points+=xp/25-old;
+                awardGrowthXP(10+5*(raidDifficulty-1)+10*(raidChapter-1));
                 result="탈출 성공! 장비와 전리품을 창고에 보관했습니다."
                         +(redeemed.potions+redeemed.scrolls>0?"\n포션 "+redeemed.potions+"개 · 스크롤 "+redeemed.scrolls+"장 정산 · +"+redeemed.gold+" G":"");
                 if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)result+="\n"+(raidChapter+1)+"챕터 "+ExtractionDifficulty.chapterName(raidChapter+1)+" 출격 가능";
@@ -267,7 +275,45 @@ public final class ExtractionProfile {
             active=false; escrow.clear();
             if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
         });
+        migrateGrowthCap();
         Dungeon.deleteGame(GamesInProgress.curSlot, true);
+    }
+    private void awardGrowthXP(long amount){
+        int old=Math.min(MAX_GROWTH_XP,Math.max(0,xp));
+        xp=(int)Math.min(MAX_GROWTH_XP,old+Math.max(0,amount));
+        points=(int)Math.min(Math.max(0,MAX_GROWTH_POINTS-spentPoints()),(long)points+xp/25-old/25);
+    }
+    private void trimPrepared(){while(prepared.size()>capacity())stash.add(prepared.remove(prepared.size()-1));}
+    /** Preserve a running hero; over-budget legacy allocations are refunded at the hub. */
+    private void migrateGrowthCap(){
+        int used=spentPoints(), cappedXP=Math.min(MAX_GROWTH_XP,Math.max(0,xp));
+        boolean refund=!active&&used>MAX_GROWTH_POINTS;
+        int remaining=Math.max(0,MAX_GROWTH_POINTS-(refund?0:used));
+        int cappedPoints=refund?MAX_GROWTH_POINTS:Math.min(remaining,Math.max(0,points));
+        if(xp==cappedXP&&points==cappedPoints&&!refund)return;
+        change(()->{xp=cappedXP;points=cappedPoints;if(refund){nodes.clear();trimPrepared();result+="\n성장 한도 102 P 적용: 기존 배분을 초기화하고 포인트를 반환했습니다.";}});
+    }
+    private void checkPresetSlot(int slot){if(slot<0||slot>=PRESET_SLOTS)throw new IllegalArgumentException("없는 프리셋입니다.");}
+    public boolean hasPreset(int slot){checkPresetSlot(slot);return presets[slot]!=null;}
+    public int presetCost(int slot){checkPresetSlot(slot);if(presets[slot]==null)return 0;return allocationCost(new HashSet<>(java.util.Arrays.asList(presets[slot])));}
+    private int allocationCost(java.util.Set<String> allocation){
+        int cost=0;for(String id:allocation)cost=Math.addExact(cost,ExtractionGrowth.NODES[ExtractionGrowth.index(id)].cost);return cost;
+    }
+    public void savePreset(int slot){
+        checkPresetSlot(slot);if(active)throw new IllegalStateException("프리셋은 거점에서 저장할 수 있습니다.");
+        if(spentPoints()>MAX_GROWTH_POINTS)throw new IllegalStateException("배분 한도를 넘었습니다. 먼저 초기화해 주세요.");
+        change(()->presets[slot]=nodes.toArray(new String[0]));
+    }
+    public void applyPreset(int slot){
+        checkPresetSlot(slot);if(active)throw new IllegalStateException("원정을 끝내거나 포기한 뒤 프리셋을 바꿀 수 있습니다.");
+        if(presets[slot]==null)throw new IllegalStateException("저장된 프리셋이 없습니다.");
+        HashSet<String> target=new HashSet<>(java.util.Arrays.asList(presets[slot]));int cost=allocationCost(target);
+        int budget=(int)Math.min(MAX_GROWTH_POINTS,(long)points+spentPoints());
+        if(cost>budget)throw new IllegalStateException("프리셋에 "+cost+" P가 필요합니다. 현재 총 "+budget+" P입니다.");
+        HashSet<String> valid=new HashSet<>();boolean progress;
+        do{progress=false;for(String id:target)if(!valid.contains(id)&&ExtractionGrowth.unlocked(ExtractionGrowth.NODES[ExtractionGrowth.index(id)],valid)){valid.add(id);progress=true;}}while(progress);
+        if(valid.size()!=target.size())throw new IllegalStateException("프리셋의 선행 노드가 부족합니다.");
+        change(()->{nodes.clear();nodes.addAll(target);points=budget-cost;trimPrepared();});
     }
     public void buyPotion() {
         buy(0);
@@ -279,6 +325,7 @@ public final class ExtractionProfile {
             active=false;escrow.clear();raidXP=0;
             result="원정을 포기했습니다. 출격 물품과 전리품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
         });
+        migrateGrowthCap();
         Dungeon.deleteGame(1,true);
         Dungeon.hero=null;Dungeon.level=null;
     }

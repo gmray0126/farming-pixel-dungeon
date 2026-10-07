@@ -163,7 +163,7 @@ public class ExtractionProfileTest {
         Hero hero=new Hero();int hp=hero.HT,str=hero.STR;
         profile.setDebugEnabled(true);profile.debugResources(10000,250,100);profile.debugUnlockPrison();
         forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.debugEnabled);
-        assertEquals(gold+10000,profile.gold);assertEquals(250,profile.xp);assertEquals(points+110,profile.points);
+        assertEquals(gold+10000,profile.gold);assertEquals(250,profile.xp);assertEquals(102,profile.points);
         assertEquals(hp,hero.HT);assertEquals(str,hero.STR);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.setDebugEnabled(false);forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.debugEnabled);
     }
@@ -806,10 +806,10 @@ public class ExtractionProfileTest {
         Item item=profile.stash.get(0);profile.prepare(item,true);profile.xp=77;
         int before=profile.points,used=profile.spentPoints(),gold=profile.gold,stash=profile.stash.size();
         assertEquals(1000,before+used);assertTrue(used>0);
-        assertEquals(used,profile.resetNodes());assertEquals(1000,profile.points);assertEquals(0,profile.spentPoints());assertTrue(profile.nodes.isEmpty());
+        assertEquals(used,profile.resetNodes());assertEquals(102,profile.points);assertEquals(0,profile.spentPoints());assertTrue(profile.nodes.isEmpty());
         assertEquals(gold,profile.gold);assertEquals(77,profile.xp);assertEquals(stash,profile.stash.size());assertEquals(1,profile.prepared.size());assertEquals(10,profile.startingStrength());
-        assertEquals(0,profile.resetNodes());assertEquals(1000,profile.points);
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(1000,profile.points);assertEquals(0,profile.spentPoints());assertEquals(77,profile.xp);assertEquals(1,profile.prepared.size());
+        assertEquals(0,profile.resetNodes());assertEquals(102,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(102,profile.points);assertEquals(0,profile.spentPoints());assertEquals(77,profile.xp);assertEquals(1,profile.prepared.size());
     }
     @Test public void resetCannotChangeAnActiveRaidAndFailedSaveRollsBackTheRefund() throws Exception {
         profile.points=100;learnPath("utility_protective_shadows_2");int before=profile.points,used=profile.spentPoints();
@@ -1028,4 +1028,53 @@ public class ExtractionProfileTest {
         }
     }
 
+    @Test public void growthStopsAt100AndCreditsStayIdempotentWithoutChangingStats() throws Exception {
+        profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
+        int ht=Dungeon.hero.HT,str=Dungeon.hero.STR;
+        profile.credit(profile.raidID,2474);assertEquals(99,profile.growthLevel());assertEquals(24,profile.growthExperience());assertEquals(101,profile.points);
+        profile.credit(profile.raidID,Integer.MAX_VALUE);assertEquals(100,profile.growthLevel());assertEquals(2475,profile.xp);assertEquals(102,profile.points);assertEquals(0,profile.growthExperienceRequired());
+        profile.credit(profile.raidID,Integer.MAX_VALUE);Dungeon.gold=0;profile.settle(profile.raidID,true);
+        assertEquals(2475,profile.xp);assertEquals(102,profile.points);assertEquals(ht,Dungeon.hero.HT);assertEquals(str,Dungeon.hero.STR);
+        forgetProfile();profile=ExtractionProfile.get();profile.debugEnabled=true;profile.debugResources(0,Integer.MAX_VALUE,Integer.MAX_VALUE);
+        assertEquals(100,profile.growthLevel());assertEquals(102,profile.points);
+    }
+    @Test public void presetsSaveSwitchAndReloadUsingOneBudget() throws Exception {
+        profile.points=30;learnPath("strength");profile.savePreset(0);int cost=profile.spentPoints();
+        java.util.HashSet<String> original=new java.util.HashSet<>(profile.nodes);
+        profile.resetNodes();profile.learn(ExtractionGrowth.index("ranged_0"));profile.savePreset(1);profile.resetNodes();profile.savePreset(2);
+        profile.applyPreset(0);assertEquals(original,profile.nodes);assertEquals(30-cost,profile.points);
+        for(int n=0;n<10;n++){profile.applyPreset(1);profile.applyPreset(0);}assertEquals(30-cost,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(cost,profile.presetCost(0));assertTrue(profile.hasPreset(2));
+        profile.applyPreset(2);assertTrue(profile.nodes.isEmpty());assertEquals(30,profile.points);
+        profile.applyPreset(1);assertTrue(profile.nodes.contains("ranged_0"));
+    }
+    @Test public void presetsRejectInsufficientPointsAndActiveRaidsAndRollBackFailedWrites() throws Exception {
+        profile.points=30;learnPath("strength");profile.savePreset(0);profile.resetNodes();profile.savePreset(1);profile.points=0;
+        try{profile.applyPreset(0);fail("Insufficient points");}catch(IllegalStateException expected){}assertTrue(profile.nodes.isEmpty());assertEquals(0,profile.points);
+        profile.points=30;profile.begin();
+        try{profile.applyPreset(0);fail("Active raid");}catch(IllegalStateException expected){}
+        try{profile.savePreset(1);fail("Active raid");}catch(IllegalStateException expected){}
+        Dungeon.hero=new Hero();profile.settle(profile.raidID,false);profile.applyPreset(0);
+        java.util.HashSet<String> before=new java.util.HashSet<>(profile.nodes);int points=profile.points;
+        java.io.File blocker=folder.newFile("preset-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.applyPreset(1);fail("Save must fail");}catch(IllegalStateException expected){}assertEquals(before,profile.nodes);assertEquals(points,profile.points);
+        try{profile.savePreset(1);fail("Save must fail");}catch(IllegalStateException expected){}assertEquals(0,profile.presetCost(1));
+    }
+    @Test public void presetsValidateConnectionsAndReturnCapacityOverflowToStash() throws Exception {
+        profile.points=100;learnPath("porter");int capacity=profile.capacity();
+        profile.resetNodes();profile.savePreset(0);learnPath("porter");
+        for(int i=0;i<capacity;i++)profile.prepared.add(new Food());int stash=profile.stash.size();
+        profile.applyPreset(0);assertEquals(12,profile.prepared.size());assertEquals(stash+capacity-12,profile.stash.size());
+        profile.nodes.add("sword_8");profile.savePreset(1);profile.nodes.clear();
+        try{profile.applyPreset(1);fail("Invalid prerequisites");}catch(IllegalStateException expected){}assertTrue(profile.nodes.isEmpty());
+    }
+    @Test public void legacyOverBudgetGrowthRefundsAtHubAndPreservesRunningHeroUntilSettlement() throws Exception {
+        java.lang.reflect.Method snapshot=ExtractionProfile.class.getDeclaredMethod("bundle");snapshot.setAccessible(true);
+        for(ExtractionGrowth.Node node:ExtractionGrowth.NODES)profile.nodes.add(node.id);profile.xp=100000;profile.points=1000;
+        com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);saved.put("active",true);saved.put("raid",7);
+        FileUtils.bundleToFile(ExtractionProfile.FILE,saved);forgetProfile();profile=ExtractionProfile.get();
+        assertTrue(profile.active);assertEquals(532,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
+        profile.abandon();assertTrue(profile.nodes.isEmpty());assertEquals(102,profile.points);assertEquals(2475,profile.xp);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(102,profile.points);assertTrue(profile.result.contains("102 P"));
+    }
 }

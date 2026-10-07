@@ -55,7 +55,7 @@ public class ExtractionHubScene extends PixelScene {
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
         label(p.gold+" G · 남음 "+p.points+" P · 사용 "+p.spentPoints()+" P",6,left,top+20,p.debugEnabled?width-43:width,TEXT);
         if(p.debugEnabled)button("디버그",left+width-40,top+18,40,13,this::debugMenu,false);
-        label("성장 Lv. "+p.growthLevel()+" · XP "+p.growthExperience()+"/"+p.growthExperienceRequired()+" · 출격 힘 "+p.startingStrength(),6,left,top+29,width,GREEN);
+        label(p.growthDisplay()+" · 출격 힘 "+p.startingStrength(),6,left,top+29,width,GREEN);
         float tw=(width-6)/4f;
         String[] titles={"준비","성장","원정","상점"};
         for(int i=0;i<4;i++){

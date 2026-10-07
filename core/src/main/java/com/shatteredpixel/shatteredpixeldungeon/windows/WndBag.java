@@ -37,6 +37,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite;
 import com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSpriteSheet;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
+import com.watabou.noosa.ui.Component;
 import com.shatteredpixel.shatteredpixeldungeon.ui.InventorySlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
@@ -73,6 +75,7 @@ public class WndBag extends WndTabbed {
 
 	private int nCols;
 	private int nRows;
+	private Component itemGrid;
 
 	private int slotWidth;
 	private int slotHeight;
@@ -104,7 +107,7 @@ public class WndBag extends WndTabbed {
 		slotHeight = PixelScene.landscape() ? SLOT_HEIGHT_L : SLOT_HEIGHT_P;
 
 		nCols = PixelScene.landscape() ? COLS_L : COLS_P;
-		nRows = (int)Math.ceil(25/(float)nCols); //we expect to lay out 25 slots in all cases
+		nRows = 5; // Visible viewport; larger bags scroll instead of overlapping tabs.
 
 		int windowWidth = slotWidth * nCols + SLOT_MARGIN * (nCols - 1);
 		int windowHeight = TITLE_HEIGHT + slotHeight * nRows + SLOT_MARGIN * (nRows - 1);
@@ -123,7 +126,13 @@ public class WndBag extends WndTabbed {
 
 		placeTitle( bag, windowWidth );
 		
-		placeItems( bag );
+		itemGrid=new Component();
+		ScrollPane scroll=new ScrollPane(itemGrid);
+		add(scroll);
+		placeItems(bag);
+		int rows=row+(col>0?1:0);
+		itemGrid.setSize(windowWidth,rows*(slotHeight+SLOT_MARGIN)-SLOT_MARGIN);
+		scroll.setRect(0,TITLE_HEIGHT,windowWidth,windowHeight-TITLE_HEIGHT);
 
 		resize( windowWidth, windowHeight );
 
@@ -282,7 +291,7 @@ public class WndBag extends WndTabbed {
 		count++;
 		
 		int x = col * (slotWidth + SLOT_MARGIN);
-		int y = TITLE_HEIGHT + row * (slotHeight + SLOT_MARGIN);
+		int y = row * (slotHeight + SLOT_MARGIN);
 
 		InventorySlot slot = new InventorySlot( item ){
 			@Override
@@ -350,7 +359,7 @@ public class WndBag extends WndTabbed {
 			}
 		};
 		slot.setRect( x, y, slotWidth, slotHeight );
-		add(slot);
+		itemGrid.add(slot);
 
 		if (item == null || (selector != null && !selector.itemSelectable(item))){
 			slot.enable(false);
