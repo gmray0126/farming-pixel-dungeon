@@ -1170,7 +1170,7 @@ public class ExtractionProfileTest {
         profile.debugEnabled=true;profile.debugUnlockChapters();
         float previousHP=0,previousDamage=0;
         for(int chapter=1;chapter<=5;chapter++) {
-            profile.selectRaid(chapter);profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
+            profile.selectRaid(chapter);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
             float health=ExtractionDifficulty.raidHealthMultiplier(),damage=ExtractionDifficulty.raidDamageMultiplier();
             assertTrue(health>previousHP);assertTrue(damage>previousDamage);
             if(chapter>=3)assertTrue(health>=previousHP*1.4f);
