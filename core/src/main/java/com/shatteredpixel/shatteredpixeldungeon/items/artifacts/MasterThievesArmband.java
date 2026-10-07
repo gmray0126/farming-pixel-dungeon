@@ -239,6 +239,7 @@ public class MasterThievesArmband extends Artifact {
 
 	@Override
 	public Item upgrade() {
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this))return this;
 		chargeCap = 5 + (level()+1)/2;
 		return super.upgrade();
 	}

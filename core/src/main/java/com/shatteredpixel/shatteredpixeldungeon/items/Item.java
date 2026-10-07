@@ -411,7 +411,7 @@ public class Item implements Bundlable {
 	}
 	
 	final public Item upgrade( int n ) {
-		for (int i=0; i < n; i++) {
+		for (int i=0; i < n && com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this); i++) {
 			upgrade();
 		}
 		

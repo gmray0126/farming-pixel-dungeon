@@ -169,6 +169,7 @@ public class ChaliceOfBlood extends Artifact {
 
 	@Override
 	public Item upgrade() {
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this))return this;
 		if (level() >= 6)
 			image = ItemSpriteSheet.ARTIFACT_CHALICE3;
 		else if (level() >= 2)

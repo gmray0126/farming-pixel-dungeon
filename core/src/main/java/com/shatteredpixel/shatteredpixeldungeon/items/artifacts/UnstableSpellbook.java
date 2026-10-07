@@ -278,6 +278,7 @@ public class UnstableSpellbook extends Artifact {
 
 	@Override
 	public Item upgrade() {
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this))return this;
 		chargeCap = (int)((level()+1)*0.6f)+2;
 
 		//for artifact transmutation.

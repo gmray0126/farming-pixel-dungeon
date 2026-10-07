@@ -219,6 +219,7 @@ public class HornOfPlenty extends Artifact {
 
 	@Override
 	public Item upgrade() {
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this))return this;
 		super.upgrade();
 		chargeCap = 5 + level()/2;
 		return this;

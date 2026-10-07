@@ -337,6 +337,7 @@ public class DriedRose extends Artifact {
 	
 	@Override
 	public Item upgrade() {
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this))return this;
 		if (level() >= 9)
 			image = ItemSpriteSheet.ARTIFACT_ROSE3;
 		else if (level() >= 4)

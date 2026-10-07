@@ -205,7 +205,7 @@ public class Ring extends KindofMisc {
 			desc += "\n\n" + statsInfo();
 		}
 		
-		return desc;
+		return desc+com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.description(this);
 	}
 	
 	protected String statsInfo(){

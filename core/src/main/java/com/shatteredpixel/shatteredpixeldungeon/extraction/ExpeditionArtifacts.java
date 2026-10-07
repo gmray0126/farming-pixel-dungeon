@@ -52,7 +52,7 @@ public final class ExpeditionArtifacts {
     public static float tempo(Hero hero){return hero.buff(BurstTempo.class)!=null?2:1;}
     public abstract static class Relic extends Artifact {
         public static final String USE="RELIC_USE";
-        protected Relic(){unique=true;levelCap=5;chargeCap=8;charge=0;defaultAction=USE;}
+        protected Relic(){unique=true;levelCap=15;chargeCap=8;charge=0;defaultAction=USE;}
         @Override public Item upgrade(){if(level()<levelCap)return super.upgrade();return this;}
         @Override public Item level(int value){return super.level(Math.min(levelCap,value));}
         public void gainKill(){
@@ -75,7 +75,7 @@ public final class ExpeditionArtifacts {
             if(charge<cost()){GLog.w("충전이 부족합니다. 적을 처치해 충전하세요.");return false;}return true;
         }
         protected void consume(Hero hero){charge-=cost();hero.spendAndNext(1f);updateQuickslot();}
-        protected String progress(){return "\n\n유물 등급 "+level()+" / 5 · 적 처치로 성장\n충전 "+charge+" / 8 · 적 처치마다 +1";}
+        protected String progress(){return "\n\n유물 등급 "+level()+" / 15 · 적 처치로 성장\n충전 "+charge+" / 8 · 적 처치마다 +1";}
         @Override public int value(){return 100+20*level();}
     }
     public static class BloodLantern extends Relic {

@@ -199,6 +199,7 @@ public class HolyTome extends Artifact {
 
 	@Override
 	public Item upgrade() {
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this))return this;
 		chargeCap = Math.min(chargeCap + 1, 10);
 		return super.upgrade();
 	}

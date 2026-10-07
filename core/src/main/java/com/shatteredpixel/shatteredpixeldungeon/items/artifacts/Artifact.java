@@ -119,10 +119,18 @@ public class Artifact extends KindofMisc {
 		return false;
 	}
 
-	@Override
-	public int visiblyUpgraded() {
-		return levelKnown ? Math.round((level()*10)/(float)levelCap): 0;
-	}
+    public static final int MAX_PERMANENT_RANK=15;
+    public int nativeLevelCap(){return levelCap;}
+    /** Keep each original artifact's stage-dependent arrays and effects within native bounds. */
+    @Override public int level(){return trueLevel()<0?trueLevel():levelCap<=0?0:Math.min(levelCap,trueLevel()*levelCap/MAX_PERMANENT_RANK);}
+    @Override public int visiblyUpgraded(){return levelKnown?Math.min(MAX_PERMANENT_RANK,trueLevel()):0;}
+    @Override public Item upgrade(){
+        if(levelCap<=0||trueLevel()>=MAX_PERMANENT_RANK)return this;
+        // Finite native stages advance to the corresponding permanent rank, e.g. sandals +5/+10/+15.
+        int rank=(int)Math.ceil((level()+1)*MAX_PERMANENT_RANK/(double)levelCap);
+        return super.level(Math.min(MAX_PERMANENT_RANK,rank));
+    }
+
 
 	@Override
 	public int buffedVisiblyUpgraded() {
@@ -137,11 +145,13 @@ public class Artifact extends KindofMisc {
 
 	//transfers upgrades from another artifact, transfer level will equal the displayed level
 	public void transferUpgrade(int transferLvl) {
-		upgrade(Math.round((transferLvl*levelCap)/10f));
+		int nativeTarget=Math.max(0,Math.min(levelCap,transferLvl*levelCap/MAX_PERMANENT_RANK));
+        upgrade(Math.max(0,nativeTarget-level()));
+        super.level(Math.max(0,Math.min(MAX_PERMANENT_RANK,transferLvl)));
 	}
 
 	public void resetForTrinity(int visibleLevel){
-		level(Math.round((visibleLevel*levelCap)/10f));
+		level(Math.max(0,Math.min(MAX_PERMANENT_RANK,visibleLevel)));
 		exp = Integer.MIN_VALUE; //ensures no levelling
 		charge = chargeCap;
 		cooldown = 0;
@@ -170,6 +180,8 @@ public class Artifact extends KindofMisc {
 			}
 		}
 	}
+
+    @Override public String desc(){return super.desc()+"\n\n유물 강화 "+(levelKnown?"+"+visiblyUpgraded()+" / ":"상한 ")+"+15 · 고유 성장 방식";}
 
 	@Override
 	public String info() {
@@ -285,6 +297,7 @@ public class Artifact extends KindofMisc {
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle(bundle);
+        bundle.put("artifact_rank_15",true);
 		bundle.put( EXP , exp );
 		bundle.put( CHARGE , charge );
 		bundle.put( PARTIALCHARGE , partialCharge );
@@ -292,7 +305,12 @@ public class Artifact extends KindofMisc {
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle(bundle);
+        int stored=bundle.getInt("level");
+        int nativeLevel=bundle.getBoolean("artifact_rank_15")&&stored>0?Math.min(levelCap,stored*levelCap/MAX_PERMANENT_RANK):stored;
+        // Item restoration calls natural upgrade stages, rather than assigning a displayed rank.
+        bundle.put("level",nativeLevel);
+        try{super.restoreFromBundle(bundle);}finally{bundle.put("level",stored);}
+        if(bundle.getBoolean("artifact_rank_15"))super.level(stored);
 		exp = bundle.getInt( EXP );
 		if (chargeCap > 0)  charge = Math.min( chargeCap, bundle.getInt( CHARGE ));
 		else                charge = bundle.getInt( CHARGE );

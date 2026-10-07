@@ -265,11 +265,11 @@ public class ExtractionProfileTest {
         ExpeditionArtifacts.kill(hero);assertEquals(5,hero.HP);assertEquals(1,ExpeditionArtifacts.healingMultiplier(hero),0);
         hero.belongings.artifact=lantern;lantern.activate(hero);ExpeditionArtifacts.kill(hero);
         assertEquals(6,hero.HP);assertEquals(.65f,ExpeditionArtifacts.healingMultiplier(hero),.001f);
-        for(int i=0;i<200;i++)lantern.gainKill();assertEquals(5,lantern.level());lantern.upgrade(100);assertEquals(5,lantern.level());
-        lantern.level(100);assertEquals(5,lantern.level());
+        for(int i=0;i<1000;i++)lantern.gainKill();assertEquals(15,lantern.level());lantern.upgrade(100);assertEquals(15,lantern.level());
+        lantern.level(100);assertEquals(15,lantern.level());
         lantern.identify(false);com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();lantern.storeInBundle(saved);
         ExpeditionArtifacts.BloodLantern copy=new ExpeditionArtifacts.BloodLantern();copy.restoreFromBundle(saved);
-        assertEquals(5,copy.level());assertEquals(lantern.status(),copy.status());
+        assertEquals(15,copy.level());assertEquals(lantern.status(),copy.status());
         assertEquals("8/8",copy.status());
         profile.stash.add(copy);profile.prepare(copy,true);profile.begin();Hero next=new Hero();next.extractionRaidID=profile.raidID;
         profile.initialize(next);assertTrue(next.belongings.artifact instanceof ExpeditionArtifacts.BloodLantern);
@@ -1086,5 +1086,33 @@ public class ExtractionProfileTest {
         forgetProfile();profile=ExtractionProfile.get();assertEquals(31,profile.points);
         profile.begin();profile.credit(profile.raidID,25);assertEquals(12,profile.growthLevel());assertEquals(34,profile.points);
         profile.credit(profile.raidID,25);assertEquals(34,profile.points);
+    }
+    @Test public void ringsStopAt15AndLegacyOverCapSavesClampWithoutChangingWeapons() throws Exception {
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight();
+        ring.level(100);assertEquals(15,ring.trueLevel());ring.upgrade(100);assertEquals(15,ring.trueLevel());assertFalse(WeaponUpgradeLimit.eligible(ring));
+        ring.level(14);assertTrue(WeaponUpgradeLimit.eligible(ring));ring.upgrade();assertEquals(15,ring.trueLevel());
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();ring.storeInBundle(saved);saved.put("level",50);
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring restored=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight();restored.restoreFromBundle(saved);assertEquals(15,restored.trueLevel());
+        assertEquals(3,WeaponUpgradeLimit.cap(new BasicExpeditionSword()));assertEquals(15,WeaponUpgradeLimit.cap(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword()));
+    }
+    @Test public void everyOriginalArtifactKeepsNativeEffectsAndRestoresIts15RankAndLegacyStages() throws Exception {
+        Class<?>[] types={com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SandalsOfNature.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TimekeepersHourglass.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.ChaliceOfBlood.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.UnstableSpellbook.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HornOfPlenty.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.MasterThievesArmband.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.TalismanOfForesight.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.AlchemistsToolkit.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.LloydsBeacon.class,
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.SkeletonKey.class,com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CapeOfThorns.class};
+        for(Class<?> type:types){
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact a=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.watabou.utils.Reflection.newInstance(type);a.identify(false);a.upgrade(100);
+            assertEquals(type.getName(),15,a.trueLevel());assertEquals(15,a.visiblyUpgraded());assertEquals(a.nativeLevelCap(),a.level());assertFalse(WeaponUpgradeLimit.canIncrease(a));
+            String status=a.status();a.upgrade();assertEquals(status,a.status());assertEquals(15,a.trueLevel());
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();a.storeInBundle(saved);
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact copy=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.watabou.utils.Reflection.newInstance(type);copy.restoreFromBundle(saved);
+            assertEquals(15,copy.trueLevel());assertEquals(a.level(),copy.level());assertEquals(status,copy.status());assertEquals(15,saved.getInt("level"));
+            saved.put("artifact_rank_15",false);saved.put("level",a.nativeLevelCap());copy=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.watabou.utils.Reflection.newInstance(type);copy.restoreFromBundle(saved);
+            assertEquals(15,copy.trueLevel());assertEquals(a.nativeLevelCap(),copy.level());
+        }
     }
 }
