@@ -162,7 +162,7 @@ try {
     $p=Start-Game
     Click-Client $p 648 110
     Start-Sleep -Seconds 1
-    Click-Client $p 654 218
+    Click-Client $p 654 200
     Start-Sleep -Seconds 1
     Capture $p '04-shoe-shop'
     Close-Game $p
