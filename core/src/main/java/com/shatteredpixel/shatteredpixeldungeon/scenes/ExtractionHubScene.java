@@ -28,6 +28,8 @@ public class ExtractionHubScene extends PixelScene {
 
     @Override public void create() {
         super.create();uiCamera.visible=false;
+        // The hub replaces TitleScene, including its global badge initialization.
+        Badges.loadGlobal();
         SPDSettings.intro(false);SPDSettings.version(ShatteredPixelDungeon.versionCode);
         add(new TitleBackground(Camera.main.width,Camera.main.height));
         add(new ColorBlock(Camera.main.width,Camera.main.height,0xEA080F18));

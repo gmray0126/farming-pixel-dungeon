@@ -134,7 +134,7 @@ public class ExtractionProfileTest {
         assertEquals(1,Dungeon.depth);
         assertEquals(0,Dungeon.hero.extractionVisited);
         assertNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight.class));
-        Dungeon.switchLevel(Dungeon.newLevel(),-1);
+        Dungeon.depth=2;Dungeon.switchLevel(Dungeon.newLevel(),-1);
         Hero h=Dungeon.hero;assertEquals(2,Dungeon.depth);
         // Ensure this regression includes a nearby discovery, even if generator changes.
         int hidden=h.pos+1;

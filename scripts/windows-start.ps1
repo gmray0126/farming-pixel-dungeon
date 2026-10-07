@@ -142,7 +142,7 @@ try {
     Click-Hero $p
     Start-Sleep -Seconds 10
     $p.Refresh()
-    if ($p.HasExited -or $p.MainWindowTitle -match 'Crashed|Error') { Capture $p 'floor-crash'; throw 'Scouting floor descent crashed' }
+    if ($p.HasExited -or $p.MainWindowTitle -match 'Crashed|Error') { Get-Content pc-evidence/stderr.txt -ErrorAction SilentlyContinue | Write-Output; throw 'Scouting floor descent crashed' }
     Capture $p '06-second-floor'
     Close-Game $p
     $second = Read-Bundle "$saveDir/game1/game.dat"
