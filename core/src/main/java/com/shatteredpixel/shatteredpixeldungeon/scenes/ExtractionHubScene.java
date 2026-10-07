@@ -93,7 +93,7 @@ public class ExtractionHubScene extends PixelScene {
         bagPage=Math.min(bagPage,Math.max(0,(p.capacity()-1)/12));
         grid(p.prepared,bagPage*12,3,bagY+12,true);
         float after=bagY+12+3*cellStep;
-        if(after+10<bottom-26)label("탭: 넣기 / 빼기 · 길게: 착용 / 상세",6,left,after+3,width,MUTED);
+        if(after+10<bottom-26)label("탭: 넣기 / 빼기 · 물통 기본 지급",6,left,after+3,width,MUTED);
         if(after+51<bottom-26){
             panel(left,after+16,width,33);
             Item weapon=p.preparedWeapon(), armor=p.preparedArmor();

@@ -167,6 +167,10 @@ public class Waterskin extends Item {
 		return true;
 	}
 
+	public boolean isEmpty() {
+		return volume == 0;
+	}
+
 	public boolean isFull() {
 		return volume >= MAX_VOLUME;
 	}

@@ -420,7 +420,8 @@ public class ExtractionProfileTest {
         profile.settle(profile.raidID,true);assertEquals(4,profile.stash.size());
         Item chosen=profile.stash.get(0);profile.prepare(chosen,true);profile.begin();
         Hero next=new Hero();profile.initialize(next);assertEquals(chosen.getClass(),next.belongings.weapon.getClass());
-        assertTrue(next.belongings.backpack.items.isEmpty());
+        assertEquals(1,next.belongings.backpack.items.size());
+        assertNotNull(next.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class));
     }
     @Test public void potionKnowledgeIsSelectiveAndSurvivesNewColorsAndNativeSave() throws Exception {
         profile.learn(ExtractionGrowth.index("pack"));profile.learn(ExtractionGrowth.index("know_healing"));
@@ -455,6 +456,24 @@ public class ExtractionProfileTest {
         assertEquals(2,profile.growthLevel());assertEquals(1,profile.growthExperience());
         assertEquals(25,profile.growthExperienceRequired());assertEquals(4,profile.points);
         profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(20,next.HT);assertEquals(10,next.STR);
+    }
+    @Test public void waterskinIsReissuedAfterDeathAndPreparedDewSurvivesWithoutDuplicates() throws Exception {
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
+        com.shatteredpixel.shatteredpixeldungeon.items.Waterskin skin=Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class);
+        assertNotNull(skin);assertTrue(skin.isEmpty());
+        com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop dew=new com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop();dew.quantity(5);skin.collectDew(dew);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("water",skin);
+        assertEquals("5/20",((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)saved.get("water")).status());
+        profile.settle(profile.raidID,true);forgetProfile();profile=ExtractionProfile.get();
+        Item prepared=profile.stash.get(profile.stash.size()-1);assertTrue(prepared instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin);
+        profile.prepare(prepared,true);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
+        int count=0;for(Item i:Dungeon.hero.belongings)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)count++;
+        assertEquals(1,count);assertEquals("5/20",Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class).status());
+        profile.settle(profile.raidID,false);
+        for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
+        assertEquals(13,Dungeon.hero.belongings.backpack.items.size());
+        assertTrue(Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class).isEmpty());
     }
     @Before public void setUp() throws Exception {
         Gdx.files = new HeadlessFiles();
@@ -594,7 +613,7 @@ public class ExtractionProfileTest {
         Dungeon.hero.heroClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
         profile.initialize(Dungeon.hero);
         assertEquals(1, Dungeon.hero.belongings.weapon.level());
-        assertEquals(1, Dungeon.hero.belongings.backpack.items.size());
+        assertEquals(2, Dungeon.hero.belongings.backpack.items.size());
     }
     @Test public void returnAllPreservesEveryPreparedItemAfterReload() throws Exception {
         for (Item item : new java.util.ArrayList<>(profile.stash)) profile.prepare(item, true);

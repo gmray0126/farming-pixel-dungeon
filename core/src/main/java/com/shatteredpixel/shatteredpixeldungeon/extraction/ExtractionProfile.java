@@ -133,6 +133,9 @@ public final class ExtractionProfile {
             h.belongings.weapon=(KindOfWeapon)new BasicExpeditionSword().identify(false);
             h.belongings.weapon.activate(h);
         }
+        if(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class)==null
+                && !new com.shatteredpixel.shatteredpixeldungeon.items.Waterskin().collect(h.belongings.backpack))
+            throw new IllegalStateException("기본 물통을 가방에 넣지 못했습니다.");
         ExtractionPotionKnowledge.apply(this);
         for(Item i:h.belongings)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.shatteredpixel.shatteredpixeldungeon.items.Generator.removeArtifact((Class<? extends com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact>)i.getClass());
         h.HTBoost += Math.round(bonus(ExtractionGrowth.Stat.HEALTH)); h.updateHT(true); h.HP=h.HT;
@@ -214,6 +217,8 @@ public final class ExtractionProfile {
                 ExtractionShop.Redemption redeemed=ExtractionShop.redeemConsumables(loot);
                 // Unmodified free swords are reissued next run instead of filling the stash.
                 loot.removeIf(i -> i instanceof BasicExpeditionSword && i.level()==0 && ((BasicExpeditionSword)i).enchantment==null);
+                loot.removeIf(i -> i instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin
+                        && ((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)i).isEmpty());
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
                 gold+=redeemed.gold;
