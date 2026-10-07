@@ -461,7 +461,7 @@ public class ExtractionProfileTest {
         profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
         com.shatteredpixel.shatteredpixeldungeon.items.Waterskin skin=Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class);
         assertNotNull(skin);assertTrue(skin.isEmpty());
-        com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop dew=new com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop();dew.quantity(5);skin.collectDew(dew);
+        for(int i=0;i<5;i++)skin.collectDew(new com.shatteredpixel.shatteredpixeldungeon.items.Dewdrop());
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("water",skin);
         assertEquals("5/20",((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)saved.get("water")).status());
         profile.settle(profile.raidID,true);forgetProfile();profile=ExtractionProfile.get();
