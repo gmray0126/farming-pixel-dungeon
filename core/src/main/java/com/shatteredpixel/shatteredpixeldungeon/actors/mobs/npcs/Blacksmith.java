@@ -345,6 +345,8 @@ public class Blacksmith extends NPC {
 		}
 		
 		public static ArrayList<Room> spawn( ArrayList<Room> rooms ) {
+            // Mining branches are outside the five-floor expedition route.
+            if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())return rooms;
 			if (!spawned && Dungeon.depth > 11 && Random.Int( 15 - Dungeon.depth ) == 0) {
 				
 				rooms.add(new BlacksmithRoom());

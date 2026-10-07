@@ -35,7 +35,7 @@ public final class ExtractionUtility {
         float turns=value(h,FOOD_INVIS);if(turns>0)Buff.prolong(h,Invisibility.class,turns);
     }
     public static boolean floor(Hero h,int depth){
-        if(h==null||h.extractionRaidID==0||depth<1||depth>10||(h.extractionVisited&(1<<depth))!=0)return false;
+        if(h==null||h.extractionRaidID==0||depth<1||depth>25||(h.extractionVisited&(1<<depth))!=0)return false;
         h.extractionVisited|=1<<depth;
         heal(h,value(h,FLOOR_HEAL));shield(h,value(h,FLOOR_SHIELD));
         float turns=value(h,FLOOR_AWARENESS);if(turns>0)Buff.prolong(h,Awareness.class,turns);
@@ -46,7 +46,7 @@ public final class ExtractionUtility {
     }
     public static void defeated(Hero h,Mob mob){
         if(h==null||h.extractionRaidID==0||!h.isAlive()||mob.alignment!=Char.Alignment.ENEMY)return;
-        if(!h.extractionBossDefeated&&Dungeon.branch==0&&((mob instanceof Goo&&Dungeon.depth==5&&ExtractionDifficulty.chapter()==1)||(mob instanceof com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu&&Dungeon.depth==10&&ExtractionDifficulty.chapter()==2))){
+        if(!h.extractionBossDefeated&&Dungeon.branch==0&&ExtractionDifficulty.chapterBoss(mob,ExtractionDifficulty.chapter(),Dungeon.depth)){
             h.extractionBossDefeated=true;
             if(h.sprite!=null)ExtractionDifficulty.bossLoot(mob);
             if(h.sprite!=null)GLog.p("챕터 보스 처치! 아래 계단으로 탈출할 수 있습니다.");

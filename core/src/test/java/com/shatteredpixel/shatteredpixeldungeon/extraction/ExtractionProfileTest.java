@@ -195,7 +195,7 @@ public class ExtractionProfileTest {
         assertEquals(1,profile.unlockedDifficulty[0]);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.selectRaid(2);profile.begin();int id=profile.raidID;
         try{profile.selectRaid(1);fail("Active selection must be frozen");}catch(IllegalStateException expected){}
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(2,profile.raidRules);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(3,profile.raidRules);
         profile.settle(id,false);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.selectRaid(1);profile.selectedDifficulty=10;profile.begin();assertEquals(1,profile.raidDifficulty);profile.settle(profile.raidID,true);assertEquals(1,profile.unlockedDifficulty[0]);
         assertFalse(profile.result.contains("난이도"));
@@ -231,7 +231,7 @@ public class ExtractionProfileTest {
         java.lang.reflect.Method restore=ExtractionProfile.class.getDeclaredMethod("restore",com.watabou.utils.Bundle.class);restore.setAccessible(true);restore.invoke(profile,saved);
         profile.begin();assertEquals(10,profile.raidDifficulty);assertEquals(1,profile.raidRules);
         Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;assertEquals(5,ExtractionDifficulty.raidMaxTier());
-        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(2,profile.raidRules);
+        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(3,profile.raidRules);
     }
     @Test public void lootCeilingsScalingAndShopRestrictionsDoNotFollowPlayerPower(){
         assertEquals(2,ExtractionDifficulty.maxTier(1,1));assertEquals(3,ExtractionDifficulty.maxTier(1,4));
@@ -940,4 +940,92 @@ public class ExtractionProfileTest {
         assertTrue(profile.nodes.contains("greatsword_5"));
         assertEquals(1,profile.defenseBonus(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword()));
     }
+    @Test public void allFiveChapterUnlocksRequireSuccessfulExtractionAndPersist() throws Exception {
+        for(int c=2;c<=5;c++){
+            try{profile.selectRaid(c);fail("Later chapters must start locked");}catch(IllegalStateException expected){}
+        }
+        for(int c=1;c<=5;c++){
+            profile.selectRaid(c);profile.begin();int id=profile.raidID;
+            Dungeon.hero=new Hero();Dungeon.gold=0;
+            assertEquals(c,profile.raidChapter);assertEquals(ExtractionDifficulty.fixedStage(c),profile.raidDifficulty);
+            if(c<5){profile.settle(id,false);assertEquals(0,profile.unlockedDifficulty[c]);profile.begin();id=profile.raidID;}
+            profile.settle(id,true);int gold=profile.gold,xp=profile.xp;
+            profile.settle(id,true);assertEquals(gold,profile.gold);assertEquals(xp,profile.xp);
+            forgetProfile();profile=ExtractionProfile.get();
+            for(int n=0;n<Math.min(5,c+1);n++)assertTrue(profile.unlockedDifficulty[n]>0);
+        }
+        assertTrue(profile.result.contains("5챕터 완주"));
+        profile.selectRaid(5);profile.begin();assertEquals(5,profile.raidChapter);
+    }
+    @Test public void oldTwoChapterProfileMigratesWithoutUnlockingOrChangingAnActiveRaid() throws Exception {
+        profile.debugEnabled=true;profile.debugUnlockPrison();profile.selectRaid(2);profile.begin();
+        profile.raidRules=2;profile.raidDifficulty=6;profile.xp=78;profile.points=12;profile.nodes.add("ranged_0");
+        java.lang.reflect.Method snapshot=ExtractionProfile.class.getDeclaredMethod("bundle");snapshot.setAccessible(true);
+        com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);saved.put("difficulty_unlocks",new int[]{1,1});
+        FileUtils.bundleToFile(ExtractionProfile.FILE,saved);forgetProfile();profile=ExtractionProfile.get();
+        assertArrayEquals(new int[]{1,1,0,0,0},profile.unlockedDifficulty);
+        assertTrue(profile.active);assertEquals(2,profile.raidRules);assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);
+        assertEquals(78,profile.xp);assertEquals(12,profile.points);assertTrue(profile.nodes.contains("ranged_0"));
+        Dungeon.hero=new Hero();Dungeon.gold=0;profile.settle(profile.raidID,true);
+        assertEquals(1,profile.unlockedDifficulty[2]);profile.selectRaid(3);profile.begin();assertEquals(3,profile.raidRules);
+    }
+    @Test public void laterChaptersGenerateAllOriginalFloorsAndResumeWithCappedLoot() throws Exception {
+        profile.debugEnabled=true;profile.debugUnlockChapters();
+        Class<?>[] normal={com.shatteredpixel.shatteredpixeldungeon.levels.CavesLevel.class,com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel.class,com.shatteredpixel.shatteredpixeldungeon.levels.HallsLevel.class};
+        Class<?>[] boss={com.shatteredpixel.shatteredpixeldungeon.levels.CavesBossLevel.class,com.shatteredpixel.shatteredpixeldungeon.levels.CityBossLevel.class,com.shatteredpixel.shatteredpixeldungeon.levels.HallsBossLevel.class};
+        for(int c=3;c<=5;c++){
+            profile.selectRaid(c);profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+            int start=ExtractionDifficulty.startDepth(c);assertEquals(start,Dungeon.depth);
+            assertEquals(2*(c-1),Dungeon.LimitedDrops.STRENGTH_POTIONS.count);assertEquals(3*(c-1),Dungeon.LimitedDrops.UPGRADE_SCROLLS.count);
+            if(c>=4)assertTrue(Dungeon.LimitedDrops.ENCH_STONE.dropped());
+            for(int d=start;d<=start+4;d++){
+                Dungeon.depth=d;Dungeon.level=Dungeon.newLevel();
+                assertEquals(d==start+4?boss[c-3]:normal[c-3],Dungeon.level.getClass());
+                assertNotNull(Dungeon.level.getTransition(com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition.Type.REGULAR_EXIT));
+                for(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob m:Dungeon.level.mobs)assertEquals(0,m.extractionElite);
+                for(int n=0;n<10;n++){
+                    com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon weapon=com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomWeapon();
+                    assertTrue(WeaponUpgradeLimit.tier(weapon)<=ExtractionDifficulty.chapterMaxTier(c));
+                    assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomArmor().tier<=ExtractionDifficulty.chapterMaxTier(c));
+                }
+            }
+            Dungeon.hero.pos=Dungeon.level.entrance();Dungeon.saveGame(1);Dungeon.saveLevel();Dungeon.hero=null;Dungeon.level=null;
+            Dungeon.loadGame(1);Dungeon.level=Dungeon.loadLevel();
+            assertEquals(start+4,Dungeon.depth);assertEquals(boss[c-3],Dungeon.level.getClass());assertEquals(profile.raidID,Dungeon.hero.extractionRaidID);
+            profile.settle(profile.raidID,false);
+        }
+    }
+    @Test public void onlyTheCurrentChapterMainBossOpensExtractionAndFloorTraitsReachTwentyFive(){
+        profile.debugEnabled=true;profile.debugUnlockChapters();
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob[] bosses={new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo(),new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Tengu(),new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DM300(),new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing(),new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa()};
+        Dungeon.level=null;
+        for(int c=1;c<=5;c++){
+            profile.selectRaid(c);profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;Dungeon.branch=0;Dungeon.depth=ExtractionDifficulty.endDepth(c);
+            for(int n=0;n<5;n++)if(n!=c-1){ExtractionUtility.defeated(h,bosses[n]);assertFalse(h.extractionBossDefeated);}
+            Dungeon.depth--;ExtractionUtility.defeated(h,bosses[c-1]);assertFalse(h.extractionBossDefeated);Dungeon.depth++;
+            ExtractionUtility.defeated(h,bosses[c-1]);assertTrue(h.extractionBossDefeated);
+            for(int d=ExtractionDifficulty.startDepth(c);d<=Dungeon.depth;d++){assertTrue(ExtractionUtility.floor(h,d));assertFalse(ExtractionUtility.floor(h,d));}
+            assertFalse(ExtractionUtility.floor(h,26));
+            profile.settle(profile.raidID,false);
+        }
+    }
+    @Test public void scaledLateBossPhasesKeepTheirNativeHealthAndShieldRatios(){
+        Dungeon.challenges=com.shatteredpixel.shatteredpixeldungeon.Challenges.STRONGER_BOSSES;
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing king=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.DwarfKing();
+        king.HT=2936;assertEquals(1957,king.phaseHealth(300));assertEquals(979,king.phaseHealth(150));assertEquals(652,king.phaseHealth(100));
+        int damage=(int)Math.ceil(king.HT/18f);assertTrue(king.HT-6*damage<=king.phaseHealth(300));assertTrue(king.HT-12*damage<=king.phaseHealth(150));assertTrue(18*damage>=king.HT);
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa yog=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.YogDzewa();yog.HT=7850;
+        assertEquals(2355,yog.phaseHealth(300));assertEquals(785,yog.phaseHealth(100));assertEquals(3140,yog.phaseHealth(400));
+        assertEquals(yog.phaseHealth(100),yog.HT-3*yog.phaseHealth(300));
+    }
+    @Test public void debugUnlocksAllChaptersButNewNormalRaidsNeverGenerateAffixElites() throws Exception {
+        try{profile.debugUnlockChapters();fail("Debug must be enabled");}catch(IllegalStateException expected){}
+        profile.setDebugEnabled(true);profile.debugUnlockChapters();forgetProfile();profile=ExtractionProfile.get();assertArrayEquals(new int[]{1,1,1,1,1},profile.unlockedDifficulty);
+        profile.selectRaid(5);profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;
+        for(int n=0;n<100;n++){
+            com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat rat=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();ExtractionDifficulty.prepare(rat);
+            assertTrue(rat.extractionScaled);assertEquals(0,rat.extractionElite);
+        }
+    }
+
 }

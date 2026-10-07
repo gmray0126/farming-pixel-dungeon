@@ -241,29 +241,30 @@ public class ExtractionHubScene extends PixelScene {
     private void expedition(float y){
         ExtractionProfile p=ExtractionProfile.get();
         int chapter=p.active?p.raidChapter:p.selectedChapter, difficulty=p.active?p.raidDifficulty:p.selectedDifficulty;
-        float half=(width-2)/2f;
-        for(int c=1;c<=2;c++){final int selected=c;
-            button((c==1?"01 하수도":"02 감옥")+(p.unlockedDifficulty[c-1]==0?" · 잠금":""),left+(c-1)*(half+2),y,half,18,()->{
+        String[] shortNames={"하수도","감옥","동굴","드워프 도시","악마의 전당"};
+        for(int c=1;c<=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.CHAPTER_COUNT;c++){final int selected=c;
+            int columns=c<=3?3:2, column=c<=3?c-1:c-4;float cw=(width-2*(columns-1))/columns;
+            button(String.format(java.util.Locale.ROOT,"%02d ",c)+shortNames[c-1]+(p.unlockedDifficulty[c-1]==0?" 잠금":""),left+column*(cw+2),y+(c<=3?0:21),cw,19,()->{
                 if(p.active)throw new IllegalStateException("진행 중인 원정을 먼저 마치세요.");
-                if(p.unlockedDifficulty[selected-1]==0)throw new IllegalStateException("하수도 보스를 잡고 탈출하면 감옥이 열립니다.");
+                if(p.unlockedDifficulty[selected-1]==0)throw new IllegalStateException(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(selected-1)+" 보스를 잡고 탈출하면 열립니다.");
                 p.selectRaid(selected);refresh();
             },chapter==c);
         }
-        centered(p.active&&p.raidRules<2?"이전 원정 · 기존 난이도 유지":chapter==1?"파밍과 성장":"고난도 · 성장 후 도전",7,left,y+26,width,GOLD);
-        panel(left,y+43,width,49);
-        int start=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(chapter),end=start+4;
-        label(start+"~"+end+"층 · 보스 "+(chapter==1?"구":"텐구"),8,left+5,y+48,width-10,GOLD);
+        centered(p.active&&p.raidRules<3?"이전 원정 · 기존 규칙 유지":chapter==1?"파밍과 성장":"고난도 · 이전 지역에서 준비",7,left,y+47,width,GOLD);
+        panel(left,y+62,width,48);
+        int start=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(chapter),end=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.endDepth(chapter);
+        label(start+"~"+end+"층 · "+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.bossName(chapter),8,left+5,y+67,width-10,GOLD);
         int tier=p.active&&p.raidRules<2?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.maxTier(chapter,difficulty):com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterMaxTier(chapter);
-        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+tier+" · "+(chapter==1?"반복 파밍으로 출격 준비":"강화 보스와 지원 병력"),6,left+5,y+63,width-10,TEXT);
-        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지\n하수도에서 장비와 노드를 준비하세요",6,left,y+99,width,TEXT);
-        button("챕터 / 유물 안내",left,y+120,width,12,this::expeditionGuide,false);
-        if(!p.result.isEmpty()&&y+156+35<bottom-27)label(p.result,6,left,y+156,width,GREEN);
+        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+tier+" · "+(chapter==1?"반복 파밍으로 출격 준비":"강화 보스 · 높은 고정 난이도"),6,left+5,y+82,width-10,TEXT);
+        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지",6,left,y+116,width,TEXT);
+        button("챕터 / 유물 안내",left,y+139,width,13,this::expeditionGuide,false);
+        if(!p.result.isEmpty()&&y+158+35<bottom-27)label(p.result,6,left,y+158,width,GREEN);
     }
     private void expeditionGuide(){
         add(new WndOptions("원정 안내","확인할 내용을 선택하세요.","챕터 / 보상","신규 유물","착용 / 상점"){
             @Override protected void onSelect(int index){
                 String[] pages={
-                    "챕터별 난이도는 고정이며 장비나 레벨에 따라 자동으로 오르지 않습니다.\n\n하수도 1~5층: T1~T2 장비를 파밍하고 성장 노드를 준비하세요. 첫 탈출 후 감옥이 열립니다.\n\n감옥 6~10층: 원본 감옥 대비 적 체력 약 4배, 피해 2배. 정예 확률 25.5%, 추가 적 4마리, 강화 텐구와 최대 2회 지원 병력. T1~T3 장비를 얻습니다.\n\n보스는 챕터 최상위 티어 무기를 보장합니다. 감옥은 원정 골드 2.15배, 탈출 경험치 45를 지급합니다. 기존 진행 중인 원정은 이전 규칙을 유지합니다.",
+                    "각 챕터는 독립된 5층 원정입니다. 앞 챕터 보스를 처치하고 탈출하면 다음 지역이 열립니다.\n\n01 하수도 1~5층 · 구 · 최대 T2\n02 감옥 6~10층 · 텐구 · 최대 T3\n03 동굴 11~15층 · DM-300 · 최대 T4\n04 드워프 도시 16~20층 · 드워프 제왕 · 최대 T5\n05 악마의 전당 21~25층 · 요그제바 · 최대 T5\n\n후반 지역일수록 고정 난이도와 보상이 높습니다. 장비와 성장 노드로 준비하세요. 보스는 해당 챕터 최상위 티어 무기를 보장합니다.\n\n보스 처치 후 아래 계단에서 정산하여 거점으로 돌아옵니다. 5챕터도 같은 방식으로 완주하고 다시 파밍할 수 있습니다. 일반 원정에는 수식어 정예가 없습니다. 기존 진행 중인 원정은 이전 규칙을 유지합니다.",
                     "피의 등불: 처치 회복 / 물약 회복 감소\n\n탐욕의 주머니: 좋은 장비 / 골드에 따른 피해 증가\n\n깨진 모래시계: 시간 가속 / 이후 둔화\n\n사냥꾼의 표식: 지정 적 피해 증가 / 다른 적 피해 감소\n\n불안정한 나침반: 비밀 감지 / 주변 적 유인",
                     "유물은 최대 2개 착용하며 같은 유물은 중복 착용할 수 없습니다. 창고나 가방에 있는 유물은 효과가 없습니다.\n\n준비 화면에서 유물을 길게 눌러 착용할 물품을 선택하세요. 유물은 적 처치로 성장하며 +5가 상한입니다.\n\n상점은 보급품과 T1~T2 장비만 판매합니다."
                 };

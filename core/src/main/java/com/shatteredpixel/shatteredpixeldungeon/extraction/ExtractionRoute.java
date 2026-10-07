@@ -2,14 +2,15 @@
 package com.shatteredpixel.shatteredpixeldungeon.extraction;
 import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 
-/** Five original sewer floors; the sixth-floor stair is the extraction point. */
+/** Each original chapter is an independent five-floor raid with a boss-gated exit. */
 public final class ExtractionRoute {
     public enum Action { BLOCK, TRAVEL, EXTRACT }
     public static Action action(int depth,int branch,LevelTransition.Type type,int destination,boolean bossDefeated,boolean locked){
         return action(1,depth,branch,type,destination,bossDefeated,locked);
     }
     public static Action action(int chapter,int depth,int branch,LevelTransition.Type type,int destination,boolean bossDefeated,boolean locked){
-        int start=chapter==2?6:1,end=start+4;
+        if(!ExtractionDifficulty.validChapter(chapter))return Action.BLOCK;
+        int start=ExtractionDifficulty.startDepth(chapter),end=ExtractionDifficulty.endDepth(chapter);
         if(locked||branch!=0)return Action.BLOCK;
         if(type==LevelTransition.Type.REGULAR_ENTRANCE)
             return depth>start&&depth<=end&&destination==depth-1?Action.TRAVEL:Action.BLOCK;

@@ -290,7 +290,12 @@ public class Dungeon {
 		com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
 		profile.initialize(hero);
         depth=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(profile.raidChapter);
-        if(profile.raidChapter==2){LimitedDrops.STRENGTH_POTIONS.count=2;LimitedDrops.UPGRADE_SCROLLS.count=3;LimitedDrops.ARCANE_STYLI.count=1;}
+        int completedChapters=profile.raidChapter-1;
+        LimitedDrops.STRENGTH_POTIONS.count=2*completedChapters;
+        LimitedDrops.UPGRADE_SCROLLS.count=3*completedChapters;
+        LimitedDrops.ARCANE_STYLI.count=completedChapters;
+        // Its original spawn window ends on floor 14; later independent raids skip it.
+        if(profile.raidChapter>=4)LimitedDrops.ENCH_STONE.drop();
         if(profile.raidDifficulty>=3)challenges|=Challenges.STRONGER_BOSSES;
 	}
 

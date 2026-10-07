@@ -28,7 +28,7 @@ public final class ExtractionProfile {
     public boolean debugEnabled=false;
     public int selectedChapter=1, selectedDifficulty=1, raidChapter=1, raidDifficulty=1;
     public int raidRules=1; // Missing in old saves: preserve an ongoing staged raid.
-    public final int[] unlockedDifficulty={1,0};
+    public final int[] unlockedDifficulty={1,0,0,0,0};
     public String result = "";
     public static final String[] IDS=ExtractionGrowth.IDS, NAMES=ExtractionGrowth.NAMES, DESCS=ExtractionGrowth.DESCS;
     public static final int[] COSTS=ExtractionGrowth.COSTS, PARENTS=ExtractionGrowth.PARENTS;
@@ -73,8 +73,9 @@ public final class ExtractionProfile {
         raidDifficulty=b.contains("raid_difficulty")?b.getInt("raid_difficulty"):1;
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
-        int[] unlocked=b.contains("difficulty_unlocks")?b.getIntArray("difficulty_unlocks"):new int[0];unlockedDifficulty[0]=1;unlockedDifficulty[1]=0;
-        for(int n=0;n<Math.min(2,unlocked.length);n++)unlockedDifficulty[n]=Math.max(n==0?1:0,Math.min(10,unlocked[n]));
+        int[] unlocked=b.contains("difficulty_unlocks")?b.getIntArray("difficulty_unlocks"):new int[0];
+        java.util.Arrays.fill(unlockedDifficulty,0);unlockedDifficulty[0]=1;
+        for(int n=0;n<Math.min(unlockedDifficulty.length,unlocked.length);n++)unlockedDifficulty[n]=Math.max(n==0?1:0,Math.min(10,unlocked[n]));
     }
     private void save() throws IOException { FileUtils.bundleToFile(FILE, bundle()); }
     public void setDebugEnabled(boolean enabled){change(()->debugEnabled=enabled);}
@@ -84,6 +85,7 @@ public final class ExtractionProfile {
         change(()->{int level=xp/25;gold=Math.addExact(gold,addedGold);xp=Math.addExact(xp,addedXP);points=Math.addExact(points,Math.addExact(addedPoints,xp/25-level));});
     }
     public void debugUnlockPrison(){requireDebug();change(()->unlockedDifficulty[1]=Math.max(1,unlockedDifficulty[1]));}
+    public void debugUnlockChapters(){requireDebug();change(()->java.util.Arrays.fill(unlockedDifficulty,1));}
     public void debugStore(Item item){
         requireDebug();if(active)throw new IllegalStateException("원정 중에는 원정 가방으로 지급하세요.");
         change(()->stash.add(item));
@@ -102,12 +104,12 @@ public final class ExtractionProfile {
     }
     public void begin() {
         if (active) return; // retry the same escrow if first map creation was interrupted
-        if(selectedChapter<1||selectedChapter>2||unlockedDifficulty[selectedChapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
-        change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=2;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
+        if(!ExtractionDifficulty.validChapter(selectedChapter)||unlockedDifficulty[selectedChapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
+        change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=3;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
     }
     public void selectRaid(final int chapter){
         if(active)throw new IllegalStateException("원정 중에는 출격 지역을 바꿀 수 없습니다.");
-        if(chapter<1||chapter>2||unlockedDifficulty[chapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
+        if(!ExtractionDifficulty.validChapter(chapter)||unlockedDifficulty[chapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
         change(()->{selectedChapter=chapter;selectedDifficulty=ExtractionDifficulty.fixedStage(chapter);});
     }
     public Item preparedWeapon() {
@@ -236,7 +238,7 @@ public final class ExtractionProfile {
         if (!active || id!=raidID) return;
         change(() -> {
             if (success) {
-                if(raidChapter==1)unlockedDifficulty[1]=Math.max(1,unlockedDifficulty[1]);
+                if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)unlockedDifficulty[raidChapter]=Math.max(1,unlockedDifficulty[raidChapter]);
                 // Preserve only top-level inventory entries: Bag.iterator() also yields
                 // nested contents, which would otherwise be deposited twice.
                 com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings b = Dungeon.hero.belongings;
@@ -259,7 +261,8 @@ public final class ExtractionProfile {
                 int old=xp/25; xp+=10+5*(raidDifficulty-1)+10*(raidChapter-1); points+=xp/25-old;
                 result="탈출 성공! 장비와 전리품을 창고에 보관했습니다."
                         +(redeemed.potions+redeemed.scrolls>0?"\n포션 "+redeemed.potions+"개 · 스크롤 "+redeemed.scrolls+"장 정산 · +"+redeemed.gold+" G":"");
-                if(raidChapter==1)result+="\n2챕터 감옥 출격 가능";
+                if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)result+="\n"+(raidChapter+1)+"챕터 "+ExtractionDifficulty.chapterName(raidChapter+1)+" 출격 가능";
+                else result+="\n5챕터 완주! 모든 지역에 다시 출격할 수 있습니다.";
             }
             active=false; escrow.clear();
             if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";

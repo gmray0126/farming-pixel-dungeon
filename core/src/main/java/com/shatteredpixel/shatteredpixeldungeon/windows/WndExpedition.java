@@ -22,7 +22,7 @@ public class WndExpedition extends Window {
             (p.nodes.contains(ExtractionProfile.IDS[n])?"습득한 영구 노드입니다.":"선행: "+p.prerequisites(n)+"\n\n거점에서 분배할 수 있습니다."))),
             ()->GameScene.show(new WndGrowthAtlas()));
         add(tree);tree.setRect(0,65,w,109);
-        text(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.raidChapter)+" "+Dungeon.depth+"층 · 난이도 "+p.raidDifficulty+" · "+(hero.extractionBossDefeated?"탈출 가능":"보스 목표"),6,0,176,w,ExtractionNodeTree.GREEN);
+        text(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.raidChapter)+" "+Dungeon.depth+"층 · "+(hero.extractionBossDefeated?"탈출 가능":"보스 목표"),6,0,176,w,ExtractionNodeTree.GREEN);
         resize(w,188);
     }
     private void text(String value,int size,float x,float y,int width,int color){

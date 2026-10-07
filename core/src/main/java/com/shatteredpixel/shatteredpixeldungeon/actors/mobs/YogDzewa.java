@@ -245,7 +245,7 @@ public class YogDzewa extends Mob {
 
 			if (abilityCooldown <= 0){
 
-				int beams = 1 + (HT - HP)/400;
+				int beams = 1 + (HT - HP)/phaseHealth(400);
 				HashSet<Integer> affectedCells = new HashSet<>();
 				for (int i = 0; i < beams; i++){
 
@@ -378,6 +378,9 @@ public class YogDzewa extends Mob {
 		}
 	}
 
+    /** Native phases remain at 70%, 40%, 10% even with expedition health scaling. */
+    public int phaseHealth(int originalHealth){return Math.max(1,Math.round(HT*(originalHealth/1000f)));}
+
 	@Override
 	public boolean isAlive() {
 		return super.isAlive() || phase != 5;
@@ -397,18 +400,18 @@ public class YogDzewa extends Mob {
 		if (phase == 0 || findFist() != null) return;
 
 		if (phase < 4) {
-			HP = Math.max(HP, HT - 300 * phase);
+			HP = Math.max(HP, HT - phaseHealth(300) * phase);
 		} else if (phase == 4) {
-			HP = Math.max(HP, 100);
+			HP = Math.max(HP, phaseHealth(100));
 		}
 		int dmgTaken = preHP - HP;
 
 		if (dmgTaken > 0) {
-			abilityCooldown -= dmgTaken / 10f;
-			summonCooldown -= dmgTaken / 10f;
+			abilityCooldown -= dmgTaken*1000f/HT/10f;
+			summonCooldown -= dmgTaken*1000f/HT/10f;
 		}
 
-		if (phase < 4 && HP <= HT - 300*phase){
+		if (phase < 4 && HP <= HT - phaseHealth(300)*phase){
 
 			phase++;
 

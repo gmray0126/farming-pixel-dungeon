@@ -181,7 +181,36 @@ try {
     $again = Read-Bundle "$saveDir/game1/game.dat"
     if ($again.depth -ne 2 -or $again.hero.extraction_raid -ne $raid -or $again.hero.extraction_visited -ne $second.hero.extraction_visited) { throw 'Second floor resume lost its saved traits' }
     if (!$again.hero.extraction_skills -or $again.hero.extraction_skills.armor.charge -ne $second.hero.extraction_skills.armor.charge) { throw 'Class skill energy reset on cold resume' }
-    @{class_skill_save=$true;class_skill_resume=$true;windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    # Exercise each added chapter in the native renderer and cold-resume its first floor.
+    $chapterEvidence = @()
+    foreach ($chapter in 3..5) {
+        $profile = Read-Bundle $profilePath
+        $profile.active = $false
+        $profile.chapter = $chapter
+        $profile.difficulty_unlocks = @(1,1,1,1,1)
+        $profile.prepared = @()
+        $profile.escrow = @()
+        Write-Bundle $profilePath $profile
+        Remove-Item "$saveDir/game1" -Recurse -Force -ErrorAction SilentlyContinue
+        $p = Start-Game
+        Click-Client $p 545 110
+        Start-Sleep -Seconds 1
+        Capture $p "chapter-$chapter-hub"
+        Depart $p $true
+        Capture $p "chapter-$chapter-start"
+        Close-Game $p
+        $chapterRun = Read-Bundle "$saveDir/game1/game.dat"
+        $startDepth = 1+5*($chapter-1)
+        if ($chapterRun.depth -ne $startDepth -or $chapterRun.hero.extraction_raid -le 0) { throw "Chapter $chapter did not start at $startDepth" }
+        $p = Start-Game
+        Depart $p
+        Capture $p "chapter-$chapter-resume"
+        Close-Game $p
+        $chapterResume = Read-Bundle "$saveDir/game1/game.dat"
+        if ($chapterResume.depth -ne $startDepth -or $chapterResume.hero.extraction_raid -ne $chapterRun.hero.extraction_raid) { throw "Chapter $chapter cold resume failed" }
+        $chapterEvidence += @{ chapter=$chapter; start_depth=$startDepth; native_start=$true; cold_resume=$true }
+    }
+    @{added_chapters=$chapterEvidence;class_skill_save=$true;class_skill_resume=$true;windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

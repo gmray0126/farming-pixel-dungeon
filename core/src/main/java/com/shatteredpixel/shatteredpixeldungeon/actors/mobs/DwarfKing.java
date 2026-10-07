@@ -90,6 +90,12 @@ public class DwarfKing extends Mob {
 		properties.add(Property.UNDEAD);
 	}
 
+    /** Keep wave and final-phase health thresholds proportional to the scaled boss. */
+    public int phaseHealth(int originalHealth){
+        int base=Dungeon.isChallenged(Challenges.STRONGER_BOSSES)?450:300;
+        return Math.max(1,Math.round(HT*(originalHealth/(float)base)));
+    }
+
 	@Override
 	public int damageRoll() {
 		return Random.NormalIntRange( 15, 25 );
@@ -152,6 +158,8 @@ public class DwarfKing extends Mob {
 
 	@Override
 	protected boolean act() {
+        // Armor abilities are unlocked by growth nodes in classless expeditions.
+        if(Dungeon.hero.extractionRaidID==0){
 		if (pos == CityBossLevel.throne){
 			throwItems();
 		}
@@ -213,7 +221,7 @@ public class DwarfKing extends Mob {
 					spend(3 * TICK);
 					summonsMade += 2;
 					return true;
-				} else if (shielding() <= 300 && summonsMade < 12){
+				} else if (shielding() <= phaseHealth(300) && summonsMade < 12){
 					if (summonsMade == 6) {
 						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);
 						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
@@ -229,7 +237,7 @@ public class DwarfKing extends Mob {
 					summonsMade += 3;
 					spend(3*TICK);
 					return true;
-				} else if (shielding() <= 150 && summonsMade < 18) {
+				} else if (shielding() <= phaseHealth(150) && summonsMade < 18) {
 					if (summonsMade == 12) {
 						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);
 						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
@@ -263,7 +271,7 @@ public class DwarfKing extends Mob {
 					spend(3 * TICK);
 					summonsMade++;
 					return true;
-				} else if (shielding() <= 200 && summonsMade < 8) {
+				} else if (shielding() <= phaseHealth(200) && summonsMade < 8) {
 					if (summonsMade == 4) {
 						sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);
 						Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
@@ -277,7 +285,7 @@ public class DwarfKing extends Mob {
 					summonsMade++;
 					spend(TICK);
 					return true;
-				} else if (shielding() <= 100 && summonsMade < 12) {
+				} else if (shielding() <= phaseHealth(100) && summonsMade < 12) {
 					sprite.centerEmitter().start(Speck.factory(Speck.SCREAM), 0.4f, 2);
 					Sample.INSTANCE.play(Assets.Sounds.CHALLENGE);
 					yell(Messages.get(this, "wave_3"));
@@ -490,10 +498,10 @@ public class DwarfKing extends Mob {
 
 		if (phase == 1) {
 			int dmgTaken = preHP - HP;
-			abilityCooldown -= dmgTaken/8f;
-			summonCooldown -= dmgTaken/8f;
-			if (HP <= (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 100 : 50)) {
-				HP = (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 100 : 50);
+			abilityCooldown -= dmgTaken*(Dungeon.isChallenged(Challenges.STRONGER_BOSSES)?450f:300f)/HT/8f;
+			summonCooldown -= dmgTaken*(Dungeon.isChallenged(Challenges.STRONGER_BOSSES)?450f:300f)/HT/8f;
+			if (HP <= phaseHealth(Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 100 : 50)) {
+				HP = phaseHealth(Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 100 : 50);
 				sprite.showStatus(CharSprite.POSITIVE, Messages.get(this, "invulnerable"));
 				ScrollOfTeleportation.appear(this, CityBossLevel.throne);
 				properties.add(Property.IMMOVABLE);
@@ -534,7 +542,7 @@ public class DwarfKing extends Mob {
 					});
 				}
 			});
-		} else if (phase == 3 && preHP > 20 && HP < 20 && isAlive()){
+		} else if (phase == 3 && preHP > phaseHealth(20) && HP < phaseHealth(20) && isAlive()){
 			yell( Messages.get(this, "losing") );
 		}
 	}
@@ -564,6 +572,7 @@ public class DwarfKing extends Mob {
 		} else {
 			Dungeon.level.drop(new KingsCrown(), pos).sprite.drop();
 		}
+        }
 
 		Badges.validateBossSlain();
 		if (Statistics.qualifiedForBossChallengeBadge){
@@ -787,7 +796,7 @@ public class DwarfKing extends Mob {
 			super.detach();
 			for (Mob m : Dungeon.level.mobs){
 				if (m instanceof DwarfKing){
-					int damage = m.HT / (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 18 : 12);
+					int damage = (int)Math.ceil(m.HT / (Dungeon.isChallenged(Challenges.STRONGER_BOSSES) ? 18f : 12f));
 					m.damage(damage, this);
 				}
 			}

@@ -38,8 +38,8 @@ public final class ExtractionDebugMenu {
             if(i==0){p.debugResources(10000,0,0);done("10,000 G 지급");}
             else if(i==1){p.debugResources(0,250,0);done("250 XP · 10 P 지급");}
             else if(i==2){p.debugResources(0,0,100);done("100 P 지급");}
-            else{p.debugUnlockPrison();done("감옥을 해금했습니다.");}
-        },"골드 +10,000","경험치 +250","성장 포인트 +100","감옥 해금");
+            else{p.debugUnlockChapters();done("5개 챕터를 모두 해금했습니다.");}
+        },"골드 +10,000","경험치 +250","성장 포인트 +100","전체 챕터 해금");
     }
     private void items(){
         if(!raid&&ExtractionProfile.get().active)throw new IllegalStateException("원정을 이어간 뒤 원정 가방으로 지급하세요.");

@@ -13,14 +13,35 @@ import com.watabou.utils.Random;
 
 /** Chapter balance is fixed at departure; legacy raids retain their old snapshot. */
 public final class ExtractionDifficulty {
-    public static int fixedStage(int chapter){return chapter==2?6:1;}
-    public static int chapterMaxTier(int chapter){return chapter==2?3:2;}
+    public static final int CHAPTER_COUNT=5;
+    public static boolean validChapter(int chapter){return chapter>=1&&chapter<=CHAPTER_COUNT;}
+    public static int fixedStage(int chapter){return chapter==1?1:chapter+4;}
+    public static int chapterMaxTier(int chapter){return Math.min(5,chapter+1);}
     public static int raidMaxTier(){return ExtractionProfile.get().raidRules>=2?chapterMaxTier(chapter()):maxTier(chapter(),stage());}
     public static boolean active(){return Dungeon.hero!=null&&Dungeon.hero.extractionRaidID!=0;}
     public static int stage(){return active()?ExtractionProfile.get().raidDifficulty:1;}
     public static int chapter(){return active()?ExtractionProfile.get().raidChapter:1;}
-    public static String chapterName(int chapter){return chapter==2?"감옥":"하수도";}
-    public static int startDepth(int chapter){return chapter==2?6:1;}
+    public static String chapterName(int chapter){
+        String[] names={"하수도","감옥","동굴","드워프 도시","악마의 전당"};
+        return validChapter(chapter)?names[chapter-1]:"알 수 없는 지역";
+    }
+    public static String bossName(int chapter){
+        String[] names={"구","텐구","DM-300","드워프 제왕","요그제바"};
+        return validChapter(chapter)?names[chapter-1]:"알 수 없는 보스";
+    }
+    public static int startDepth(int chapter){return 1+5*(chapter-1);}
+    public static int endDepth(int chapter){return startDepth(chapter)+4;}
+    public static boolean chapterBoss(Mob mob,int chapter,int depth){
+        if(!validChapter(chapter)||depth!=endDepth(chapter))return false;
+        switch(chapter){
+            case 1:return mob instanceof Goo;
+            case 2:return mob instanceof Tengu;
+            case 3:return mob instanceof DM300;
+            case 4:return mob instanceof DwarfKing;
+            case 5:return mob instanceof YogDzewa;
+            default:return false;
+        }
+    }
     public static int maxTier(int chapter,int stage){return Math.min(5,2+(stage-1)/3+(chapter-1));}
     public static float healthMultiplier(int chapter,int stage){int d=stage-1;return 1.25f+.23f*d+.055f*d*d+.2f*(chapter-1);}
     public static float damageMultiplier(int stage){int d=stage-1;return 1.1f+.09f*d+.018f*d*d;}
@@ -44,7 +65,8 @@ public final class ExtractionDifficulty {
         if(!active()||mob.extractionScaled||mob.alignment!=Char.Alignment.ENEMY)return;
         mob.extractionScaled=true;
         boolean boss=mob.properties().contains(Char.Property.BOSS);
-        if(!boss&&mob.EXP>0&&Random.Float()<.08f+.035f*(stage()-1))mob.extractionElite=1+Random.Int(3);
+        // Normal raids have no affix elites. Preserve already-running legacy expeditions.
+        if(ExtractionProfile.get().raidRules<3&&!boss&&mob.EXP>0&&Random.Float()<.08f+.035f*(stage()-1))mob.extractionElite=1+Random.Int(3);
         float fraction=mob.HP/(float)Math.max(1,mob.HT);
         mob.HT=Math.max(1,Math.round(mob.HT*healthMultiplier(chapter(),stage())*(mob.extractionElite>0?1.25f:1)));
         mob.HP=Math.max(1,Math.round(mob.HT*fraction));
@@ -76,7 +98,7 @@ public final class ExtractionDifficulty {
         GLog.w("보스가 지원 병력을 불렀습니다!");
     }
     public static void bossLoot(Mob boss){
-        if(!active()||Dungeon.level==null||!(boss instanceof Goo||boss instanceof Tengu))return;
+        if(!active()||Dungeon.level==null||!chapterBoss(boss,chapter(),Dungeon.depth))return;
         Item gear=Generator.randomUsingDefaults(Generator.wepTiers[raidMaxTier()-1]);
         dropLoot(gear,boss.pos);
         if(Random.Float()<.12f+.035f*(stage()-1)+.1f*(chapter()-1)){
