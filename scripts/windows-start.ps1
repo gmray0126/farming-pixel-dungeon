@@ -178,7 +178,7 @@ try {
     $profile.nodes=@('pack','porter','explore_merge','explore_cap')
     Write-Bundle $profilePath $profile
     $bag=@()
-    foreach($n in 1..20){$bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.food.Food';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}}
+    foreach($n in 1..20){$bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}}
     $bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.Waterskin';quantity=1;volume=17}
     $again.hero.items=$bag
     Write-Bundle "$saveDir/game1/game.dat" $again
