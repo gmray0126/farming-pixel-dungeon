@@ -679,28 +679,18 @@ public class InterlevelScene extends PixelScene {
 
 	}
 
-	//TODO atm falling always just increments depth by 1, do we eventually want to roll it into the transition system?
 	private void fall() throws IOException {
-
         Mob.holdAllies(Dungeon.level);
         Buff.affect(Dungeon.hero,Chasm.Falling.class);
         Dungeon.saveAll();
-        int oldDepth=Dungeon.depth, oldPos=Dungeon.hero.pos;
-        if(Dungeon.hero.extractionRaidID!=0&&Dungeon.branch==0)
-            Dungeon.depth=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.fallDepth(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,oldDepth);
+        int oldPos=Dungeon.hero.pos;
+        boolean raid=Dungeon.hero.extractionRaidID!=0;
+        if(raid) Dungeon.depth=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.fallDepth(
+                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,Dungeon.depth);
         else Dungeon.depth++;
         Level level=Dungeon.levelHasBeenGenerated(Dungeon.depth,Dungeon.branch)?Dungeon.loadLevel(GamesInProgress.curSlot):Dungeon.newLevel();
-        int landing=level.fallCell(fallIntoPit);
-        if(Dungeon.depth==oldDepth){
-            // A boss-floor fall cannot bypass extraction. Land on nearby safe ground.
-            int best=-1,bestDistance=Integer.MAX_VALUE;
-            for(int cell=0;cell<level.length();cell++){
-                if(!level.passable[cell]||level.pit[cell]||Actor.findChar(cell)!=null)continue;
-                int distance=level.distance(oldPos,cell);
-                if(distance<bestDistance){best=cell;bestDistance=distance;}
-            }
-            if(best>=0)landing=best;
-        }
+        int landing=raid?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionFalls.landingCell(level,oldPos):level.fallCell(fallIntoPit);
+        if(landing<0) throw new IOException("No safe landing on the current floor");
         Dungeon.switchLevel(level,landing);
     }
 

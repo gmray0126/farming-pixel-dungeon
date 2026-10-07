@@ -97,7 +97,7 @@ public class WeakFloorRoom extends SpecialRoom {
 
 		@Override
 		public String desc(int tileX, int tileY) {
-			return Messages.get(this, "desc");
+			return Messages.get(this, com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?"desc_raid":"desc");
 		}
 
 	}

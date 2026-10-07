@@ -45,6 +45,10 @@ public final class ExtractionDifficulty {
     public static int maxTier(int chapter,int stage){return Math.min(5,2+(stage-1)/3+(chapter-1));}
     public static float healthMultiplier(int chapter,int stage){int d=stage-1;return 1.25f+.23f*d+.055f*d*d+.2f*(chapter-1);}
     public static float damageMultiplier(int stage){int d=stage-1;return 1.1f+.09f*d+.018f*d*d;}
+    public static float chapterHealthMultiplier(int chapter){return new float[]{1.25f,4f,6f,9f,13f}[Math.max(1,Math.min(5,chapter))-1];}
+    public static float chapterDamageMultiplier(int chapter){return new float[]{1.1f,2f,2.8f,3.8f,5f}[Math.max(1,Math.min(5,chapter))-1];}
+    public static float raidHealthMultiplier(){return ExtractionProfile.get().raidRules>=4?chapterHealthMultiplier(chapter()):healthMultiplier(chapter(),stage());}
+    public static float raidDamageMultiplier(){return ExtractionProfile.get().raidRules>=4?chapterDamageMultiplier(chapter()):damageMultiplier(stage());}
     public static float rewardMultiplier(int chapter,int stage){return 1+.18f*(stage-1)+.25f*(chapter-1);}
     public static float[] tierWeights(int chapter,int stage,boolean greed){
         return weightsForMaxTier(maxTier(chapter,stage),greed);
@@ -68,7 +72,7 @@ public final class ExtractionDifficulty {
         // Normal raids have no affix elites. Preserve already-running legacy expeditions.
         if(ExtractionProfile.get().raidRules<3&&!boss&&mob.EXP>0&&Random.Float()<.08f+.035f*(stage()-1))mob.extractionElite=1+Random.Int(3);
         float fraction=mob.HP/(float)Math.max(1,mob.HT);
-        mob.HT=Math.max(1,Math.round(mob.HT*healthMultiplier(chapter(),stage())*(mob.extractionElite>0?1.25f:1)));
+        mob.HT=Math.max(1,Math.round(mob.HT*raidHealthMultiplier()*(mob.extractionElite>0?1.25f:1)));
         mob.HP=Math.max(1,Math.round(mob.HT*fraction));
         if(mob.extractionElite>0)mob.EXP=Math.round(mob.EXP*1.5f);
     }
@@ -76,7 +80,7 @@ public final class ExtractionDifficulty {
         if(!active()||damage<=0)return damage;
         boolean enemy=source instanceof Mob&&((Mob)source).alignment==Char.Alignment.ENEMY;
         boolean tengu=source!=null&&(source.getClass().getName().contains("Tengu$")||source instanceof Class&&((Class<?>)source).getName().contains("Tengu$"));
-        if(enemy||tengu){float modifier=damageMultiplier(stage());if(source instanceof Mob&&((Mob)source).extractionElite==1)modifier*=1.2f;return Math.round(damage*modifier);}
+        if(enemy||tengu){float modifier=raidDamageMultiplier();if(source instanceof Mob&&((Mob)source).extractionElite==1)modifier*=1.2f;return Math.round(damage*modifier);}
         return damage;
     }
     public static int extraArmor(Char enemy){return enemy instanceof Mob&&((Mob)enemy).extractionElite==2?2+(stage()-1)/3:0;}

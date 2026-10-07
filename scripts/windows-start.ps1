@@ -124,57 +124,19 @@ function Close-Game($p) {
 }
 $p = $null
 try {
-    # Launch/descent/cold-resume already passed with this game tree. Check changed UI only.
     $p=Start-Game
     Depart $p $true
+    Capture $p '01-new-raid'
     Close-Game $p
-    $again=Read-Bundle "$saveDir/game1/game.dat"
-    if($again.depth -ne 1){throw 'UI fixture raid did not start'}
-    $profilePath="$saveDir/extraction-profile.dat"
-    # Reproduce the screenshot: 21 bag entries exceed the old fixed 25-slot window.
-    $profile=Read-Bundle $profilePath
-    $profile.nodes=@('pack','porter','explore_merge','explore_cap')
-    Write-Bundle $profilePath $profile
-    $bag=@()
-    foreach($n in 1..20){$bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}}
-    $bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.Waterskin';quantity=1;volume=17}
-    $again.hero.inventory=$bag
-    Write-Bundle "$saveDir/game1/game.dat" $again
-    $settingsPath=Join-Path $saveDir 'settings.xml'
-    $settings=[IO.File]::ReadAllText($settingsPath)
-    if($settings -match 'key="full_ui"'){ $compact=[regex]::Replace($settings,'(<entry key="full_ui"[^>]*>)\d+(</entry>)','${1}0${2}') }
-    else { $compact=$settings.Replace('</properties>','<entry key="full_ui" type="Integer">0</entry></properties>') }
-    [IO.File]::WriteAllText($settingsPath,$compact)
+    $saved=Read-Bundle "$saveDir/game1/game.dat"
+    if($saved.depth -ne 1){throw 'Fresh raid did not start at floor 1'}
     $p=Start-Game
     Depart $p
-    [DesktopInput]::keybd_event(73,0,0,[UIntPtr]::Zero)
-    Start-Sleep -Milliseconds 100
-    [DesktopInput]::keybd_event(73,0,2,[UIntPtr]::Zero)
-    Start-Sleep -Seconds 1
-    Capture $p '08-inventory-before-scroll'
-    $rect=[DesktopInput+Rect]::new();[void][DesktopInput]::GetClientRect($p.MainWindowHandle,[ref]$rect)
-    $origin=[DesktopInput+Point]::new();[void][DesktopInput]::ClientToScreen($p.MainWindowHandle,[ref]$origin)
-    [void][DesktopInput]::SetCursorPos($origin.X+[int]($rect.Right/2),$origin.Y+[int]($rect.Bottom/2))
-    Start-Sleep -Milliseconds 100
-    [DesktopInput]::mouse_event(2048,0,0,[uint32]4294966576,[UIntPtr]::Zero)
-    Start-Sleep -Seconds 1
-    Capture $p '09-inventory-after-scroll'
+    Capture $p '02-resumed-raid'
     Close-Game $p
-    [IO.File]::WriteAllText($settingsPath,$settings)
-    # Load a 100-level hub and inspect the new preset controls in the native renderer.
-    $profile=Read-Bundle $profilePath
-    $profile.active=$false; $profile.xp=2475; $profile.points=300; $profile.nodes=@(); $profile.prepared=@(); $profile.escrow=@()
-    Write-Bundle $profilePath $profile
-    Remove-Item "$saveDir/game1" -Recurse -Force -ErrorAction SilentlyContinue
-    $p=Start-Game
-    Capture $p '10-level-cap-hub'
-    Click-Client $p 466 110
-    Start-Sleep -Seconds 1
-    Capture $p '11-growth-presets'
-    Close-Game $p
-    $profile=Read-Bundle $profilePath
-    if ($profile.xp -ne 2475 -or $profile.points -ne 300) { throw 'Growth cap was not preserved' }
-    @{inventory_scroll_render=$true;growth_cap=$true;growth_presets_render=$true;windows_launch=$true;native_start=$true; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    $resumed=Read-Bundle "$saveDir/game1/game.dat"
+    if($resumed.depth -ne 1){throw 'Resumed raid changed floors'}
+    @{windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

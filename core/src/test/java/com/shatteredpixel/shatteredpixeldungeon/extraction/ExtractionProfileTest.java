@@ -195,7 +195,7 @@ public class ExtractionProfileTest {
         assertEquals(1,profile.unlockedDifficulty[0]);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.selectRaid(2);profile.begin();int id=profile.raidID;
         try{profile.selectRaid(1);fail("Active selection must be frozen");}catch(IllegalStateException expected){}
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(3,profile.raidRules);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(4,profile.raidRules);
         profile.settle(id,false);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.selectRaid(1);profile.selectedDifficulty=10;profile.begin();assertEquals(1,profile.raidDifficulty);profile.settle(profile.raidID,true);assertEquals(1,profile.unlockedDifficulty[0]);
         assertFalse(profile.result.contains("난이도"));
@@ -231,7 +231,7 @@ public class ExtractionProfileTest {
         java.lang.reflect.Method restore=ExtractionProfile.class.getDeclaredMethod("restore",com.watabou.utils.Bundle.class);restore.setAccessible(true);restore.invoke(profile,saved);
         profile.begin();assertEquals(10,profile.raidDifficulty);assertEquals(1,profile.raidRules);
         Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;assertEquals(5,ExtractionDifficulty.raidMaxTier());
-        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(3,profile.raidRules);
+        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(4,profile.raidRules);
     }
     @Test public void lootCeilingsScalingAndShopRestrictionsDoNotFollowPlayerPower(){
         assertEquals(2,ExtractionDifficulty.maxTier(1,1));assertEquals(3,ExtractionDifficulty.maxTier(1,4));
@@ -967,7 +967,7 @@ public class ExtractionProfileTest {
         assertTrue(profile.active);assertEquals(2,profile.raidRules);assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);
         assertEquals(78,profile.xp);assertEquals(12,profile.points);assertTrue(profile.nodes.contains("ranged_0"));
         Dungeon.hero=new Hero();Dungeon.gold=0;profile.settle(profile.raidID,true);
-        assertEquals(1,profile.unlockedDifficulty[2]);profile.selectRaid(3);profile.begin();assertEquals(3,profile.raidRules);
+        assertEquals(1,profile.unlockedDifficulty[2]);profile.selectRaid(3);profile.begin();assertEquals(4,profile.raidRules);
     }
     @Test public void laterChaptersGenerateAllOriginalFloorsAndResumeWithCappedLoot() throws Exception {
         profile.debugEnabled=true;profile.debugUnlockChapters();
@@ -1115,4 +1115,72 @@ public class ExtractionProfileTest {
             assertEquals(15,copy.trueLevel());assertEquals(a.nativeLevelCap(),copy.level());
         }
     }
+    @Test public void actualFallTransitionKeepsTheFloorRaidAndSavedState() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        java.lang.reflect.Method fall=com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene.class.getDeclaredMethod("fall");fall.setAccessible(true);
+        for(int depth:new int[]{1,2,5}) {
+            Dungeon.depth=depth;Dungeon.level=Dungeon.newLevel();Dungeon.hero.pos=Dungeon.level.entrance();
+            int origin=Dungeon.hero.pos,id=Dungeon.hero.extractionRaidID,hp=Dungeon.hero.HP;
+            com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene.fallIntoPit=true;
+            fall.invoke(new com.shatteredpixel.shatteredpixeldungeon.scenes.InterlevelScene());
+            assertEquals(depth,Dungeon.depth);assertEquals(id,Dungeon.hero.extractionRaidID);
+            assertNotEquals(origin,Dungeon.hero.pos);assertTrue(Dungeon.level.passable[Dungeon.hero.pos]);assertFalse(Dungeon.level.pit[Dungeon.hero.pos]);
+            assertEquals(hp,Dungeon.hero.HP);assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.levels.features.Chasm.Falling.class));
+            assertFalse(Dungeon.levelHasBeenGenerated(depth+1,0));
+            Dungeon.hero=null;Dungeon.level=null;Dungeon.loadGame(1);Dungeon.switchLevel(Dungeon.loadLevel(1),-1);
+            assertEquals(depth,Dungeon.depth);assertEquals(id,Dungeon.hero.extractionRaidID);
+        }
+    }
+    @Test public void landingCannotCrossLockedDoorsOrUseTrapsOrOccupiedCells() {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel level=(com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel)Dungeon.newLevel();
+        level.rooms().clear();level.mobs.clear();level.traps.clear();level.setSize(9,7);
+        java.util.Arrays.fill(level.map,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.WALL);
+        for(int x=1;x<=7;x++)level.map[3*9+x]=com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.EMPTY;
+        int origin=29;level.map[origin]=com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.CHASM;
+        level.map[31]=com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.LOCKED_DOOR;level.buildFlagMaps();
+        level.traps.put(28,new com.shatteredpixel.shatteredpixeldungeon.levels.traps.PitfallTrap());
+        for(int n=0;n<20;n++)assertEquals(30,ExtractionFalls.landingCell(level,origin));
+        level.locked=true;assertEquals(30,ExtractionFalls.landingCell(level,origin));
+        level.traps.clear();com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat rat=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();rat.pos=28;level.mobs.add(rat);
+        assertEquals(30,ExtractionFalls.landingCell(level,origin));
+    }
+    @Test public void pitRoomKeySpawnsOutsideAndOldKeyMovesOnlyOnce() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Field pit=com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.SpecialRoom.class.getDeclaredField("pitNeededDepth");pit.setAccessible(true);pit.setInt(null,2);
+        Dungeon.depth=2;Dungeon.level=Dungeon.newLevel();
+        com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel level=(com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel)Dungeon.level;
+        com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.PitRoom room=null;
+        for(com.shatteredpixel.shatteredpixeldungeon.levels.rooms.Room r:level.rooms())if(r instanceof com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.PitRoom)room=(com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.PitRoom)r;
+        assertNotNull(room);Item key=null;com.shatteredpixel.shatteredpixeldungeon.items.Heap source=null;int count=0;
+        for(com.shatteredpixel.shatteredpixeldungeon.items.Heap heap:level.heaps.valueList())for(Item item:heap.items)if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.keys.CrystalKey){
+            assertFalse(level.room(heap.pos) instanceof com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.PitRoom);count+=item.quantity();key=item;source=heap;
+        }
+        assertEquals(1,count);source.items.remove(key);if(source.items.isEmpty())level.heaps.remove(source.pos);
+        int inside=level.pointToCell(room.center());level.drop(key,inside); // Old map fixture.
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("level",level);
+        level=(com.shatteredpixel.shatteredpixeldungeon.levels.RegularLevel)saved.get("level");
+        ExtractionFalls.movePitKeys(level);ExtractionFalls.movePitKeys(level);count=0;
+        for(com.shatteredpixel.shatteredpixeldungeon.items.Heap heap:level.heaps.valueList())for(Item item:heap.items)if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.keys.CrystalKey){
+            assertFalse(level.room(heap.pos) instanceof com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.PitRoom);count+=item.quantity();
+        }
+        assertEquals(1,count);
+    }
+    @Test public void newChapterBalanceRisesSharplyAndOldRaidsKeepTheirMultipliers() {
+        profile.debugEnabled=true;profile.debugUnlockChapters();
+        float previousHP=0,previousDamage=0;
+        for(int chapter=1;chapter<=5;chapter++) {
+            profile.selectRaid(chapter);profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
+            float health=ExtractionDifficulty.raidHealthMultiplier(),damage=ExtractionDifficulty.raidDamageMultiplier();
+            assertTrue(health>previousHP);assertTrue(damage>previousDamage);
+            if(chapter>=3)assertTrue(health>=previousHP*1.4f);
+            com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat rat=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();int hp=rat.HT;
+            ExtractionDifficulty.prepare(rat);assertEquals(Math.round(hp*health),rat.HT);assertEquals(Math.round(10*damage),ExtractionDifficulty.incoming(10,rat));
+            profile.raidRules=3;
+            assertEquals(ExtractionDifficulty.healthMultiplier(chapter,profile.raidDifficulty),ExtractionDifficulty.raidHealthMultiplier(),0);
+            assertEquals(ExtractionDifficulty.damageMultiplier(profile.raidDifficulty),ExtractionDifficulty.raidDamageMultiplier(),0);
+            profile.settle(profile.raidID,false);previousHP=health;previousDamage=damage;
+        }
+    }
+
 }

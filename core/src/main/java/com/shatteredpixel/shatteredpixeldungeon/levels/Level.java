@@ -320,6 +320,7 @@ public abstract class Level implements Bundlable {
 		
 		createMobs();
 		createItems();
+        if (this instanceof RegularLevel) com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionFalls.movePitKeys((RegularLevel)this);
 
 		Random.popGenerator();
 	}

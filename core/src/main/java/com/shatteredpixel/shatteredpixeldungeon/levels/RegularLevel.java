@@ -904,6 +904,7 @@ public abstract class RegularLevel extends Level {
 				roomExit = r;
 			}
 		}
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionFalls.movePitKeys(this);
 	}
 	
 }

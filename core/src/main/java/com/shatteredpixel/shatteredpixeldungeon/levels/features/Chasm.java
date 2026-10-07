@@ -62,7 +62,7 @@ public class Chasm implements Hero.Doom {
 				GameScene.show(
 						new WndOptions( new Image(Dungeon.level.tilesTex(), 176, 16, 16, 16),
 								Messages.get(Chasm.class, "chasm"),
-								Messages.get(Chasm.class, "jump"),
+								Messages.get(Chasm.class, com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?"jump_raid":"jump"),
 								Messages.get(Chasm.class, "yes"),
 								Messages.get(Chasm.class, "no") ) {
 

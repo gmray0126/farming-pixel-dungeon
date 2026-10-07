@@ -19,9 +19,9 @@ public final class ExtractionRoute {
         if(depth==end&&destination==end+1&&bossDefeated)return Action.EXTRACT;
         return Action.BLOCK;
     }
-    /** Falling may traverse this raid, but can never enter another chapter. */
+    /** Falls always relocate within the same floor, including boss floors. */
     public static int fallDepth(int chapter,int depth){
-        return ExtractionDifficulty.validChapter(chapter)&&depth>=ExtractionDifficulty.startDepth(chapter)&&depth<ExtractionDifficulty.endDepth(chapter)?depth+1:depth;
+        return depth;
     }
     private ExtractionRoute(){}
 }

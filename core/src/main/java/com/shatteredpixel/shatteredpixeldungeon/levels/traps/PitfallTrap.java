@@ -47,6 +47,12 @@ public class PitfallTrap extends Trap {
 		shape = DIAMOND;
 	}
 
+    @Override public String desc() {
+        String text=super.desc();
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()) text+="\n\n"+Messages.get(this,"desc_raid");
+        return text;
+    }
+
 	@Override
 	public void activate() {
 		
@@ -69,7 +75,7 @@ public class PitfallTrap extends Trap {
 		p.setPositions(positions);
 
 		if (pos == Dungeon.hero.pos){
-			GLog.n(Messages.get(this, "triggered_hero"));
+			GLog.n(Messages.get(this, com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()?"triggered_hero_raid":"triggered_hero"));
 		} else if (Dungeon.level.heroFOV[pos]){
 			GLog.n(Messages.get(this, "triggered"));
 		}

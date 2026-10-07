@@ -114,7 +114,7 @@ public final class ExtractionProfile {
         if (active) return; // retry the same escrow if first map creation was interrupted
         if(!ExtractionDifficulty.validChapter(selectedChapter)||unlockedDifficulty[selectedChapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
         migrateGrowthCap();
-        change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=3;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
+        change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=4;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
     }
     public void selectRaid(final int chapter){
         if(active)throw new IllegalStateException("원정 중에는 출격 지역을 바꿀 수 없습니다.");
