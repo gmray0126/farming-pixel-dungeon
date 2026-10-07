@@ -45,6 +45,7 @@ function Click-Hero($p) {
     [void][DesktopInput]::ClientToScreen($p.MainWindowHandle, [ref]$origin)
     [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
     [void][DesktopInput]::SetCursorPos($origin.X + [int]($rect.Right / 2), $origin.Y + [int]($rect.Bottom / 2) + 12)
+    Start-Sleep -Milliseconds 100
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
     Start-Sleep -Milliseconds 80
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
@@ -55,6 +56,7 @@ function Click-Client($p, [int]$x, [int]$y) {
     [void][DesktopInput]::ClientToScreen($p.MainWindowHandle, [ref]$origin)
     [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
     [void][DesktopInput]::SetCursorPos($origin.X+$x,$origin.Y+$y)
+    Start-Sleep -Milliseconds 100
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
     Start-Sleep -Milliseconds 80
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
@@ -101,6 +103,7 @@ function Depart($p, [bool]$fresh = $false) {
     [void][DesktopInput]::ClientToScreen($p.MainWindowHandle, [ref]$origin)
     [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
     [void][DesktopInput]::SetCursorPos($origin.X + [int]($rect.Right / 2) - 35, $origin.Y + $rect.Bottom - 34)
+    Start-Sleep -Milliseconds 100
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
     Start-Sleep -Milliseconds 80
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
