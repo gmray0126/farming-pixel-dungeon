@@ -76,6 +76,7 @@ public class WndBag extends WndTabbed {
 	private int nCols;
 	private int nRows;
 	private Component itemGrid;
+	private ScrollPane itemScroll;
 
 	private int slotWidth;
 	private int slotHeight;
@@ -127,12 +128,11 @@ public class WndBag extends WndTabbed {
 		placeTitle( bag, windowWidth );
 		
 		itemGrid=new Component();
-		ScrollPane scroll=new ScrollPane(itemGrid);
-		add(scroll);
+		itemScroll=new ScrollPane(itemGrid);
+		add(itemScroll);
 		placeItems(bag);
 		int rows=row+(col>0?1:0);
 		itemGrid.setSize(windowWidth,rows*(slotHeight+SLOT_MARGIN)-SLOT_MARGIN);
-		scroll.setRect(0,TITLE_HEIGHT,windowWidth,windowHeight-TITLE_HEIGHT);
 
 		resize( windowWidth, windowHeight );
 
@@ -149,6 +149,22 @@ public class WndBag extends WndTabbed {
 		}
 
 		layoutTabs();
+	}
+
+	@Override
+	public void resize(int w,int h){
+		super.resize(w,h);
+		refreshViewport();
+	}
+
+	@Override
+	public void offset(int xOffset,int yOffset){
+		super.offset(xOffset,yOffset);
+		refreshViewport();
+	}
+
+	private void refreshViewport(){
+		if(itemScroll!=null)itemScroll.setRect(0,TITLE_HEIGHT,width,height-TITLE_HEIGHT);
 	}
 
 	public ItemSelector getSelector() {
