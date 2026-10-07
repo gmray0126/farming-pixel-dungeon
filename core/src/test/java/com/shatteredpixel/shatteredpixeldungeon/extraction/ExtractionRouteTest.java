@@ -45,4 +45,13 @@ public class ExtractionRouteTest {
         for(int c=1;c<=5;c++)assertEquals(BLOCK,ExtractionRoute.action(c,ExtractionDifficulty.endDepth(c),1,REGULAR_EXIT,ExtractionDifficulty.endDepth(c)+1,true,false));
     }
 
+    @Test public void bossFloorFallsCannotEscapeIntoTheNextChapter(){
+        for(int c=1;c<=5;c++){
+            int start=1+5*(c-1),end=start+4;
+            assertEquals(start+1,ExtractionRoute.fallDepth(c,start));
+            assertEquals(end,ExtractionRoute.fallDepth(c,end-1));
+            assertEquals(end,ExtractionRoute.fallDepth(c,end));
+        }
+    }
+
 }

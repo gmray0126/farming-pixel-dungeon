@@ -136,7 +136,7 @@ public class InterlevelScene extends PixelScene {
 				break;
 			case DESCEND:
 				if (Dungeon.hero == null){
-					loadingDepth = 1;
+					loadingDepth = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter);
 					fadeTime = SLOW_FADE;
 				} else {
 					if (curTransition != null)  loadingDepth = curTransition.destDepth;
@@ -681,21 +681,28 @@ public class InterlevelScene extends PixelScene {
 
 	//TODO atm falling always just increments depth by 1, do we eventually want to roll it into the transition system?
 	private void fall() throws IOException {
-		
-		Mob.holdAllies( Dungeon.level );
-		
-		Buff.affect( Dungeon.hero, Chasm.Falling.class );
-		Dungeon.saveAll();
 
-		Level level;
-		Dungeon.depth++;
-		if (Dungeon.levelHasBeenGenerated(Dungeon.depth, Dungeon.branch)) {
-			level = Dungeon.loadLevel( GamesInProgress.curSlot );
-		} else {
-			level = Dungeon.newLevel();
-		}
-		Dungeon.switchLevel( level, level.fallCell( fallIntoPit ));
-	}
+        Mob.holdAllies(Dungeon.level);
+        Buff.affect(Dungeon.hero,Chasm.Falling.class);
+        Dungeon.saveAll();
+        int oldDepth=Dungeon.depth, oldPos=Dungeon.hero.pos;
+        if(Dungeon.hero.extractionRaidID!=0&&Dungeon.branch==0)
+            Dungeon.depth=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.fallDepth(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,oldDepth);
+        else Dungeon.depth++;
+        Level level=Dungeon.levelHasBeenGenerated(Dungeon.depth,Dungeon.branch)?Dungeon.loadLevel(GamesInProgress.curSlot):Dungeon.newLevel();
+        int landing=level.fallCell(fallIntoPit);
+        if(Dungeon.depth==oldDepth){
+            // A boss-floor fall cannot bypass extraction. Land on nearby safe ground.
+            int best=-1,bestDistance=Integer.MAX_VALUE;
+            for(int cell=0;cell<level.length();cell++){
+                if(!level.passable[cell]||level.pit[cell]||Actor.findChar(cell)!=null)continue;
+                int distance=level.distance(oldPos,cell);
+                if(distance<bestDistance){best=cell;bestDistance=distance;}
+            }
+            if(best>=0)landing=best;
+        }
+        Dungeon.switchLevel(level,landing);
+    }
 
 	private void ascend() throws IOException {
 		if (curTransition.destBranch != Dungeon.branch && Dungeon.depth >= 16 && Dungeon.depth <= 20) {

@@ -158,8 +158,6 @@ public class DwarfKing extends Mob {
 
 	@Override
 	protected boolean act() {
-        // Armor abilities are unlocked by growth nodes in classless expeditions.
-        if(Dungeon.hero.extractionRaidID==0){
 		if (pos == CityBossLevel.throne){
 			throwItems();
 		}
@@ -567,6 +565,8 @@ public class DwarfKing extends Mob {
 			h.destroy();
 		}
 
+        // Armor abilities are unlocked by growth nodes in classless expeditions.
+        if(Dungeon.hero.extractionRaidID==0){
 		if (pos == CityBossLevel.throne){
 			Dungeon.level.drop(new KingsCrown(), pos + Dungeon.level.width()).sprite.drop(pos);
 		} else {
