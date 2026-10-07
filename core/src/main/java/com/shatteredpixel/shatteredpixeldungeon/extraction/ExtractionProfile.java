@@ -25,6 +25,7 @@ public final class ExtractionProfile {
     public final HashSet<String> nodes = new HashSet<>();
     public int gold = 100, xp = 0, points = 3, raidID = 0, nextRaid = 1, raidXP = 0;
     public boolean active = false;
+    public boolean debugEnabled=false;
     public int selectedChapter=1, selectedDifficulty=1, raidChapter=1, raidDifficulty=1;
     public int raidRules=1; // Missing in old saves: preserve an ongoing staged raid.
     public final int[] unlockedDifficulty={1,0};
@@ -54,6 +55,7 @@ public final class ExtractionProfile {
         b.put("chapter",selectedChapter);b.put("difficulty",selectedDifficulty);b.put("raid_chapter",raidChapter);b.put("raid_difficulty",raidDifficulty);
         b.put("difficulty_unlocks",unlockedDifficulty);
         b.put("raid_rules",raidRules);
+        b.put("debug_enabled",debugEnabled);
         return b;
     }
     private void restore(Bundle b) {
@@ -70,10 +72,23 @@ public final class ExtractionProfile {
         raidChapter=b.contains("raid_chapter")?b.getInt("raid_chapter"):1;
         raidDifficulty=b.contains("raid_difficulty")?b.getInt("raid_difficulty"):1;
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
+        debugEnabled=b.getBoolean("debug_enabled");
         int[] unlocked=b.contains("difficulty_unlocks")?b.getIntArray("difficulty_unlocks"):new int[0];unlockedDifficulty[0]=1;unlockedDifficulty[1]=0;
         for(int n=0;n<Math.min(2,unlocked.length);n++)unlockedDifficulty[n]=Math.max(n==0?1:0,Math.min(10,unlocked[n]));
     }
     private void save() throws IOException { FileUtils.bundleToFile(FILE, bundle()); }
+    public void setDebugEnabled(boolean enabled){change(()->debugEnabled=enabled);}
+    public void debugResources(int addedGold,int addedXP,int addedPoints){
+        requireDebug();
+        if(addedGold<0||addedXP<0||addedPoints<0)throw new IllegalArgumentException("지급량은 음수일 수 없습니다.");
+        change(()->{int level=xp/25;gold=Math.addExact(gold,addedGold);xp=Math.addExact(xp,addedXP);points=Math.addExact(points,Math.addExact(addedPoints,xp/25-level));});
+    }
+    public void debugUnlockPrison(){requireDebug();change(()->unlockedDifficulty[1]=Math.max(1,unlockedDifficulty[1]));}
+    public void debugStore(Item item){
+        requireDebug();if(active)throw new IllegalStateException("원정 중에는 원정 가방으로 지급하세요.");
+        change(()->stash.add(item));
+    }
+    public void requireDebug(){if(!debugEnabled)throw new IllegalStateException("디버그 메뉴를 먼저 활성화하세요.");}
     private synchronized void change(Runnable mutation) {
         Bundle before = bundle();
         try { mutation.run(); save(); }

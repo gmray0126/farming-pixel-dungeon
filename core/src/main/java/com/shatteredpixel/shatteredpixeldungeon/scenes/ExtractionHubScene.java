@@ -22,6 +22,8 @@ public class ExtractionHubScene extends PixelScene {
     private float left, top, width, bottom;
     private int stashRows;
     private float cellStep;
+    private int debugTaps;
+    private long lastDebugTap;
     private static final int TEXT=0xD5DFE4, MUTED=0x8D9FA9, GOLD=0xE4C583, GREEN=0x83C9B5;
 
     @Override public void create() {
@@ -44,8 +46,13 @@ public class ExtractionHubScene extends PixelScene {
         body=new Group();add(body);
         ExtractionProfile p=ExtractionProfile.get();
         label("파밍 픽셀 던전",9,left,top,width-34,GOLD);
+        Button secret=new Button(){@Override protected void onClick(){
+            long now=System.currentTimeMillis();if(now-lastDebugTap>4000)debugTaps=0;lastDebugTap=now;
+            if(++debugTaps>=7){debugTaps=0;try{p.setDebugEnabled(true);refresh();debugMenu();}catch(RuntimeException e){error(e);}}
+        }};secret.setRect(left,top,width-34,16);body.add(secret);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
-        label(p.gold+" G  ·  "+p.points+" P",7,left,top+20,width,TEXT);
+        label(p.gold+" G  ·  "+p.points+" P",7,left,top+20,p.debugEnabled?width-43:width,TEXT);
+        if(p.debugEnabled)button("디버그",left+width-40,top+18,40,13,this::debugMenu,false);
         label("성장 Lv. "+p.growthLevel()+"  ·  경험치 "+p.growthExperience()+" / "+p.growthExperienceRequired(),6,left,top+29,width,GREEN);
         float tw=(width-6)/4f;
         String[] titles={"준비","성장","원정","상점"};
@@ -101,6 +108,7 @@ public class ExtractionHubScene extends PixelScene {
             label("착용 갑옷  "+(armor==null?"없음":armor.title()),6,left+5,after+34,width-10,GREEN);
         }
     }
+    private void debugMenu(){new com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDebugMenu(this::add,this::refresh,false).open();}
     private void grid(ArrayList<Item> items,int offset,int rows,float y,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();float cw=(width-6)/4f;
         Item weapon=p.preparedWeapon(),armor=p.preparedArmor();

@@ -196,6 +196,7 @@ import java.util.LinkedHashMap;
 
 public class Hero extends Char {
 	public int extractionRaidID = 0;
+	public boolean extractionDebugInvulnerable=false;
 	public int extractionXP = 0;
 	public int extractionVisited = 0;
 	public boolean extractionBossDefeated = false, extractionSecondWindUsed = false;
@@ -312,6 +313,7 @@ public class Hero extends Char {
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put("extraction_raid", extractionRaidID);
+		bundle.put("extraction_debug_invulnerable",extractionDebugInvulnerable);
 		bundle.put("extraction_xp", extractionXP);
 		bundle.put("extraction_visited",extractionVisited);
 		bundle.put("extraction_boss",extractionBossDefeated);
@@ -340,6 +342,7 @@ public class Hero extends Char {
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		extractionRaidID=bundle.getInt("extraction_raid");
+		extractionDebugInvulnerable=bundle.getBoolean("extraction_debug_invulnerable");
 		extractionXP=bundle.getInt("extraction_xp");
 		extractionVisited=bundle.getInt("extraction_visited");
 		extractionBossDefeated=bundle.getBoolean("extraction_boss");
@@ -1655,6 +1658,7 @@ public class Hero extends Char {
 
 	@Override
 	public void damage( int dmg, Object src ) {
+		if(extractionRaidID!=0&&extractionDebugInvulnerable&&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().debugEnabled)return;
 		if (buff(TimekeepersHourglass.timeStasis.class) != null
 				|| buff(TimeStasis.class) != null) {
 			return;

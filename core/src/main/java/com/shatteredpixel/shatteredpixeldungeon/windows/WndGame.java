@@ -60,6 +60,12 @@ public class WndGame extends Window {
 			}
 		});
 		curBtn.icon(Icons.get(Icons.PREFS));
+		if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().debugEnabled
+				&& Dungeon.hero!=null && Dungeon.hero.extractionRaidID!=0 && Dungeon.hero.isAlive()){
+			addButton(new RedButton("디버그"){@Override protected void onClick(){
+				hide();new com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDebugMenu(GameScene::show,()->{},true).open();
+			}});
+		}
 
 		// Challenges window
 		if (Dungeon.challenges > 0) {

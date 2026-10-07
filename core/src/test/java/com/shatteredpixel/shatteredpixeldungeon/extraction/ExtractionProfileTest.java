@@ -126,6 +126,39 @@ public class ExtractionProfileTest {
         assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision.class));
         assertFalse(Dungeon.level.mobs.isEmpty());
     }
+    @Test public void debugIsOptInAndResourcesPersistWithoutChangingStats() throws Exception {
+        assertFalse(profile.debugEnabled);int gold=profile.gold,points=profile.points;
+        try{profile.debugResources(10000,250,100);fail("Debug must be enabled");}catch(IllegalStateException expected){}
+        assertEquals(gold,profile.gold);assertEquals(points,profile.points);
+        Hero hero=new Hero();int hp=hero.HT,str=hero.STR;
+        profile.setDebugEnabled(true);profile.debugResources(10000,250,100);profile.debugUnlockPrison();
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.debugEnabled);
+        assertEquals(gold+10000,profile.gold);assertEquals(250,profile.xp);assertEquals(points+110,profile.points);
+        assertEquals(hp,hero.HT);assertEquals(str,hero.STR);assertEquals(1,profile.unlockedDifficulty[1]);
+        profile.setDebugEnabled(false);forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.debugEnabled);
+    }
+    @Test public void debugItemsUseStashAndRunInventoryWithoutChangingNormalLoot() throws Exception {
+        profile.setDebugEnabled(true);int stash=profile.stash.size();
+        Item sword=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword().identify(false).level(15);
+        ExtractionDebug.give(sword,false);forgetProfile();profile=ExtractionProfile.get();assertEquals(stash+1,profile.stash.size());
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Dungeon.level=Dungeon.newLevel();Dungeon.hero.pos=Dungeon.level.entrance();Dungeon.hero.ready=true;
+        Item scroll=new ExtractionShop.SupplyUpgrade().quantity(20);ExtractionDebug.give(scroll,true);
+        assertTrue(Dungeon.hero.belongings.backpack.items.contains(scroll));assertEquals(2,ExtractionDifficulty.raidMaxTier());
+        assertEquals(0,ExtractionDifficulty.tierWeights()[4],0);
+        try{ExtractionDebug.give(new Food(),false);fail("Escrow must not be edited");}catch(IllegalStateException expected){}
+    }
+    @Test public void debugRaidToolsPreserveSnapshotAndDisabledModeStopsInvulnerability() throws Exception {
+        profile.setDebugEnabled(true);profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Dungeon.level=Dungeon.newLevel();Hero hero=Dungeon.hero;hero.pos=Dungeon.level.entrance();hero.ready=true;hero.sprite=new EffectSprite();hero.sprite.visible=false;
+        hero.HP=5;ExtractionDebug.heal();assertEquals(hero.HT,hero.HP);
+        ExtractionDebug.toggleInvulnerable();hero.damage(100,new com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger());assertEquals(hero.HT,hero.HP);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();hero.storeInBundle(saved);Hero copy=new Hero();copy.restoreFromBundle(saved);assertTrue(copy.extractionDebugInvulnerable);
+        assertEquals(5,ExtractionDebug.checkedDepth(5));try{ExtractionDebug.checkedDepth(6);fail("Cross chapter warp must be rejected");}catch(IllegalArgumentException expected){}
+        ExtractionDebug.weakenEnemies();for(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob mob:Dungeon.level.mobs)if(mob.alignment==com.shatteredpixel.shatteredpixeldungeon.actors.Char.Alignment.ENEMY)assertEquals(1,mob.HP);
+        int id=profile.raidID;profile.setDebugEnabled(false);hero.damage(1,new com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger());assertEquals(hero.HT-1,hero.HP);assertEquals(id,profile.raidID);
+        hero.sprite=null;
+    }
     @Test public void chapterUnlocksPersistAndFixedRaidSelectionIsFrozen() throws Exception {
         try{profile.selectRaid(2);fail("Prison must be locked");}catch(IllegalStateException expected){}
         profile.begin();Dungeon.hero=new Hero();Dungeon.gold=0;profile.settle(profile.raidID,true);
