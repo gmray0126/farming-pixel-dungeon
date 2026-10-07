@@ -42,12 +42,16 @@ try:
     adb('exec-in', f"run-as {PACKAGE} sh -c 'cat > shared_prefs/ShatteredPixelDungeon.xml'", input=prefs)
     adb('logcat', '-c')
     launch()
+    # Dismiss Android's first-use immersive-mode hint before testing Back.
+    adb('shell', 'input', 'tap', '600', '190')
+    time.sleep(1)
     screenshot('01-hub')
     assert not read_state('extraction-profile.dat')['active']
     # Each selection closes WndOptions before creating the next window. Exercise
     # all three callbacks on the native scene to catch detached-window access.
     adb('shell', 'input', 'tap', '444', '278')
     time.sleep(1)
+    guide_images = []
     for index, button_y in enumerate((740, 840, 940)):
         adb('shell', 'input', 'tap', '360', '1083')
         time.sleep(1)
@@ -56,8 +60,13 @@ try:
         time.sleep(1)
         check_crash()
         screenshot('guide-page-' + str(index))
+        page = (OUT / ('guide-page-' + str(index) + '.png')).read_bytes()
+        menu = (OUT / ('guide-menu-' + str(index) + '.png')).read_bytes()
+        assert page != menu, 'Guide selection did not open a page'
+        guide_images.append(page)
         adb('shell', 'input', 'keyevent', '4')
         time.sleep(1)
+    assert len(set(guide_images)) == 3, 'Guide checks stayed on the same page'
     adb('shell', 'input', 'tap', '110', '278')
     time.sleep(1)
     adb('shell', 'input', 'tap', '250', '1475')
