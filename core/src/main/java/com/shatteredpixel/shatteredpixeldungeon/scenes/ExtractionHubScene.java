@@ -43,6 +43,9 @@ public class ExtractionHubScene extends PixelScene {
         if(!p.active&&GamesInProgress.check(1)!=null)Dungeon.deleteGame(1,true);
         refresh();fadeIn();
     }
+    public void showHubControls(boolean visible){
+        if(body!=null)body.visible=body.active=visible;
+    }
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);

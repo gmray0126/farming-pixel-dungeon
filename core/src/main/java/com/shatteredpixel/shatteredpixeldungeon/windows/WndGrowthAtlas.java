@@ -3,6 +3,7 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 
 import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
+import com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.*;
 import com.watabou.noosa.Camera;
 import com.watabou.noosa.Game;
@@ -23,6 +24,7 @@ public class WndGrowthAtlas extends Window {
         atlasWidth=Math.max(100,(int)((Game.width-insets.left-insets.right)/PixelScene.defaultZoom)-16);
         atlasHeight=Math.max(170,(int)((Game.height-insets.top-insets.bottom)/PixelScene.defaultZoom)-20);
         resize(atlasWidth,atlasHeight);refresh();
+        if(Game.scene() instanceof ExtractionHubScene)((ExtractionHubScene)Game.scene()).showHubControls(false);
     }
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}
@@ -50,5 +52,5 @@ public class WndGrowthAtlas extends Window {
     private void text(String value,int size,float x,float y,int maxWidth,int color){
         RenderedTextBlock text=PixelScene.renderTextBlock(value,size);text.maxWidth(maxWidth);text.hardlight(color);text.setPos(x,y);body.add(text);
     }
-    @Override public void hide(){super.hide();if(closed!=null)closed.run();}
+    @Override public void hide(){super.hide();if(Game.scene() instanceof ExtractionHubScene)((ExtractionHubScene)Game.scene()).showHubControls(true);if(closed!=null)closed.run();}
 }
