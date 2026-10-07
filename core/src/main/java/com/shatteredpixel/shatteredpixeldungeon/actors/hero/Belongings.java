@@ -56,7 +56,7 @@ public class Belongings implements Iterable<Item> {
 			image = ItemSpriteSheet.BACKPACK;
 		}
 		public int capacity(){
-			int cap = Dungeon.hero != null && Dungeon.hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().capacity()+1 : super.capacity();
+			int cap = Dungeon.hero != null && Dungeon.hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().capacity()+1+(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().nodes.contains("ranged_0")?1:0) : super.capacity();
 			for (Item item : items){
 				if (item instanceof Bag){
 					cap++;

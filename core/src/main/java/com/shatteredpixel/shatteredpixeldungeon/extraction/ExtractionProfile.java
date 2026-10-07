@@ -92,7 +92,7 @@ public final class ExtractionProfile {
     private synchronized void change(Runnable mutation) {
         Bundle before = bundle();
         try { mutation.run(); save(); }
-        catch (IOException e) { restore(before); throw new IllegalStateException("저장 실패. 장비 이동을 취소했습니다.", e); }
+        catch (IOException e) { restore(before); throw new IllegalStateException("저장 실패. 변경 사항을 취소했습니다.", e); }
         catch (RuntimeException e) { restore(before); throw e; }
     }
     public void prepare(final Item i, final boolean take) {
@@ -111,7 +111,7 @@ public final class ExtractionProfile {
         change(()->{selectedChapter=chapter;selectedDifficulty=ExtractionDifficulty.fixedStage(chapter);});
     }
     public Item preparedWeapon() {
-        for (Item i : prepared) if (i instanceof KindOfWeapon) return i;
+        for (Item i : prepared) if (i instanceof KindOfWeapon && !(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)) return i;
         return null;
     }
     public Item preparedArmor() {
@@ -127,6 +127,7 @@ public final class ExtractionProfile {
     /** Selected gear goes first, preserving the existing profile/escrow format. */
     public void selectEquipment(final Item i) {
         if (active) throw new IllegalStateException("원정 중에는 착용 장비를 바꿀 수 없습니다.");
+        if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow) return;
         if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor || i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)) return;
         change(() -> { prepared.remove(i); prepared.add(0, i); });
     }
@@ -141,7 +142,8 @@ public final class ExtractionProfile {
         Bundle copy = new Bundle(); copy.put("items", escrow);
         for (Bundlable value : copy.getCollection("items")) {
             Item i=(Item)value;
-            if (i instanceof KindOfWeapon && h.belongings.weapon == null) { h.belongings.weapon=(KindOfWeapon)i; h.belongings.weapon.activate(h); }
+            if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow){if(!i.collect(h.belongings.backpack))throw new IllegalStateException("영혼의 활을 가방에 넣지 못했습니다.");}
+            else if (i instanceof KindOfWeapon && h.belongings.weapon == null) { h.belongings.weapon=(KindOfWeapon)i; h.belongings.weapon.activate(h); }
             else if (i instanceof Armor && h.belongings.armor == null) { h.belongings.armor=(Armor)i; h.belongings.armor.activate(h); }
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact&&h.belongings.artifact==null){h.belongings.artifact=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)i;h.belongings.artifact.activate(h);}
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact&&h.belongings.misc==null&&h.belongings.artifact.getClass()!=i.getClass()){h.belongings.misc=(com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)i;h.belongings.misc.activate(h);}
@@ -155,6 +157,9 @@ public final class ExtractionProfile {
         if(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class)==null
                 && !new com.shatteredpixel.shatteredpixeldungeon.items.Waterskin().collect(h.belongings.backpack))
             throw new IllegalStateException("기본 물통을 가방에 넣지 못했습니다.");
+        if(nodes.contains("ranged_0")&&h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow.class)==null
+                &&!new NodeSpiritBow().identify(false).collect(h.belongings.backpack))
+            throw new IllegalStateException("기본 영혼의 활을 가방에 넣지 못했습니다.");
         ExtractionPotionKnowledge.apply(this);
         for(Item i:h.belongings)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.shatteredpixel.shatteredpixeldungeon.items.Generator.removeArtifact((Class<? extends com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact>)i.getClass());
         h.HTBoost += Math.round(bonus(ExtractionGrowth.Stat.HEALTH)); h.updateHT(true); h.HP=h.HT;
@@ -203,6 +208,15 @@ public final class ExtractionProfile {
         }
         return result.length()==0?"없음":result.toString();
     }
+    public int spentPoints(){
+        int used=0;for(ExtractionGrowth.Node n:ExtractionGrowth.NODES)if(nodes.contains(n.id))used=Math.addExact(used,n.cost);return used;
+    }
+    /** Full, atomic refund. Raid stats and granted skills cannot change during an expedition. */
+    public int resetNodes(){
+        if(active)throw new IllegalStateException("진행 중인 원정을 끝내거나 포기한 뒤 초기화할 수 있습니다.");
+        int refunded=spentPoints();if(nodes.isEmpty())return 0;
+        change(()->{points=Math.addExact(points,refunded);nodes.clear();while(prepared.size()>capacity())stash.add(prepared.remove(prepared.size()-1));});return refunded;
+    }
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
         if (!unlocked(index)) throw new IllegalStateException("선행 경로나 연결된 계통의 노드를 먼저 배워 주세요.");
@@ -238,6 +252,7 @@ public final class ExtractionProfile {
                 loot.removeIf(i -> i instanceof BasicExpeditionSword && i.level()==0 && ((BasicExpeditionSword)i).enchantment==null);
                 loot.removeIf(i -> i instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin
                         && ((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)i).isEmpty());
+                loot.removeIf(i -> i instanceof NodeSpiritBow && ((NodeSpiritBow)i).enchantment==null && ((NodeSpiritBow)i).augment==com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Augment.NONE);
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
                 gold+=redeemed.gold;

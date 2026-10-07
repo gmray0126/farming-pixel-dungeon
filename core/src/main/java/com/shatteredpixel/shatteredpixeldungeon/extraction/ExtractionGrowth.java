@@ -59,6 +59,7 @@ public final class ExtractionGrowth {
             }
             if(branch>=3&&branch<12)text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
             if(branch>=12)text.append("\n\n무기 종류와 관계없이 적용됩니다. 보호막은 누적되지 않으며, 새 층 효과는 원정 중 해당 층의 첫 방문에만 발동합니다.");
+            if(id.equals("ranged_0"))text.append("\n\n영혼의 활 해금: 매 출격 때 활을 가방에 기본 지급합니다. 상점 구매가 필요하지 않으며 사망 후에도 다시 지급됩니다. 초기화하면 지급과 사용이 잠깁니다.");
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
             if(effects.containsKey(Stat.SECOND_WIND))text.append("\n두 생존 최종 특성은 원정당 한 번의 발동 횟수를 공유합니다.");
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");

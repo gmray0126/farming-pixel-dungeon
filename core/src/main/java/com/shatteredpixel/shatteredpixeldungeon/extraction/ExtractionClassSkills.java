@@ -133,7 +133,7 @@ public final class ExtractionClassSkills {
     public static void open(){
         Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 스킬을 사용할 수 있습니다."));return;}
         ensure(h);
-        GameScene.show(new WndOptions("원정 스킬",hasSkills(h)?"기력 "+Math.round(h.extractionSkills.armor.charge)+" / 100 · 기도 "+MessagesDecimal(h.extractionSkills.prayer.remaining())+" / "+h.extractionSkills.prayer.capacity()+"\n\n기력은 500턴, 기도 충전은 50턴마다 1 회복됩니다. 허기 회복이 중단된 상태에서는 충전되지 않습니다. 스킬 옆 정보 버튼에서 효과를 볼 수 있습니다.":"성장 지도 바깥의 기술 계통에서 스킬을 해금하세요.","수호","비전","그림자","자연","기동","기도","닫기"){
+        GameScene.show(new WndOptions("원정 스킬",hasSkills(h)?"기력 "+Math.round(h.extractionSkills.armor.charge)+" / 100 · 기도 "+MessagesDecimal(h.extractionSkills.prayer.remaining())+" / "+h.extractionSkills.prayer.capacity()+"\n\n기력은 턴마다 0.2, 기도 충전은 50턴마다 1 회복됩니다. 허기 회복이 중단된 상태에서는 충전되지 않습니다. 스킬 옆 정보 버튼에서 효과를 볼 수 있습니다.":"성장 지도 바깥의 기술 계통에서 스킬을 해금하세요.","수호","비전","그림자","자연","기동","기도","닫기"){
             @Override protected void onSelect(int i){if(i<6)page(h,19+i,0);}
         });
     }

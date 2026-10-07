@@ -25,11 +25,14 @@ public class WndGrowthAtlas extends Window {
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);ExtractionProfile p=ExtractionProfile.get();
-        text("성장 지도",9,0,0,atlasWidth-24,ExtractionNodeTree.GOLD);
-        text(p.points+" P · 습득 "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+" · 출격 힘 "+p.startingStrength(),6,0,16,atlasWidth,WHITE);
+        text("성장 지도",9,0,0,atlasWidth-68,ExtractionNodeTree.GOLD);
+        text("남은 "+p.points+" P · 사용한 "+p.spentPoints()+" P",6,0,16,atlasWidth,WHITE);
+        text("습득 "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+" · 출격 힘 "+p.startingStrength(),5,0,25,atlasWidth,ExtractionNodeTree.GREEN);
+        StyledButton reset=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"초기화",6){@Override protected void onClick(){WndGrowthReset.open(WndGrowthAtlas.this::refresh);}};
+        reset.setRect(atlasWidth-65,0,39,13);body.add(reset);
         StyledButton close=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"닫기",6){@Override protected void onClick(){hide();}};
         close.setRect(atlasWidth-23,0,23,13);body.add(close);
-        ExtractionNodeTree tree=new ExtractionNodeTree(this::node);body.add(tree);tree.setRect(0,30,atlasWidth,atlasHeight-47);
+        ExtractionNodeTree tree=new ExtractionNodeTree(this::node);body.add(tree);tree.setRect(0,38,atlasWidth,atlasHeight-55);
         text("밀어서 이동 · 두 손가락 확대 · 노드 선택",5,0,atlasHeight-10,atlasWidth,ExtractionNodeTree.GREEN);
     }
     private void node(final int index){

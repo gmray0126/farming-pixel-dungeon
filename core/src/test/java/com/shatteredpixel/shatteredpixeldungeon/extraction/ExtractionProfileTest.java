@@ -800,6 +800,53 @@ public class ExtractionProfileTest {
         h.lvl=1;assertEquals(10,monk.energyCap());assertEquals(4,weapons.chargeCap());
         h.lvl=30;assertEquals(10,monk.energyCap());assertEquals(4,weapons.chargeCap());
     }
+
+    @Test public void resetRefundsAllNodeCostsAndPreservesProgressAndGearAfterReload() throws Exception {
+        profile.points=1000;learnPath("utility_soul_eater_3");learnPath("strength");
+        Item item=profile.stash.get(0);profile.prepare(item,true);profile.xp=77;
+        int before=profile.points,used=profile.spentPoints(),gold=profile.gold,stash=profile.stash.size();
+        assertEquals(1000,before+used);assertTrue(used>0);
+        assertEquals(used,profile.resetNodes());assertEquals(1000,profile.points);assertEquals(0,profile.spentPoints());assertTrue(profile.nodes.isEmpty());
+        assertEquals(gold,profile.gold);assertEquals(77,profile.xp);assertEquals(stash,profile.stash.size());assertEquals(1,profile.prepared.size());assertEquals(10,profile.startingStrength());
+        assertEquals(0,profile.resetNodes());assertEquals(1000,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(1000,profile.points);assertEquals(0,profile.spentPoints());assertEquals(77,profile.xp);assertEquals(1,profile.prepared.size());
+    }
+    @Test public void resetCannotChangeAnActiveRaidAndFailedSaveRollsBackTheRefund() throws Exception {
+        profile.points=100;learnPath("utility_protective_shadows_2");int before=profile.points,used=profile.spentPoints();
+        java.util.HashSet<String> learned=new java.util.HashSet<>(profile.nodes);profile.begin();
+        try{profile.resetNodes();fail("Reset must be blocked during a raid");}catch(IllegalStateException expected){}
+        assertEquals(before,profile.points);assertEquals(learned,profile.nodes);assertEquals(used,profile.spentPoints());
+        profile.settle(profile.raidID,false);
+        java.io.File blocker=folder.newFile("reset-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.resetNodes();fail("Reset save must fail");}catch(IllegalStateException expected){}
+        assertEquals(before,profile.points);assertEquals(learned,profile.nodes);assertEquals(used,profile.spentPoints());
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");forgetProfile();profile=ExtractionProfile.get();assertEquals(before,profile.points);assertEquals(learned,profile.nodes);
+    }
+    @Test public void resetReturnsOnlyOverflowPreparedItemsToTheStash(){
+        profile.points=100;learnPath("porter");int cap=profile.capacity(),stored=profile.stash.size();assertTrue(cap>12);
+        for(int i=0;i<cap;i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
+        profile.resetNodes();assertEquals(12,profile.prepared.size());assertEquals(stored+cap-12,profile.stash.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(13,h.belongings.backpack.items.size());
+    }
+    @Test public void firstArcherNodeGivesTheNativeBowEveryRaidAndResetLocksItAgain(){
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
+        assertNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow.class));profile.settle(profile.raidID,false);
+        learnPath("ranged_0");profile.begin();h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow bow=h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow.class);
+        assertTrue(bow instanceof NodeSpiritBow);assertTrue(h.belongings.weapon instanceof BasicExpeditionSword);assertTrue(bow.actions(h).contains(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow.AC_SHOOT));assertEquals(0,bow.value());assertEquals(0,bow.energyVal());
+        profile.settle(profile.raidID,false);profile.begin();Hero next=new Hero();next.extractionRaidID=profile.raidID;Dungeon.hero=next;profile.initialize(next);assertNotNull(next.belongings.getItem(NodeSpiritBow.class));
+        profile.settle(profile.raidID,false);profile.resetNodes();assertFalse(bow.actions(h).contains(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow.AC_SHOOT));
+        for(ExtractionShop.Offer offer:ExtractionShop.OFFERS)assertFalse(offer.item() instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow);
+    }
+    @Test public void freeBowFitsAFullLoadoutAndPreparedBowNeverReplacesTheSword(){
+        learnPath("ranged_0");for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(14,h.belongings.backpack.items.size());
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");assertNotNull(restored.belongings.getItem(NodeSpiritBow.class));
+        Dungeon.gold=0;profile.settle(profile.raidID,true);for(Item item:profile.stash)assertFalse(item instanceof NodeSpiritBow);
+        Item bow=new NodeSpiritBow().identify(false);profile.stash.add(bow);profile.prepare(bow,true);assertNull(profile.preparedWeapon());
+        profile.begin();h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);int bows=0;for(Item item:h.belongings)if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)bows++;
+        assertEquals(1,bows);assertTrue(h.belongings.weapon instanceof BasicExpeditionSword);
+    }
     @Test public void graphPreserves178ExistingNodesAndAddsClassSkillsAndSubclasses() {
         assertEquals(532, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();

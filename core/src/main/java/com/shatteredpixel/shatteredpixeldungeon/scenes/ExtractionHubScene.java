@@ -53,7 +53,7 @@ public class ExtractionHubScene extends PixelScene {
             if(++debugTaps>=7){debugTaps=0;try{p.setDebugEnabled(true);refresh();debugMenu();}catch(RuntimeException e){error(e);}}
         }};secret.setRect(left,top,width-34,16);body.add(secret);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
-        label(p.gold+" G  ·  "+p.points+" P",7,left,top+20,p.debugEnabled?width-43:width,TEXT);
+        label(p.gold+" G · 남음 "+p.points+" P · 사용 "+p.spentPoints()+" P",6,left,top+20,p.debugEnabled?width-43:width,TEXT);
         if(p.debugEnabled)button("디버그",left+width-40,top+18,40,13,this::debugMenu,false);
         label("성장 Lv. "+p.growthLevel()+" · XP "+p.growthExperience()+"/"+p.growthExperienceRequired()+" · 출격 힘 "+p.startingStrength(),6,left,top+29,width,GREEN);
         float tw=(width-6)/4f;
@@ -102,7 +102,7 @@ public class ExtractionHubScene extends PixelScene {
         bagPage=Math.min(bagPage,Math.max(0,(p.capacity()-1)/12));
         grid(p.prepared,bagPage*12,3,bagY+12,true);
         float after=bagY+12+3*cellStep;
-        if(after+10<bottom-26)label("탭: 넣기 / 빼기 · 물통 기본 지급",6,left,after+3,width,MUTED);
+        if(after+10<bottom-26)label(p.nodes.contains("ranged_0")?"물통·영혼의 활 자동 지급 · 탭: 넣기 / 빼기":"탭: 넣기 / 빼기 · 물통 기본 지급",6,left,after+3,width,MUTED);
         if(after+51<bottom-26){
             panel(left,after+16,width,33);
             Item weapon=p.preparedWeapon(), armor=p.preparedArmor();
@@ -132,7 +132,7 @@ public class ExtractionHubScene extends PixelScene {
     }
     private void itemDetails(final Item i,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();
-        boolean gear=bag&&(i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
+        boolean gear=bag&&(!(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)&&i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
         boolean worn=i==p.preparedWeapon()||i==p.preparedArmor()||p.preparedRelics().contains(i);
         ArrayList<String> options=new ArrayList<>();
         options.add(bag?"창고로 빼기":"출격 가방에 넣기");
@@ -221,8 +221,9 @@ public class ExtractionHubScene extends PixelScene {
     }
     private void growth(float y){
         ExtractionProfile p=ExtractionProfile.get();
-        label("성장 노드  "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+"  ·  "+p.points+" P",8,left,y,width,GOLD);
-        label("밀어서 이동 · 두 손가락 확대 · 노드 선택",6,left,y+12,width,MUTED);
+        label("성장 노드 "+p.nodes.size()+" / "+ExtractionProfile.IDS.length,8,left,y,width-40,GOLD);
+        button("초기화",left+width-38,y-2,38,14,()->com.shatteredpixel.shatteredpixeldungeon.windows.WndGrowthReset.open(this::refresh),false);
+        label("남은 "+p.points+" P · 사용한 "+p.spentPoints()+" P",6,left,y+12,width,GREEN);
         ExtractionNodeTree tree=new ExtractionNodeTree(this::node,()->add(new WndGrowthAtlas(this::refresh)));
         body.add(tree);tree.setRect(left,y+26,width,Math.min(166,bottom-27-(y+26)));
         float after=tree.bottom()+7;

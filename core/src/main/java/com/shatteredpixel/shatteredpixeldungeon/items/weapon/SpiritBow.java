@@ -76,13 +76,15 @@ public class SpiritBow extends Weapon {
 	public ArrayList<String> actions(Hero hero) {
 		ArrayList<String> actions = super.actions(hero);
 		actions.remove(AC_EQUIP);
-		actions.add(AC_SHOOT);
+		if(canUseInExpedition(hero))actions.add(AC_SHOOT);
 		return actions;
 	}
 	
-	@Override
+    public static boolean canUseInExpedition(Hero hero){return hero.extractionRaidID==0||com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().nodes.contains("ranged_0");}
+    @Override
 	public void execute(Hero hero, String action) {
 		
+        if(action.equals(AC_SHOOT)&&!canUseInExpedition(hero)){com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("사격 입문 노드를 배워야 영혼의 활을 사용할 수 있습니다.");return;}
 		super.execute(hero, action);
 		
 		if (action.equals(AC_SHOOT)) {

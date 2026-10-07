@@ -13,6 +13,16 @@ public class GrowthAtlasViewportTest {
             assertEquals(n,GrowthAtlasLayout.nearest(GrowthAtlasLayout.X[n],GrowthAtlasLayout.Y[n],0));
         }
     }
+    @Test public void roundUtilityClustersKeepEveryNodeDistinctAndInsideTheMap(){
+        for(int i=178;i<ExtractionGrowth.NODES.length;i++){
+            int branch=ExtractionGrowth.NODES[i].branch;
+            assertTrue(GrowthAtlasLayout.GROUP_RING[branch]>0);
+            for(int j=0;j<i;j++){
+                double gap=Math.hypot(GrowthAtlasLayout.X[i]-GrowthAtlasLayout.X[j],GrowthAtlasLayout.Y[i]-GrowthAtlasLayout.Y[j])-GrowthAtlasLayout.RADIUS[i]-GrowthAtlasLayout.RADIUS[j];
+                assertTrue("Node touch targets must not overlap",gap>5);
+            }
+        }
+    }
     @Test public void zoomKeepsTheWorldPointUnderTheFinger(){
         GrowthAtlasViewport view=new GrowthAtlasViewport();view.bounds(128,230);view.origin();
         float x=view.worldX(90),y=view.worldY(95);
