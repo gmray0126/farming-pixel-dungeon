@@ -1,5 +1,6 @@
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -29,11 +30,24 @@ function Read-Bundle($path) {
     return ([Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json)
 }
 function Start-Game {
-    $p = Start-Process $exe -WorkingDirectory (Split-Path $exe) -PassThru
-    Start-Sleep -Seconds 10
-    $p.Refresh()
-    if ($p.HasExited -or $p.MainWindowHandle -eq 0) { throw 'Native Windows game window did not open' }
-    if ($p.MainWindowTitle -match 'Crashed|Error') { throw "Game crashed: $($p.MainWindowTitle)" }
+    $started = Start-Process $exe -WorkingDirectory (Split-Path $exe) -RedirectStandardOutput (Join-Path (Resolve-Path pc-evidence) 'stdout.txt') -RedirectStandardError (Join-Path (Resolve-Path pc-evidence) 'stderr.txt') -PassThru
+    for ($i=0; $i -lt 20; $i++) {
+        Start-Sleep -Seconds 1
+        $p = Get-Process FarmingPixelDungeon -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowHandle -ne 0 } | Select-Object -First 1
+        if ($p) { break }
+    }
+    if (!$p) {
+        $started.Refresh()
+        "Launcher exited: $($started.HasExited); exit code: $($started.ExitCode)" | Set-Content pc-evidence/launcher.txt
+        Get-Content pc-evidence/stderr.txt -ErrorAction SilentlyContinue | Write-Output
+        $bounds = [Windows.Forms.Screen]::PrimaryScreen.Bounds
+        $image = [Drawing.Bitmap]::new($bounds.Width, $bounds.Height)
+        $graphics = [Drawing.Graphics]::FromImage($image)
+        try { $graphics.CopyFromScreen($bounds.X,$bounds.Y,0,0,$image.Size); $image.Save((Join-Path (Resolve-Path pc-evidence) 'failure.png')) } finally { $graphics.Dispose(); $image.Dispose() }
+        throw 'Native Windows game window did not open'
+    }
+    Start-Sleep -Seconds 6
+    if ($p.MainWindowTitle -match 'Crashed|Error') { Capture $p 'crash'; throw "Game crashed: $($p.MainWindowTitle)" }
     return $p
 }
 function Capture($p, $name) {
