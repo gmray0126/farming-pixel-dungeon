@@ -146,4 +146,9 @@ public class WndInfoItem extends Window {
 		super.offset(x, y);
 		if (scroll != null) scroll.setRect(scroll.left(), scroll.top(), scroll.width(), scroll.height());
 	}
+
+	@Override public void resize(int width, int height){
+		super.resize(width, height);
+		if (scroll != null) scroll.setRect(scroll.left(), scroll.top(), scroll.width(), scroll.height());
+	}
 }
