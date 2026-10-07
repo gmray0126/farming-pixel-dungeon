@@ -11,7 +11,7 @@ import java.util.*;
 public final class ExtractionGrowth {
     private ExtractionGrowth() {}
     public static final int MAGIC = 11, FIST = 9;
-    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술"};
+    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술","마검사","그림자술사","연금 사냥꾼","폭풍 유격수","성전사","혈기사"};
     public enum Stat {
         KNOW_HEALING("회복 물약 식별",false), KNOW_STRENGTH("힘 물약 식별",false), KNOW_EXPERIENCE("경험 물약 식별",false),
         KNOW_MINDVISION("심안 물약 식별",false), KNOW_LEVITATION("부유 물약 식별",false), KNOW_INVISIBILITY("투명 물약 식별",false),
@@ -42,6 +42,7 @@ public final class ExtractionGrowth {
         public int[] parents;
         public int[] alternatives=new int[0];
         public com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent talent;
+        public boolean hybrid;
         public int talentRank; public String skill,utilityDescription;
         public final EnumMap<Stat,Float> effects=new EnumMap<>(Stat.class);
         Node(String id,String name,int branch,int row,int col,int cost,String[] required,Object... effects) {
@@ -69,6 +70,7 @@ public final class ExtractionGrowth {
             return text.toString();
         }
         public String summary() {
+            if(hybrid)return "혼합 특성";
             if(utilityDescription!=null)return skill!=null?"사용 스킬":talent!=null?talentRank+"단계":effects.isEmpty()?"고유 능력":"기도 +2";
             if(branch==18)return "미리 식별";
             Stat s=effects.keySet().iterator().next();
@@ -271,6 +273,7 @@ public final class ExtractionGrowth {
         add(list,"strength_advanced","중량 적응",2,6,0,4,new String[]{"explore_merge"},Stat.STRENGTH,1f);
         add(list,"strength_master","완력 완성",0,6,2,5,new String[]{"combat_cap"},Stat.STRENGTH,3f);
         ExtractionClassUtilities.append(list);
+        ExtractionHybridTrees.append(list);
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];
@@ -309,6 +312,12 @@ public final class ExtractionGrowth {
         alternative("strength_mid","combat_left_end");alternative("strength_mid","explore_left_end");
         alternative("strength_advanced","combat_merge");alternative("strength_advanced","survival_merge");
         alternative("strength_master","survival_cap");alternative("strength_master","explore_cap");
+        String[][] bridges={{"magic_0","skill_endure","skill_beacon"},{"dagger_0","skill_beacon","skill_stealth"},{"stealth_0","skill_stealth","skill_hawk"},{"spear_0","skill_hawk","skill_feint"},{"skill_feint","skill_prayer"},{"skill_prayer","skill_endure"}};
+        for(int b=0;b<ExtractionHybridTrees.PREFIXES.length;b++){
+            String prefix=ExtractionHybridTrees.PREFIXES[b];
+            for(String source:bridges[b])alternative(prefix+"_0",source);
+            alternative(prefix+"_13",prefix+"_8");alternative(prefix+"_13",prefix+"_12");
+        }
         for(int i=0;i<NODES.length;i++)DESCS[i]=NODES[i].description();
     }
     private static void alternative(String target,String source){

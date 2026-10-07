@@ -46,6 +46,7 @@ public final class ExtractionUtility {
     }
     public static void defeated(Hero h,Mob mob){
         if(h==null||h.extractionRaidID==0||!h.isAlive()||mob.alignment!=Char.Alignment.ENEMY)return;
+        ExtractionHybridCombat.defeated(h,mob);
         if(!h.extractionBossDefeated&&Dungeon.branch==0&&ExtractionDifficulty.chapterBoss(mob,ExtractionDifficulty.chapter(),Dungeon.depth)){
             h.extractionBossDefeated=true;
             if(h.sprite!=null)ExtractionDifficulty.bossLoot(mob);
@@ -67,7 +68,7 @@ public final class ExtractionUtility {
     private static boolean source(Object src,Class<?> type){return src==type||type.isInstance(src);}
     public static int incoming(Hero h,int damage,Object src){
         if(h.extractionRaidID==0||damage<=0)return damage;
-        damage=ExpeditionArtifacts.incoming(h,ExtractionDifficulty.incoming(damage,src));
+        damage=ExtractionHybridCombat.incoming(h,ExpeditionArtifacts.incoming(h,ExtractionDifficulty.incoming(damage,src)),src);
         float reduction=0;
         boolean poison=source(src,Poison.class),burn=source(src,Burning.class),bleed=source(src,Bleeding.class),ooze=source(src,Ooze.class);
         if(poison||burn||bleed||ooze)reduction+=value(h,DOT_REDUCTION);

@@ -945,6 +945,8 @@ public abstract class Mob extends Char {
 
 	@Override
 	public void damage( int dmg, Object src ) {
+        if(src instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.DamageWand && !isInvulnerable(src.getClass()))
+            dmg=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.magic(Dungeon.hero,this,dmg);
 
 		if (!isInvulnerable(src.getClass())) {
 			if (state == SLEEPING) {

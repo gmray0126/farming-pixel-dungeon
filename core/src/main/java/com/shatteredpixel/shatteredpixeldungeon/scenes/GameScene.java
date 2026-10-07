@@ -610,6 +610,7 @@ public class GameScene extends PixelScene {
 		}
 
 		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.sceneReady(Dungeon.hero);
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.floor(Dungeon.hero);
 
 		// Foresight searches immediately when attached, including discovery particles.
 		// Apply entry traits only after this floor's sprites, fog and UI exist.

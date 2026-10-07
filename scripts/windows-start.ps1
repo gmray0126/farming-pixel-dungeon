@@ -160,7 +160,7 @@ try {
     $profile.active=$false; $profile.prepared=@(); $profile.escrow=@()
     Write-Bundle $profilePath $profile
     $p=Start-Game
-    Click-Client $p 648 110
+    Click-Client $p 535 110
     Start-Sleep -Seconds 1
     Click-Client $p 654 200
     Start-Sleep -Seconds 1

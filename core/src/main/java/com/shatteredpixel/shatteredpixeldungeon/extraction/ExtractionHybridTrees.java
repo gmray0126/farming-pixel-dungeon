@@ -1,0 +1,104 @@
+/* Farming Pixel Dungeon. GPL-3.0-or-later. */
+package com.shatteredpixel.shatteredpixeldungeon.extraction;
+import java.util.ArrayList;
+/** Six original combat themes; appended IDs preserve existing saves and presets. */
+public final class ExtractionHybridTrees {
+    public static final String[] PREFIXES={"spell","shadow","alchemy","storm","holy","blood"};
+    public static void append(ArrayList<ExtractionGrowth.Node> nodes){
+        node(nodes,"spell_0","마검 입문",25,0,1,3,"sword_0","근접 명중 후 다음 완드 직접 피해 +20%, 완드 명중 후 다음 근접 피해 +20%. 준비 효과는 6턴 동안 유지되고 한 번의 공격이나 시전에만 적용됩니다.");
+        node(nodes,"spell_1","마력 잔류",25,1,0,2,"spell_0","강화된 근접 공격에 방어 관통 피해 2를 추가합니다.");
+        node(nodes,"spell_2","주문 압축",25,2,0,3,"spell_1","교대로 사용하는 완드의 피해 보너스가 35%가 됩니다.");
+        node(nodes,"spell_3","룬 파열",25,3,0,4,"spell_2","강화된 주문이 대상에게 3턴 취약을 남깁니다.");
+        node(nodes,"spell_4","과부하",25,4,0,5,"spell_3","완드에 충전이 2 이상 있으면 강화 시전의 보너스가 55%가 되며 충전 1을 추가 소모합니다.");
+        node(nodes,"spell_5","마력 방벽",25,1,1,2,"spell_0","교대 주문을 명중하면 보호막 3을 얻습니다.");
+        node(nodes,"spell_6","검의 결계",25,2,1,3,"spell_5","교대 근접 공격을 맞히면 보호막 3을 얻습니다.");
+        node(nodes,"spell_7","비전 흡수",25,3,1,4,"spell_6","교대 주문 명중 시 자신의 화상·독을 제거합니다.");
+        node(nodes,"spell_8","룬 수호",25,4,1,5,"spell_7","교대 공격으로 얻는 보호막이 6으로 증가합니다. 보호막은 누적되지 않습니다.");
+        node(nodes,"spell_9","룬 발걸음",25,1,2,2,"spell_0","교대 근접 명중 후 2턴 신속을 얻습니다.");
+        node(nodes,"spell_10","냉각 주문",25,2,2,3,"spell_9","교대 주문이 대상에게 3턴 냉기를 부여합니다.");
+        node(nodes,"spell_11","회로 순환",25,3,2,4,"spell_10","교대 근접 명중 후 3턴 완드 충전 효과를 얻습니다.");
+        node(nodes,"spell_12","전투 집중",25,4,2,5,"spell_11","교대 근접 공격의 피해 보너스가 40%가 됩니다.");
+        node(nodes,"spell_13","검술 공명",25,5,1,6,"spell_4","물리와 주문을 연속으로 교대하면 공명이 최대 3회 쌓이며 회당 교대 피해 +5%. 같은 종류를 연속 사용하면 초기화됩니다.");
+        node(nodes,"spell_14","마검 완성",25,6,1,8,"spell_13","교대 공격으로 적 처치 시 체력 3 회복. 교대 준비 시간이 10턴으로 증가합니다.");
+        node(nodes,"shadow_0","암영 각인",26,0,1,3,"magic_0","단검·쌍검으로 맞힌 적에게 8턴 표식을 남깁니다. 해당 적을 완드로 맞히면 표식을 터뜨려 추가 피해 4를 줍니다.");
+        node(nodes,"shadow_1","깊은 각인",26,1,0,2,"shadow_0","표식 폭발의 추가 피해가 7이 됩니다.");
+        node(nodes,"shadow_2","암영 균열",26,2,0,3,"shadow_1","표식 폭발 후 적에게 3턴 취약을 부여합니다.");
+        node(nodes,"shadow_3","흑마법",26,3,0,4,"shadow_2","표식 폭발이 적에게 3턴 실명을 부여합니다.");
+        node(nodes,"shadow_4","그림자 연쇄",26,4,0,5,"shadow_3","표식 폭발 후 주변 2칸의 다른 적들에게 6턴 표식을 남깁니다.");
+        node(nodes,"shadow_5","그림자 밟기",26,1,1,2,"shadow_0","혼합 스킬에서 표식한 적의 근처 빈칸으로 순간이동합니다. 사거리 5, 재사용 10턴, 1턴 소모.");
+        node(nodes,"shadow_6","긴 그림자",26,2,1,3,"shadow_5","그림자 밟기 사거리가 7칸이 됩니다.");
+        node(nodes,"shadow_7","암영 장막",26,3,1,4,"shadow_6","그림자 밟기 후 2턴 투명화합니다.");
+        node(nodes,"shadow_8","탈출 그림자",26,4,1,5,"shadow_7","표식 폭발 후 3턴 신속을 얻습니다.");
+        node(nodes,"shadow_9","어둠의 보호",26,1,2,2,"shadow_0","표식 폭발 후 보호막 3을 얻습니다.");
+        node(nodes,"shadow_10","생명 훔치기",26,2,2,3,"shadow_9","표식 폭발 후 체력 2를 회복합니다.");
+        node(nodes,"shadow_11","숨겨진 칼날",26,3,2,4,"shadow_10","표식한 적에게 단검·쌍검 공격 시 피해 +15%.");
+        node(nodes,"shadow_12","끈질긴 추적",26,4,2,5,"shadow_11","표식 지속 시간이 12턴으로 증가합니다.");
+        node(nodes,"shadow_13","암영 숙련",26,5,1,6,"shadow_4","표식 폭발 추가 피해 +4. 그림자 밟기 재사용 시간이 6턴으로 감소합니다.");
+        node(nodes,"shadow_14","그림자 완성",26,6,1,8,"shadow_13","표식이 있는 적 처치 시 2턴 투명화하고 체력 3을 회복합니다.");
+        node(nodes,"alchemy_0","약품 사격",27,0,1,3,"ranged_0","혼합 스킬에서 독 코팅을 선택해 다음 원거리 명중 3회에 3턴 독을 부여합니다. 준비 1턴, 재사용 12턴.");
+        node(nodes,"alchemy_1","독성 농축",27,1,0,2,"alchemy_0","독 코팅의 독 지속 시간이 5턴으로 증가합니다.");
+        node(nodes,"alchemy_2","냉각 코팅",27,2,0,3,"alchemy_1","냉기 코팅을 해금합니다. 다음 원거리 명중 3회에 4턴 냉기를 부여합니다.");
+        node(nodes,"alchemy_3","발화 코팅",27,3,0,4,"alchemy_2","화염 코팅을 해금합니다. 다음 원거리 명중 3회에 화상을 부여합니다.");
+        node(nodes,"alchemy_4","반응 촉진",27,4,0,5,"alchemy_3","서로 다른 코팅의 상태이상이 겹친 대상에게 코팅 사격 시 추가 피해 4.");
+        node(nodes,"alchemy_5","긴 코팅",27,1,1,2,"alchemy_0","한 번 준비한 코팅이 5회 명중까지 유지됩니다.");
+        node(nodes,"alchemy_6","현장 조제",27,2,1,3,"alchemy_5","코팅 재사용 시간이 8턴으로 감소합니다.");
+        node(nodes,"alchemy_7","안전한 약품",27,3,1,4,"alchemy_6","코팅이 남아 있는 동안 받는 독·화상 피해 -25%.");
+        node(nodes,"alchemy_8","완성된 약품",27,4,1,5,"alchemy_7","코팅 재사용 시간이 6턴으로 감소합니다.");
+        node(nodes,"alchemy_9","마비성 혼합",27,1,2,2,"alchemy_0","독 상태의 적에게 냉기 코팅 명중 시 2턴 불구를 부여합니다.");
+        node(nodes,"alchemy_10","열 충격",27,2,2,3,"alchemy_9","냉기 상태의 적에게 화염 코팅 명중 시 추가 피해 4.");
+        node(nodes,"alchemy_11","화학 차폐",27,3,2,4,"alchemy_10","서로 다른 속성을 조합한 사격 후 보호막 4를 얻습니다.");
+        node(nodes,"alchemy_12","사냥꾼의 해독",27,4,2,5,"alchemy_11","코팅 사격으로 독 상태의 적을 맞히면 자신의 독을 제거합니다.");
+        node(nodes,"alchemy_13","연금 공명",27,5,1,6,"alchemy_4","코팅 사격으로 상태이상 중인 적에게 피해 +20%.");
+        node(nodes,"alchemy_14","연금 완성",27,6,1,8,"alchemy_13","코팅 사격으로 적 처치 시 체력 3 회복. 코팅 사용 횟수가 2회 늘어납니다.");
+        node(nodes,"storm_0","거리의 리듬",28,0,1,3,"ranged_0","원거리 명중 후 다음 근접 공격 피해 +20%, 근접 명중 후 다음 원거리 공격 피해 +20%. 6턴 유지, 한 번만 적용됩니다.");
+        node(nodes,"storm_1","돌입 타격",28,1,0,2,"storm_0","원거리에서 근접으로 교대할 때 추가 피해 2.");
+        node(nodes,"storm_2","폭풍 접근",28,2,0,3,"storm_1","돌입 타격 후 2턴 신속을 얻습니다.");
+        node(nodes,"storm_3","빈틈 돌파",28,3,0,4,"storm_2","돌입 타격이 적에게 3턴 취약을 부여합니다.");
+        node(nodes,"storm_4","결전 돌입",28,4,0,5,"storm_3","교대 근접 공격의 피해 보너스가 40%가 됩니다.");
+        node(nodes,"storm_5","후퇴 사격",28,1,1,2,"storm_0","근접에서 원거리로 교대할 때 적에게 3턴 불구를 부여합니다.");
+        node(nodes,"storm_6","바람의 거리",28,2,1,3,"storm_5","후퇴 사격 후 2턴 신속을 얻습니다.");
+        node(nodes,"storm_7","사선 확보",28,3,1,4,"storm_6","혼합 스킬에서 3칸 이내의 보이는 안전한 빈칸으로 이동합니다. 재사용 10턴, 1턴 소모.");
+        node(nodes,"storm_8","바람의 도약",28,4,1,5,"storm_7","사선 확보 거리가 5칸, 재사용 시간이 6턴이 됩니다.");
+        node(nodes,"storm_9","교대 방어",28,1,2,2,"storm_0","교대 공격 명중 후 보호막 3을 얻습니다.");
+        node(nodes,"storm_10","추격 조준",28,2,2,3,"storm_9","교대 원거리 공격의 피해 보너스가 35%가 됩니다.");
+        node(nodes,"storm_11","흐름 유지",28,3,2,4,"storm_10","교대 준비 효과가 10턴 유지됩니다.");
+        node(nodes,"storm_12","폭풍 회복",28,4,2,5,"storm_11","교대 공격으로 적 처치 시 체력 2 회복.");
+        node(nodes,"storm_13","폭풍 공명",28,5,1,6,"storm_4","연속 교대 횟수에 따라 최대 피해 +15%. 같은 거리 계열을 연속 사용하면 초기화됩니다.");
+        node(nodes,"storm_14","폭풍 완성",28,6,1,8,"storm_13","교대 공격의 보호막이 6으로 증가하고 교대 처치 후 3턴 신속을 얻습니다.");
+        node(nodes,"holy_0","성력 축적",29,0,1,3,"blunt_0","근접 공격을 맞히면 성력 1을 얻습니다. 최대 3. 혼합 스킬에서 성력 3으로 체력 4를 회복합니다. 회복은 1턴을 소모합니다.");
+        node(nodes,"holy_1","신성한 칼날",29,1,0,2,"holy_0","성력이 가득 찬 상태의 근접 공격에 피해 2 추가.");
+        node(nodes,"holy_2","심판",29,2,0,3,"holy_1","혼합 스킬에서 성력 3을 소모하여 보이는 5칸 이내 적에게 피해 8. 1턴 소모.");
+        node(nodes,"holy_3","죄의 무게",29,3,0,4,"holy_2","심판이 적에게 3턴 취약을 부여합니다.");
+        node(nodes,"holy_4","심판의 빛",29,4,0,5,"holy_3","심판 피해가 12로 증가합니다.");
+        node(nodes,"holy_5","치유의 서약",29,1,1,2,"holy_0","성력 회복량이 7로 증가합니다.");
+        node(nodes,"holy_6","정화",29,2,1,3,"holy_5","성력 회복 시 자신의 독·화상·출혈을 제거합니다.");
+        node(nodes,"holy_7","축복의 방벽",29,3,1,4,"holy_6","성력 회복 후 보호막 4를 얻습니다.");
+        node(nodes,"holy_8","헌신",29,4,1,5,"holy_7","성력 회복 시 시야 내 3칸의 아군도 체력 4를 회복합니다.");
+        node(nodes,"holy_9","성력 그릇",29,1,2,2,"holy_0","성력 상한이 5가 됩니다.");
+        node(nodes,"holy_10","전장의 기도",29,2,2,3,"holy_9","적 처치 시 성력 1 획득.");
+        node(nodes,"holy_11","성스러운 저항",29,3,2,4,"holy_10","성력이 3 이상일 때 받는 적의 직접 피해 -10%.");
+        node(nodes,"holy_12","빛의 추적",29,4,2,5,"holy_11","심판 사거리가 7칸으로 증가하고 대상에게 3턴 실명을 부여합니다.");
+        node(nodes,"holy_13","성전의 맹세",29,5,1,6,"holy_4","최대 성력 +1. 심판과 회복이 성력 2만 소모합니다.");
+        node(nodes,"holy_14","성전사 완성",29,6,1,8,"holy_13","심판 처치 시 성력 1을 돌려받고 보호막 5를 얻습니다.");
+        node(nodes,"blood_0","피의 서약",30,0,1,3,"vital","혼합 스킬로 서약을 켜고 끕니다. 서약 중 근접 명중마다 최대 체력의 5%를 지불해 피해 +30%와 출혈을 부여합니다. 체력이 부족하면 발동하지 않습니다. 전환 1턴.");
+        node(nodes,"blood_1","깊은 상처",30,1,0,2,"blood_0","서약으로 부여하는 출혈의 세기가 증가합니다.");
+        node(nodes,"blood_2","피의 추격",30,2,0,3,"blood_1","출혈 중인 적에게 근접 피해 +15%.");
+        node(nodes,"blood_3","핏빛 파열",30,3,0,4,"blood_2","서약 중 출혈 대상에게 근접 명중 시 2턴 취약을 부여합니다.");
+        node(nodes,"blood_4","붉은 결전",30,4,0,5,"blood_3","서약의 피해 보너스가 45%가 됩니다.");
+        node(nodes,"blood_5","피의 회수",30,1,1,2,"blood_0","출혈 중인 적에게 근접 명중 시 체력 1 회복.");
+        node(nodes,"blood_6","흡혈",30,2,1,3,"blood_5","출혈 대상의 회복량이 2로 증가합니다.");
+        node(nodes,"blood_7","핏빛 방벽",30,3,1,4,"blood_6","서약 명중 후 보호막 3을 얻습니다.");
+        node(nodes,"blood_8","절제된 서약",30,4,1,5,"blood_7","서약의 체력 비용이 최대 체력의 3%로 감소합니다.");
+        node(nodes,"blood_9","상처 봉합",30,1,2,2,"blood_0","출혈 중인 적 처치 시 체력 2 회복.");
+        node(nodes,"blood_10","피의 정화",30,2,2,3,"blood_9","출혈 중인 적 처치 시 자신의 독·화상·출혈 제거.");
+        node(nodes,"blood_11","핏빛 걸음",30,3,2,4,"blood_10","출혈 중인 적 처치 후 2턴 신속을 얻습니다.");
+        node(nodes,"blood_12","생존의 맹세",30,4,2,5,"blood_11","체력이 35% 이하이면 서약 명중 후 보호막 5를 얻습니다.");
+        node(nodes,"blood_13","혈기사 공명",30,5,1,6,"blood_4","서약 중 출혈 대상에게 피해 +10%. 출혈 대상 처치 회복량 +2.");
+        node(nodes,"blood_14","혈기사 완성",30,6,1,8,"blood_13","출혈 대상에게 명중 시 회복량 +1. 서약으로 얻는 보호막이 6이 됩니다.");
+    }
+    private static void node(ArrayList<ExtractionGrowth.Node> list,String id,String name,int branch,int row,int col,int cost,String parent,String description){
+        ExtractionGrowth.Node n=new ExtractionGrowth.Node(id,name,branch,row,col,cost,new String[]{parent});
+        n.hybrid=true;n.utilityDescription=description;list.add(n);
+    }
+    private ExtractionHybridTrees(){}
+}

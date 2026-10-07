@@ -131,6 +131,12 @@ public final class ExtractionClassSkills {
         h.extractionSkills.armor.charge-=20;Buff.prolong(h,Invisibility.class,6);h.spendAndNext(1);return true;
     }
     public static void open(){
+        Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 메뉴를 열 수 있습니다."));return;}
+        GameScene.show(new WndOptions("원정 메뉴","기술 또는 의뢰 현황을 선택하세요.","원본 직업 기술","혼합 트리 기술","의뢰 현황","닫기"){
+            @Override protected void onSelect(int i){if(i==0)classMenu();else if(i==1)ExtractionHybridCombat.open();else if(i==2)GameScene.show(new WndMessage(ExtractionContracts.tracker(h)));}
+        });
+    }
+    private static void classMenu(){
         Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 스킬을 사용할 수 있습니다."));return;}
         ensure(h);
         GameScene.show(new WndOptions("원정 스킬",hasSkills(h)?"기력 "+Math.round(h.extractionSkills.armor.charge)+" / 100 · 기도 "+MessagesDecimal(h.extractionSkills.prayer.remaining())+" / "+h.extractionSkills.prayer.capacity()+"\n\n기력은 턴마다 0.2, 기도 충전은 50턴마다 1 회복됩니다. 허기 회복이 중단된 상태에서는 충전되지 않습니다. 스킬 옆 정보 버튼에서 효과를 볼 수 있습니다.":"성장 지도 바깥의 기술 계통에서 스킬을 해금하세요.","수호","비전","그림자","자연","기동","기도","닫기"){

@@ -487,6 +487,7 @@ public abstract class Wand extends Item {
 		}
 		
 		curCharges -= cursed ? 1 : chargesPerCast();
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.endCast(curUser,this);
 
 		//remove magic charge at a higher priority, if we are benefiting from it are and not the
 		//wand that just applied it
@@ -766,7 +767,8 @@ public abstract class Wand extends Item {
 					} else {
 						curWand.fx(shot, new Callback() {
 							public void call() {
-								curWand.onZap(shot);
+								com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.beginCast(curUser,curWand,curWand.chargesPerCast());
+                                curWand.onZap(shot);
 								if (Random.Float() < WondrousResin.extraCurseEffectChance()){
 									WondrousResin.forcePositive = true;
 									CursedWand.cursedZap(curWand,

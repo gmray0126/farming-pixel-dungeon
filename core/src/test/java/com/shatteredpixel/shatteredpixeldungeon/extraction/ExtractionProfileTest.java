@@ -849,7 +849,7 @@ public class ExtractionProfileTest {
         assertEquals(1,bows);assertTrue(h.belongings.weapon instanceof BasicExpeditionSword);
     }
     @Test public void graphPreserves178ExistingNodesAndAddsClassSkillsAndSubclasses() {
-        assertEquals(532, ExtractionGrowth.NODES.length);
+        assertEquals(622, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){

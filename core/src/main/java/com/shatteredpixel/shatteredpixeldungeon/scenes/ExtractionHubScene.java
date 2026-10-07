@@ -56,15 +56,15 @@ public class ExtractionHubScene extends PixelScene {
         label(p.gold+" G · 남음 "+p.points+" P · 사용 "+p.spentPoints()+" P",6,left,top+20,p.debugEnabled?width-43:width,TEXT);
         if(p.debugEnabled)button("디버그",left+width-40,top+18,40,13,this::debugMenu,false);
         label(p.growthDisplay()+" · 출격 힘 "+p.startingStrength(),6,left,top+29,width,GREEN);
-        float tw=(width-6)/4f;
-        String[] titles={"준비","성장","원정","상점"};
-        for(int i=0;i<4;i++){
+        float tw=(width-8)/5f;
+        String[] titles={"준비","성장","원정","상점","의뢰"};
+        for(int i=0;i<5;i++){
             final int n=i;
             HubButton b=button(titles[i],left+i*(tw+2),top+40,tw,19,()->{tab=n;refresh();if(n==1)add(new WndGrowthAtlas(this::refresh));},i==tab);
             if(i==tab)b.textColor(GOLD);
         }
         float y=top+65;
-        if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else shop(y);
+        if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else if(tab==3)shop(y);else contracts(y);
         button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
         if(p.active)button("포기하기",left+width-48,bottom-22,48,22,this::abandon,false);
     }
@@ -261,6 +261,19 @@ public class ExtractionHubScene extends PixelScene {
         label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지",6,left,y+116,width,TEXT);
         button("챕터 / 유물 안내",left,y+139,width,13,this::expeditionGuide,false);
         if(!p.result.isEmpty()&&y+158+35<bottom-27)label(p.result,6,left,y+158,width,GREEN);
+    }
+    private void contracts(float y){
+        ExtractionProfile p=ExtractionProfile.get();
+        label("원정 의뢰",9,left,y,width,GOLD);
+        label("최대 3개 수락 · 탈출 후 진행도 저장\n사냥 · 기록 회수 · 무기 납품 · 혼합 실전",6,left,y+18,width,TEXT);
+        button("의뢰 게시판 열기",left,y+42,width,20,()->add(new WndContracts(this::refresh)),true);
+        float row=y+71;
+        for(String id:p.contracts){
+            com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.Job job=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.job(id);
+            label(job.name+" · "+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.progress(p,job)+" / "+job.goal,6,left,row,width,GOLD);row+=16;
+        }
+        if(p.contracts.isEmpty())label("게시판에서 의뢰를 받고 출격하세요.",6,left,row,width,TEXT);
+        if(!p.result.isEmpty())label(p.result,6,left,row+22,width,GREEN);
     }
     private void expeditionGuide(){
         add(new WndOptions("원정 안내","확인할 내용을 선택하세요.","챕터 / 보상","신규 유물","착용 / 상점"){

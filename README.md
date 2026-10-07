@@ -55,6 +55,16 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 - **Builds:** [Android build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/android-apk.yml) · [Windows build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/desktop-pc.yml). Successful runs provide downloadable artifacts; GitHub may require sign-in.
 - **Source builds:** [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction) · [Android guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-android.md) · [Desktop guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-desktop.md).
 
+## 혼합 트리와 의뢰 / Hybrid trees and contracts
+
+여섯 직업 계통 사이에 각각 15개 노드의 혼합 트리가 연결됩니다. 마검사·그림자술사·연금 사냥꾼·폭풍 유격수·성전사·혈기사로 총 90개 노드를 추가했습니다. 교대 공격, 표식 폭발, 속성 코팅, 거리 전환, 성력 소비, 체력과 출혈의 교환으로 전투 방식을 선택합니다. 원정 메뉴의 혼합 트리 기술에서 상태 확인과 활성 스킬을 사용합니다.
+
+Six hybrid trees bridge the original class themes, adding 90 nodes: Spellblade, Shadowcaster, Alchemical Hunter, Storm Skirmisher, Crusader, and Blood Knight. Their mechanics cover physical/magic alternation, mark detonation, elemental coatings, ranged/melee transitions, faith spending, and health-for-bleeding trades. Check state and use active abilities through the expedition menu's hybrid skills.
+
+로비 의뢰 게시판에서 최대 3개 의뢰를 받아 출격합니다. 챕터별 사냥·기록 회수·무기 납품 15개와 혼합 실전 6개가 있습니다. 원정 진행도는 탈출할 때만 저장되며 사망·포기하면 이번 원정의 진행도를 잃습니다. 납품 무기와 최초 완료 장비 보상은 직접 선택합니다. 하수도 연속 의뢰 보상은 전용 유물 ‘의뢰인의 인장’입니다.
+
+Accept up to three of 21 hub contracts: 15 chapter-specific hunting, record-recovery, and weapon-delivery jobs, plus six hybrid trials. Run progress is banked only on extraction; death or abandonment loses the current run's progress. Select the weapon to donate and choose first-completion equipment rewards within the chapter's tier cap. Completing the Sewer contract chain awards the exclusive Commission Seal artifact.
+
 ## 제작자와 원작 / Credits
 
 | 제작자 / Creator | 역할 / Role |

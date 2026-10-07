@@ -33,6 +33,10 @@ public final class ExtractionProfile {
     public int raidRules=1; // Missing in old saves: preserve an ongoing staged raid.
     public final int[] unlockedDifficulty={1,0,0,0,0};
     public String result = "";
+    public final ArrayList<String> contracts=new ArrayList<>();
+    public final HashSet<String> completedContracts=new HashSet<>();
+    public final java.util.HashMap<String,Integer> contractProgress=new java.util.HashMap<>();
+    public boolean contractSealAwarded;
     public static final String[] IDS=ExtractionGrowth.IDS, NAMES=ExtractionGrowth.NAMES, DESCS=ExtractionGrowth.DESCS;
     public static final int[] COSTS=ExtractionGrowth.COSTS, PARENTS=ExtractionGrowth.PARENTS;
 
@@ -60,6 +64,8 @@ public final class ExtractionProfile {
         b.put("difficulty_unlocks",unlockedDifficulty);
         b.put("raid_rules",raidRules);
         b.put("debug_enabled",debugEnabled);
+        b.put("contracts",contracts.toArray(new String[0]));b.put("completed_contracts",completedContracts.toArray(new String[0]));b.put("contract_seal",contractSealAwarded);
+        for(String id:contracts)b.put("contract_progress_"+id,contractProgress.getOrDefault(id,0));
         b.put("growth_point_rate",growthPointRate);
         for(int i=0;i<PRESET_SLOTS;i++)if(presets[i]!=null)b.put("growth_preset_"+i,presets[i]);
         return b;
@@ -79,6 +85,10 @@ public final class ExtractionProfile {
         raidDifficulty=b.contains("raid_difficulty")?b.getInt("raid_difficulty"):1;
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
+        contracts.clear();completedContracts.clear();contractProgress.clear();
+        for(String id:b.getStringArray("contracts")){contracts.add(id);contractProgress.put(id,b.getInt("contract_progress_"+id));}
+        for(String id:b.getStringArray("completed_contracts"))completedContracts.add(id);
+        contractSealAwarded=b.getBoolean("contract_seal");
         growthPointRate=b.contains("growth_point_rate")?b.getInt("growth_point_rate"):1;
         for(int i=0;i<PRESET_SLOTS;i++)presets[i]=b.contains("growth_preset_"+i)?b.getStringArray("growth_preset_"+i):null;
         int[] unlocked=b.contains("difficulty_unlocks")?b.getIntArray("difficulty_unlocks"):new int[0];
@@ -99,7 +109,7 @@ public final class ExtractionProfile {
         change(()->stash.add(item));
     }
     public void requireDebug(){if(!debugEnabled)throw new IllegalStateException("디버그 메뉴를 먼저 활성화하세요.");}
-    private synchronized void change(Runnable mutation) {
+    synchronized void change(Runnable mutation) {
         Bundle before = bundle();
         try { mutation.run(); save(); }
         catch (IOException e) { restore(before); throw new IllegalStateException("저장 실패. 변경 사항을 취소했습니다.", e); }
@@ -152,6 +162,8 @@ public final class ExtractionProfile {
     }
     public void initialize(Hero h) {
         h.belongings.clear();
+        h.extractionContracts=new ExtractionContracts.Run();h.extractionContracts.ids=contracts.toArray(new String[0]);h.extractionContracts.progress=new int[contracts.size()];
+        h.extractionHybrid=new ExtractionHybridCombat.State();
         // Reconstruct escrow items so equipped mutations cannot alter the persistent escrow.
         Bundle copy = new Bundle(); copy.put("items", escrow);
         for (Bundlable value : copy.getCollection("items")) {
@@ -254,6 +266,7 @@ public final class ExtractionProfile {
         if (!active || id!=raidID) return;
         change(() -> {
             if (success) {
+                ExtractionContracts.extracted(this,Dungeon.hero);
                 if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)unlockedDifficulty[raidChapter]=Math.max(1,unlockedDifficulty[raidChapter]);
                 // Preserve only top-level inventory entries: Bag.iterator() also yields
                 // nested contents, which would otherwise be deposited twice.
@@ -279,6 +292,7 @@ public final class ExtractionProfile {
                         +(redeemed.potions+redeemed.scrolls>0?"\n포션 "+redeemed.potions+"개 · 스크롤 "+redeemed.scrolls+"장 정산 · +"+redeemed.gold+" G":"");
                 if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)result+="\n"+(raidChapter+1)+"챕터 "+ExtractionDifficulty.chapterName(raidChapter+1)+" 출격 가능";
                 else result+="\n5챕터 완주! 모든 지역에 다시 출격할 수 있습니다.";
+                if(!contracts.isEmpty())result+="\n의뢰 진행도를 저장했습니다. 게시판에서 완료할 수 있습니다.";
             }
             active=false; escrow.clear();
             if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
@@ -286,7 +300,7 @@ public final class ExtractionProfile {
         migrateGrowthCap();
         Dungeon.deleteGame(GamesInProgress.curSlot, true);
     }
-    private void awardGrowthXP(long amount){
+    void awardGrowthXP(long amount){
         int old=Math.min(MAX_GROWTH_XP,Math.max(0,xp));
         xp=(int)Math.min(MAX_GROWTH_XP,old+Math.max(0,amount));
         points=(int)Math.min(Math.max(0,MAX_GROWTH_POINTS-spentPoints()),(long)points+3*(xp/25-old/25));

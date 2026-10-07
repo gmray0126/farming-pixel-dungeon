@@ -49,7 +49,16 @@ try:
     assert not read_state('extraction-profile.dat')['active']
     # Each selection closes WndOptions before creating the next window. Exercise
     # all three callbacks on the native scene to catch detached-window access.
-    adb('shell', 'input', 'tap', '444', '278')
+    # Native contract board and guide dialogs share the updated five-tab hub.
+    adb('shell', 'input', 'tap', '628', '278')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '360', '615')
+    time.sleep(1)
+    check_crash()
+    screenshot('05-contract-board')
+    adb('shell', 'input', 'keyevent', '4')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '360', '278')
     time.sleep(1)
     guide_images = []
     for index, button_y in enumerate((740, 840, 940)):

@@ -202,6 +202,8 @@ public class Hero extends Char {
     public boolean hasWeaponAbilities(){return heroClass==HeroClass.DUELIST || hasSubclass(HeroSubClass.CHAMPION) || hasSubclass(HeroSubClass.MONK);}
 
 	public int extractionRaidID = 0;
+    public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.State extractionHybrid;
+    public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.Run extractionContracts;
 	public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.State extractionSkills;
 	public boolean extractionDebugInvulnerable=false;
 	public int extractionXP = 0;
@@ -320,6 +322,8 @@ public class Hero extends Char {
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put("extraction_raid", extractionRaidID);
+        bundle.put("extraction_hybrid",extractionHybrid);
+        bundle.put("extraction_contracts",extractionContracts);
 		bundle.put("extraction_skills", extractionSkills);
 		bundle.put("extraction_debug_invulnerable",extractionDebugInvulnerable);
 		bundle.put("extraction_xp", extractionXP);
@@ -350,6 +354,8 @@ public class Hero extends Char {
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		extractionRaidID=bundle.getInt("extraction_raid");
+        extractionHybrid=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.State)bundle.get("extraction_hybrid");
+        extractionContracts=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.Run)bundle.get("extraction_contracts");
 		extractionSkills=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.State)bundle.get("extraction_skills");
 		extractionDebugInvulnerable=bundle.getBoolean("extraction_debug_invulnerable");
 		extractionXP=bundle.getInt("extraction_xp");
@@ -1577,7 +1583,8 @@ public class Hero extends Char {
 	
 	@Override
 	public int attackProc( final Char enemy, int damage ) {
-		damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.attack(this,enemy,damage);
+		damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.physical(this,enemy,damage);
+        damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.attack(this,enemy,damage);
 		damage = super.attackProc( enemy, damage );
 
 		KindOfWeapon wep;

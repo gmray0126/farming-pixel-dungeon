@@ -49,9 +49,7 @@ public class ExtractionNodeTree extends Component {
         nav("+",bx,14,()->{lens.zoomAt(lens.scale*1.5f,lens.width/2,lens.height/2);apply();});bx+=16;
         nav("시작",bx,21,()->{lens.origin();apply();});bx+=23;
         if(enlarge!=null){nav("크게",bx,24,enlarge);bx+=26;}
-        nav("기술",bx,21,()->Game.scene().add(new com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions("기술 계통","이동할 계통을 선택하세요.",java.util.Arrays.copyOfRange(ExtractionGrowth.BRANCHES,19,25)){
-            @Override protected void onSelect(int i){int b=19+i;lens.scale=Math.max(lens.fitScale(),Math.min(lens.width,lens.height)/(2*GrowthAtlasLayout.GROUP_EXTENT[b]+70));lens.centerX=GrowthAtlasLayout.GROUP_X[b];lens.centerY=GrowthAtlasLayout.GROUP_Y[b];lens.bounds(lens.width,lens.height);apply();}
-        }));bx+=23;
+        nav("계통",bx,21,()->chooseGroups(false));bx+=23;
         zoomText=null;
         if(width-(bx-x)>=22){zoomText=PixelScene.renderTextBlock(5);zoomText.hardlight(MUTED);zoomText.setPos(bx+1,y+3);add(zoomText);}
         Point screen=camera().cameraToScreen(x,y+15);
@@ -113,6 +111,12 @@ public class ExtractionNodeTree extends Component {
         }
         return texture;
     }
+    private void chooseGroups(boolean hybrid){
+        String[] names=hybrid?new String[]{"마검사","그림자술사","연금 사냥꾼","폭풍 유격수","성전사","혈기사","원본 기술"}:new String[]{"수호","비전","그림자","자연","기동","기도","혼합 트리"};
+        Game.scene().add(new WndOptions(hybrid?"혼합 트리":"기술 계통","선택한 계통으로 지도를 이동합니다.",names){
+            @Override protected void onSelect(int i){if(i==6){chooseGroups(!hybrid);return;}int b=(hybrid?25:19)+i;lens.scale=Math.max(lens.fitScale(),Math.min(lens.width,lens.height)/(2*GrowthAtlasLayout.GROUP_EXTENT[b]+70));lens.centerX=GrowthAtlasLayout.GROUP_X[b];lens.centerY=GrowthAtlasLayout.GROUP_Y[b];lens.bounds(lens.width,lens.height);apply();}
+        });
+    }
     private void circle(float cx,float cy,float radius,int color,boolean filled,float alpha){
         if(filled){Image disk=new Image(circleTexture(true));disk.scale.set(radius*2/64f);disk.x=cx-radius;disk.y=cy-radius;disk.hardlight(0x182023);world.add(disk);}
         Image ring=new Image(circleTexture(false));ring.scale.set(radius*2/64f);ring.x=cx-radius;ring.y=cy-radius;ring.hardlight(color);ring.alpha(alpha);world.add(ring);
@@ -122,7 +126,7 @@ public class ExtractionNodeTree extends Component {
         sprite.x=cx-sprite.width()/2;sprite.y=cy-sprite.height()/2;sprite.alpha(alpha);world.add(sprite);
     }
     private int nodeIcon(ExtractionGrowth.Node node){
-        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.POTION_AZURE,ItemSpriteSheet.ROUND_SHIELD,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.ARTIFACT_BOOTS,ItemSpriteSheet.SAI,ItemSpriteSheet.ARTIFACT_TOME};
+        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.POTION_AZURE,ItemSpriteSheet.ROUND_SHIELD,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.ARTIFACT_BOOTS,ItemSpriteSheet.SAI,ItemSpriteSheet.ARTIFACT_TOME,ItemSpriteSheet.RUNIC_BLADE,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.POTION_AZURE,ItemSpriteSheet.SPEAR,ItemSpriteSheet.ARTIFACT_TOME,ItemSpriteSheet.ARTIFACT_CHALICE1};
         if(node.branch>=12||node.row==0||node.row>=4)return family[node.branch];
         ExtractionGrowth.Stat stat=node.effects.keySet().iterator().next();
         switch(stat){

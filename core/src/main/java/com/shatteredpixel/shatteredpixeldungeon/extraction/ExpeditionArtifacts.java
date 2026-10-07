@@ -36,6 +36,8 @@ public final class ExpeditionArtifacts {
         if(hero==null)return;
         Item[] slots={hero.belongings.artifact(),hero.belongings.misc()};
         for(Item i:slots)if(i instanceof Relic&&!i.cursed&&hero.buff(MagicImmune.class)==null)((Relic)i).gainKill();
+        Relic seal=equipped(hero,ExtractionContracts.CommissionSeal.class);
+        if(seal!=null)Buff.affect(hero,Barrier.class).setShield(3+seal.level()/5);
         Relic lamp=equipped(hero,BloodLantern.class);
         if(lamp!=null)hero.HP=Math.min(hero.HT,hero.HP+1+lamp.level()/2);
     }
