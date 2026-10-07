@@ -1041,7 +1041,7 @@ public class ExtractionProfileTest {
     @Test public void presetsSaveSwitchAndReloadUsingOneBudget() throws Exception {
         profile.points=30;learnPath("strength");profile.savePreset(0);int cost=profile.spentPoints();
         java.util.HashSet<String> original=new java.util.HashSet<>(profile.nodes);
-        profile.resetNodes();profile.learn(ExtractionGrowth.index("ranged_0"));profile.savePreset(1);profile.resetNodes();profile.savePreset(2);
+        profile.resetNodes();learnPath("ranged_0");profile.savePreset(1);profile.resetNodes();profile.savePreset(2);
         profile.applyPreset(0);assertEquals(original,profile.nodes);assertEquals(30-cost,profile.points);
         for(int n=0;n<10;n++){profile.applyPreset(1);profile.applyPreset(0);}assertEquals(30-cost,profile.points);
         forgetProfile();profile=ExtractionProfile.get();assertEquals(cost,profile.presetCost(0));assertTrue(profile.hasPreset(2));
