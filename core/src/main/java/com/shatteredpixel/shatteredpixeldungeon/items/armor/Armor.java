@@ -497,6 +497,8 @@ public class Armor extends EquipableItem {
 	
 	public int proc( Char attacker, Char defender, int damage ) {
 
+        boolean ownGlyphActive=!(defender instanceof Hero)||glyph==null
+                ||com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing.glyphSource((Hero)defender,glyph.getClass())==this;
 		if (defender.buff(MagicImmune.class) == null) {
 			Glyph trinityGlyph = null;
 			//only when it's the hero or a char that uses the hero's armor
@@ -510,7 +512,7 @@ public class Armor extends EquipableItem {
 
 			if (defender instanceof Hero && isEquipped((Hero) defender)
 					&& defender.buff(HolyWard.HolyArmBuff.class) != null){
-				if (glyph != null &&
+				if (glyph != null && ownGlyphActive &&
 						(((Hero) defender).hasSubclass(HeroSubClass.PALADIN) || hasCurseGlyph())){
 					damage = glyph.proc( this, attacker, defender, damage );
 				}
@@ -521,7 +523,7 @@ public class Armor extends EquipableItem {
 				damage -= Math.round(blocking * Glyph.genericProcChanceMultiplier(defender));
 
 			} else {
-				if (glyph != null) {
+				if (glyph != null && ownGlyphActive) {
 					damage = glyph.proc(this, attacker, defender, damage);
 				}
 				if (trinityGlyph != null){
@@ -637,7 +639,7 @@ public class Armor extends EquipableItem {
 			info += "\n\n" + Messages.get(Armor.class, "seal_attached", seal.maxShield(tier, level()));
 		}
 		
-        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())info+="\n\n원정에서는 위 기본 방어량의 50%를 갑옷이 담당합니다. 나머지는 바지 30% · 신발 20%로 분배되며, 세 부위의 방어량을 합산한 뒤 반올림합니다. 힘 부족에 따른 회피·이동 부담도 각 부위의 비율만큼 적용됩니다. 문양과 특수 효과는 갑옷에 유지됩니다.";
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())info+="\n\n원정에서는 위 기본 방어량의 50%를 갑옷이 담당합니다. 나머지는 바지 30% · 신발 20%로 분배되며, 세 부위의 방어량을 합산한 뒤 반올림합니다. 힘 부족에 따른 회피·이동 부담도 각 부위의 비율만큼 적용됩니다. 기존 문양은 갑옷·바지·신발에 새길 수 있으며 같은 문양은 가장 높은 강화 수치의 한 부위만 적용됩니다.";
 		return info;
 	}
 

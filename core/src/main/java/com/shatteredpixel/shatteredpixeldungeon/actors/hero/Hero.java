@@ -643,6 +643,7 @@ public class Hero extends Char {
 			}
 		}
 
+        if(!Armor.testingNoArmDefSkill&&glyphLevel(Stone.class)>=0&&!Stone.testingEvasion())return 0;
         if(extractionRaidID!=0){
             if(belongings.pants()!=null)evasion*=belongings.pants().evasionFactor(this);
             if(belongings.boots()!=null)evasion*=belongings.boots().evasionFactor(this);
@@ -1658,6 +1659,9 @@ public class Hero extends Char {
 			}
 		}
 
+        if(belongings.pants()!=null)damage=belongings.pants().proc(enemy,this,damage);
+        if(belongings.boots()!=null)damage=belongings.boots().proc(enemy,this,damage);
+
 		WandOfLivingEarth.RockArmor rockArmor = buff(WandOfLivingEarth.RockArmor.class);
 		if (rockArmor != null) {
 			damage = rockArmor.absorb(damage);
@@ -1668,8 +1672,9 @@ public class Hero extends Char {
 
 	@Override
 	public int glyphLevel(Class<? extends Armor.Glyph> cls) {
-		if (belongings.armor() != null && belongings.armor().hasGlyph(cls, this)){
-			return Math.max(super.glyphLevel(cls), belongings.armor.buffedLvl());
+        Item source=com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing.glyphSource(this,cls);
+        if(source!=null){
+            return Math.max(super.glyphLevel(cls),source.buffedLvl());
 		} else if (buff(BodyForm.BodyFormBuff.class) != null
 				&& buff(BodyForm.BodyFormBuff.class).glyph() != null
 				&& buff(BodyForm.BodyFormBuff.class).glyph().getClass() == cls){

@@ -89,6 +89,8 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 			return true;
 		} else if (item instanceof Weapon){
 			return ((Weapon)item).hasCurseEnchant();
+        } else if(item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing){
+            return ((com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item).hasCurseGlyph();
 		} else if (item instanceof Armor){
 			return ((Armor)item).hasCurseGlyph();
 		} else {
@@ -139,6 +141,10 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 					procced = true;
 				}
 			}
+            if(item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing){
+                com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing clothing=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item;
+                if(clothing.hasCurseGlyph()){clothing.inscribe(null);procced=true;}
+            }
 			if (item instanceof Wand){
 				((Wand) item).updateLevel();
 			}
@@ -146,7 +152,8 @@ public class ScrollOfRemoveCurse extends InventoryScroll {
 		
 		if (procced) {
 			if (hero != null) {
-				hero.sprite.emitter().start(ShadowParticle.UP, 0.05f, 10);
+				com.watabou.noosa.particles.Emitter emitter=hero.sprite==null?null:hero.sprite.emitter();
+                if(emitter!=null)emitter.start(ShadowParticle.UP, 0.05f, 10);
 				hero.updateHT(false); //for ring of might
 				updateQuickslot();
 			}

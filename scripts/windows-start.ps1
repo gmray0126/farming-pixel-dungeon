@@ -130,8 +130,8 @@ try {
     Close-Game $p
     $saved=Read-Bundle "$saveDir/game1/game.dat"
     if($saved.depth -ne 1){throw 'Fresh raid did not start at floor 1'}
-    $saved.hero | Add-Member -Force NoteProperty pants @{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing$PlatePants';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}
-    $saved.hero | Add-Member -Force NoteProperty boots @{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing$PlateBoots';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}
+    $saved.hero | Add-Member -Force NoteProperty pants @{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing$PlatePants';quantity=1;level=0;levelKnown=$true;cursedKnown=$true;glyph=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Obfuscation'}}
+    $saved.hero | Add-Member -Force NoteProperty boots @{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing$PlateBoots';quantity=1;level=0;levelKnown=$true;cursedKnown=$true;glyph=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Swiftness'}}
     Write-Bundle "$saveDir/game1/game.dat" $saved
     $p=Start-Game
     Depart $p
@@ -140,6 +140,7 @@ try {
     $resumed=Read-Bundle "$saveDir/game1/game.dat"
     if($resumed.depth -ne 1){throw 'Resumed raid changed floors'}
     if($resumed.hero.pants.__className -notmatch 'PlatePants' -or $resumed.hero.boots.__className -notmatch 'PlateBoots'){throw 'Clothing slots did not survive resume'}
+    if($resumed.hero.pants.glyph.__className -notmatch 'Obfuscation' -or $resumed.hero.boots.glyph.__className -notmatch 'Swiftness'){throw 'Clothing glyphs did not survive resume'}
     $settingsPath=Join-Path $saveDir 'settings.xml'
     $settings=[IO.File]::ReadAllText($settingsPath)
     if($settings -match 'key="full_ui"'){ $compact=[regex]::Replace($settings,'(<entry key="full_ui"[^>]*>)\d+(</entry>)','${1}0${2}') }
@@ -165,7 +166,7 @@ try {
     Start-Sleep -Seconds 1
     Capture $p '04-shoe-shop'
     Close-Game $p
-    @{clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    @{clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

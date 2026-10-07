@@ -60,6 +60,8 @@ public class StoneOfEnchantment extends InventoryStone {
 			
 			((Weapon)item).enchant();
 			
+        } else if(item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing){
+            ((com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item).inscribe();
 		} else {
 			
 			((Armor)item).inscribe();

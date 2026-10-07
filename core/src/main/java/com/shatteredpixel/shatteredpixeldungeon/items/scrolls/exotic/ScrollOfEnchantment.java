@@ -66,8 +66,13 @@ public class ScrollOfEnchantment extends ExoticScroll {
 		GameScene.selectItem( itemSelector );
 	}
 
+    public static Armor.Glyph glyph(Item item){return item instanceof Armor?((Armor)item).glyph:((com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item).glyph;}
+    public static void inscribe(Item item,Armor.Glyph glyph){
+        if(item instanceof Armor)((Armor)item).inscribe(glyph);
+        else ((com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item).inscribe(glyph);
+    }
 	public static boolean enchantable( Item item ){
-		return (item instanceof Weapon || item instanceof Armor)
+		return (item instanceof Weapon || item instanceof Armor || item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)
 				&& (item.isUpgradable() || item instanceof SpiritBow);
 	}
 
@@ -128,7 +133,7 @@ public class ScrollOfEnchantment extends ExoticScroll {
 
 				GameScene.show(new WndEnchantSelect((Weapon) item, enchants[0], enchants[1], enchants[2]));
 			
-			} else if (item instanceof Armor) {
+			} else if (item instanceof Armor || item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing) {
 				if (!identifiedByUse) {
 					curItem.detach(curUser.belongings.backpack);
 				}
@@ -136,12 +141,12 @@ public class ScrollOfEnchantment extends ExoticScroll {
 				
 				final Armor.Glyph glyphs[] = new Armor.Glyph[3];
 				
-				Class<? extends Armor.Glyph> existing = ((Armor) item).glyph != null ? ((Armor) item).glyph.getClass() : null;
+				Class<? extends Armor.Glyph> existing = glyph(item) != null ? glyph(item).getClass() : null;
 				glyphs[0] = Armor.Glyph.randomCommon( existing );
 				glyphs[1] = Armor.Glyph.randomUncommon( existing );
 				glyphs[2] = Armor.Glyph.random( existing, glyphs[0].getClass(), glyphs[1].getClass());
 				
-				GameScene.show(new WndGlyphSelect((Armor) item, glyphs[0], glyphs[1], glyphs[2]));
+				GameScene.show(new WndGlyphSelect(item, glyphs[0], glyphs[1], glyphs[2]));
 			} else if (identifiedByUse){
 				((ScrollOfEnchantment)curItem).confirmCancelation();
 			}
@@ -212,7 +217,7 @@ public class ScrollOfEnchantment extends ExoticScroll {
 
 	public static class WndGlyphSelect extends WndOptions {
 
-		private static Armor arm;
+		private static Item arm;
 		private static Armor.Glyph[] glyphs;
 
 		//used in PixelScene.restoreWindows
@@ -220,7 +225,7 @@ public class ScrollOfEnchantment extends ExoticScroll {
 			this(arm, glyphs[0], glyphs[1], glyphs[2]);
 		}
 
-		public WndGlyphSelect(Armor arm, Armor.Glyph glyph1,
+		public WndGlyphSelect(Item arm, Armor.Glyph glyph1,
 		                      Armor.Glyph glyph2, Armor.Glyph glyph3) {
 			super(new ItemSprite(new ScrollOfEnchantment()),
 					Messages.titleCase(new ScrollOfEnchantment().name()),
@@ -241,7 +246,7 @@ public class ScrollOfEnchantment extends ExoticScroll {
 		@Override
 		protected void onSelect(int index) {
 			if (index < 3) {
-				arm.inscribe(glyphs[index]);
+				inscribe(arm,glyphs[index]);
 				GLog.p(Messages.get(StoneOfEnchantment.class, "armor"));
 				((ScrollOfEnchantment) curItem).readAnimation();
 

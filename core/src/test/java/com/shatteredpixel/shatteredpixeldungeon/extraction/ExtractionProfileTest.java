@@ -1216,7 +1216,7 @@ public class ExtractionProfileTest {
         assertEquals(8,pants.missingStrength(hero));assertEquals(8,boots.missingStrength(hero));assertTrue(boots.movementFactor(hero)<1);assertTrue(pants.evasionFactor(hero)<1);
         pants.cursed=true;ExpeditionClothing replacement=new ExpeditionClothing.ClothPants();hero.belongings.backpack.items.add(replacement);
         assertFalse(replacement.doEquip(hero));assertSame(pants,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(replacement));
-        hero.sprite=new EffectSprite();hero.sprite.visible=false;hero.belongings.uncurseEquipped();hero.sprite=null;assertFalse(pants.cursed);assertTrue(replacement.doEquip(hero));assertSame(replacement,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(pants));
+        hero.belongings.uncurseEquipped();assertFalse(pants.cursed);assertTrue(replacement.doEquip(hero));assertSame(replacement,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(pants));
         assertTrue(boots.doUnequip(hero,true));assertNull(hero.belongings.boots);assertTrue(hero.belongings.backpack.contains(boots));
     }
     @Test public void preparedClothesEquipIndependentlyResumeAndReturnToStash() throws Exception {
@@ -1241,9 +1241,9 @@ public class ExtractionProfileTest {
         hero.belongings.pants=null;hero.belongings.boots=null;average=0;for(int i=0;i<4000;i++)average+=ExpeditionClothing.bodyDefense(hero);
         assertEquals((armor.DRMin()+armor.DRMax())/4f,average/4000,.4f);
         hero.belongings.pants=pants;hero.belongings.boots=boots;hero.STR=10;int deficit=armor.STRReq()-hero.STR();
-        assertEquals((float)Math.pow(1.2,-deficit),armor.speedFactor(hero,1)*pants.movementFactor(hero)*boots.movementFactor(hero),.00001f);
+        assertEquals((float)Math.pow(1.2,-deficit),armor.speedFactor(hero,1)*pants.movementFactor(hero)*boots.movementFactor(hero)/boots.speedBonus(),.00001f);
         assertEquals((float)Math.pow(1.5,-deficit),armor.evasionFactor(hero,1)*pants.evasionFactor(hero)*boots.evasionFactor(hero),.00001f);
-        hero.STR=30;assertEquals(1,pants.movementFactor(hero),0);assertEquals(1,boots.movementFactor(hero),0);assertEquals(1,boots.evasionFactor(hero),0);
+        hero.STR=30;assertEquals(1,pants.movementFactor(hero),0);assertEquals(1.06f,boots.movementFactor(hero),.00001f);assertEquals(1,boots.evasionFactor(hero),0);
     }
     @Test public void clothingLootRespectsEveryChapterTierAndIterationCanRemoveSlots() {
         profile.debugEnabled=true;profile.debugUnlockChapters();
@@ -1261,6 +1261,37 @@ public class ExtractionProfileTest {
         Hero hero=new Hero();hero.belongings.pants=new ExpeditionClothing.ClothPants();hero.belongings.boots=new ExpeditionClothing.ClothShoes();hero.belongings.backpack.items.add(new Food());
         java.util.Iterator<Item> items=hero.belongings.iterator();while(items.hasNext()){items.next();items.remove();}
         assertNull(hero.belongings.pants);assertNull(hero.belongings.boots);assertTrue(hero.belongings.backpack.items.isEmpty());
+    }
+
+    public static class CountingGlyph extends com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph {
+        static int calls,lastLevel;
+        @Override public int proc(com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor armor,com.shatteredpixel.shatteredpixeldungeon.actors.Char attacker,com.shatteredpixel.shatteredpixeldungeon.actors.Char defender,int damage){calls++;lastLevel=armor.buffedLvl();return damage;}
+        @Override public com.shatteredpixel.shatteredpixeldungeon.sprites.ItemSprite.Glowing glowing(){return null;}
+    }
+    @Test public void everyNativeGlyphAndCurseCanBeInscribedSavedAndRemovedOnClothing() {
+        Hero hero=new Hero();Dungeon.hero=hero;hero.extractionRaidID=1;
+        Class<?>[][] groups={com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph.common,com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph.uncommon,com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph.rare,com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph.curses};
+        for(Class<?>[] group:groups)for(Class<?> type:group)for(boolean boots:new boolean[]{false,true}){
+            ExpeditionClothing item=ExpeditionClothing.create(boots,5);item.level(3);item.identify(false);
+            com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph glyph=(com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor.Glyph)com.watabou.utils.Reflection.newInstance(type);
+            assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment.enchantable(item));
+            com.shatteredpixel.shatteredpixeldungeon.items.scrolls.exotic.ScrollOfEnchantment.inscribe(item,glyph);
+            hero.belongings.pants=boots?null:item;hero.belongings.boots=boots?item:null;
+            assertEquals(3,hero.glyphLevel(glyph.getClass()));
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("item",item);ExpeditionClothing copy=(ExpeditionClothing)saved.get("item");
+            assertEquals(type,copy.glyph.getClass());assertEquals(item.name(),copy.name());
+            if(glyph.curse()){assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse.uncursable(item));assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfRemoveCurse.uncurse(null,item));assertNull(item.glyph);}
+        }
+    }
+    @Test public void strongestDuplicateGlyphProcsOnceAndDistinctPassiveGlyphsWorkWithoutChest() {
+        Hero hero=new Hero();Dungeon.hero=hero;hero.extractionRaidID=1;hero.STR=30;
+        hero.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();hero.belongings.armor.glyph=new CountingGlyph();hero.belongings.armor.level(1);
+        ExpeditionClothing pants=new ExpeditionClothing.PlatePants(),boots=new ExpeditionClothing.PlateBoots();pants.level(2);boots.level(4);pants.inscribe(new CountingGlyph());boots.inscribe(new CountingGlyph());hero.belongings.pants=pants;hero.belongings.boots=boots;
+        CountingGlyph.calls=0;CountingGlyph.lastLevel=-1;hero.defenseProc(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat(),10);assertEquals(1,CountingGlyph.calls);assertEquals(4,CountingGlyph.lastLevel);
+        hero.belongings.armor=null;pants.inscribe(new com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Obfuscation());boots.inscribe(new com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Brimstone());
+        assertEquals(2,hero.glyphLevel(com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Obfuscation.class));assertEquals(4,hero.glyphLevel(com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Brimstone.class));assertTrue(hero.isImmune(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Burning.class));
+        boots.inscribe(new com.shatteredpixel.shatteredpixeldungeon.items.armor.glyphs.Stone());assertEquals(0,hero.defenseSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
+        for(int tier=1;tier<=5;tier++)assertEquals(1+tier*.02f,ExpeditionClothing.create(true,tier).movementFactor(hero),.00001f);
     }
 
 }
