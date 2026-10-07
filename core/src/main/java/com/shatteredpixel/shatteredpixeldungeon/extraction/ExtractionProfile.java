@@ -258,7 +258,7 @@ public final class ExtractionProfile {
                 // Preserve only top-level inventory entries: Bag.iterator() also yields
                 // nested contents, which would otherwise be deposited twice.
                 com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings b = Dungeon.hero.belongings;
-                Item[] worn = {b.weapon,b.armor,b.artifact,b.misc,b.ring,b.secondWep};
+                Item[] worn = {b.weapon,b.armor,b.artifact,b.misc,b.ring,b.secondWep,b.pants,b.boots};
                 ArrayList<Item> loot=new ArrayList<>();
                 for (Item i : worn) if (i != null) loot.add(i);
                 loot.addAll(b.backpack.items);
