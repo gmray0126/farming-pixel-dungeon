@@ -20,6 +20,9 @@ The mod's game source is on the [`extraction` branch](https://github.com/gmray01
 - **유물과 상점:** 신규 유물에는 회복과 물약 효율, 탐욕과 받는 피해, 시간 가속과 둔화처럼 이점과 대가가 함께 있습니다. 상점에서는 물품을 사고팔고 T1~T5 장비를 구매할 수 있습니다. 반지와 유물의 강화 상한은 +15이며 T5 무기도 +15까지 강화할 수 있습니다.
 - **단계별 난이도:** 하수도에서 장비와 성장 포인트를 준비하고 더 강한 적이 있는 다음 챕터에 도전합니다. 챕터별 장비 드롭 상한이 적용됩니다.
 
+- **혼합 전투 트리:** 여섯 직업 계통 사이에 마검사·그림자술사·연금 사냥꾼·폭풍 유격수·성전사·혈기사의 90개 노드를 배치했습니다. 교대 공격, 표식 폭발, 약품 코팅, 거리 전환, 성력 소비, 피의 서약으로 전투 방식을 바꿉니다.
+- **로비 의뢰:** 사냥·기록 회수·무기 납품과 혼합 실전 훈련의 21개 의뢰를 제공합니다. 최대 3개를 받아 출격하고 탈출하면 진행도를 저장합니다. 최초 완료 장비와 하수도 연속 의뢰 유물도 얻을 수 있습니다.
+
 ## English overview
 
 Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at the hub, defeat a chapter boss, extract, and use the rewards to prepare for your next run. Your stash and a branching growth tree carry progression between expeditions.
@@ -31,6 +34,9 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings and artifacts have a +15 enhancement ceiling; T5 weapons can also reach +15.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+- **Hybrid combat trees:** Ninety new nodes connect six neighbouring class themes: Spellblade, Shadowcaster, Alchemical Hunter, Storm Skirmisher, Crusader, and Blood Knight. Alternate attacks, detonate marks, coat ranged weapons, build faith, or trade health for damage.
+- **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 ## 챕터 / Chapters
 
