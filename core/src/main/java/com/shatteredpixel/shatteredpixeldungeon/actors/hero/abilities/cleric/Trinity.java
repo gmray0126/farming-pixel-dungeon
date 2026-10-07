@@ -78,6 +78,11 @@ import com.watabou.utils.Reflection;
 import java.util.ArrayList;
 
 public class Trinity extends ArmorAbility {
+    private static Trinity current(){
+        if(Dungeon.hero.extractionRaidID!=0)return (Trinity)com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.ability(Dungeon.hero,"trinity");
+        return (Trinity)Dungeon.hero.armorAbility;
+    }
+
 
 	{
 		baseChargeUse = 25;
@@ -453,13 +458,13 @@ public class Trinity extends ArmorAbility {
 					WndItemConfirm.this.hide();
 
 					if (item instanceof MeleeWeapon) {
-						((Trinity)Dungeon.hero.armorAbility).bodyForm = ((MeleeWeapon) item).enchantment;
+						current().bodyForm = ((MeleeWeapon) item).enchantment;
 					} else if (item instanceof Armor) {
-						((Trinity)Dungeon.hero.armorAbility).bodyForm = ((Armor) item).glyph;
+						current().bodyForm = ((Armor) item).glyph;
 					} else if (item instanceof Wand || item instanceof MissileWeapon){
-						((Trinity)Dungeon.hero.armorAbility).mindForm = item;
+						current().mindForm = item;
 					} else {
-						((Trinity)Dungeon.hero.armorAbility).spiritForm = item;
+						current().spiritForm = item;
 					}
 					spell.onSpellCast(tome, Dungeon.hero);
 
@@ -531,7 +536,7 @@ public class Trinity extends ArmorAbility {
 	}
 
 	public static float trinityChargeUsePerEffect(Class<?> cls){
-		float chargeUse = Dungeon.hero.armorAbility.chargeUse(Dungeon.hero);
+		float chargeUse = current().chargeUse(Dungeon.hero);
 		if (Weapon.Enchantment.class.isAssignableFrom(cls) || Armor.Glyph.class.isAssignableFrom(cls)) {
 			for (Class ench : Weapon.Enchantment.rare) {
 				if (ench.equals(cls)) {

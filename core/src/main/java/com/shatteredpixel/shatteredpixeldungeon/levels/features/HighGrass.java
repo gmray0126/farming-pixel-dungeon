@@ -69,7 +69,7 @@ public class HighGrass {
 		} else {
 			if (ch instanceof Hero && ((Hero) ch).heroClass == HeroClass.HUNTRESS){
 				if(((Hero) ch).hasTalent(Talent.BARKSKIN)){
-					Barkskin.conditionallyAppend(ch, (((Hero) ch).lvl* ((Hero) ch).pointsInTalent(Talent.BARKSKIN))/3, 1 );
+					Barkskin.conditionallyAppend(ch, (((Hero)ch).extractionRaidID!=0?2*((Hero)ch).pointsInTalent(Talent.BARKSKIN):(((Hero) ch).lvl* ((Hero) ch).pointsInTalent(Talent.BARKSKIN))/3), 1 );
 				}
 				Level.set(pos, Terrain.FURROWED_GRASS);
 				freezeTrample = true;

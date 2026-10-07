@@ -128,7 +128,7 @@ try {
     # Enable the exact floor trait from the crash report without test hooks in the game.
     $profilePath = "$saveDir/extraction-profile.dat"
     $profile = Read-Bundle $profilePath
-    $profile.nodes = @($profile.nodes) + @('scout_4','scout_5','scout_6')
+    $profile.nodes = @($profile.nodes) + @('scout_4','scout_5','scout_6','skill_stealth','skill_prayer','utility_protective_shadows_2','utility_divine_sense_1','subclass_assassin','subclass_monk','subclass_warlock')
     Write-Bundle $profilePath $profile
     $floor = Read-Bundle "$saveDir/game1/depth1.dat"
     $exit = $floor.level.transitions | Where-Object { $_.type -eq 'REGULAR_EXIT' } | Select-Object -First 1

@@ -50,6 +50,10 @@ public class WndGame extends Window {
 		
 		super();
 
+        if(Dungeon.hero!=null&&Dungeon.hero.extractionRaidID!=0&&Dungeon.hero.isAlive()){
+            addButton(new RedButton("원정 스킬"){@Override protected void onClick(){hide();com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.open();}});
+        }
+
 		//settings
 		RedButton curBtn;
 		addButton( curBtn = new RedButton( Messages.get(this, "settings") ) {

@@ -117,7 +117,7 @@ public class Skeleton extends Mob {
 
 					if (ch.buff(HolyWard.HolyArmBuff.class) != null){
 						//doubled
-						damage -= Dungeon.hero.subClass == HeroSubClass.PALADIN ? 6 : 2;
+						damage -= Dungeon.hero.hasSubclass(HeroSubClass.PALADIN) ? 6 : 2;
 					}
 				}
 

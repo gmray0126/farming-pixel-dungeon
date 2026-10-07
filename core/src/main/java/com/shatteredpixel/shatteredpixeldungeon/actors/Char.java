@@ -301,7 +301,7 @@ public abstract class Char extends Actor {
 		c.spend( 1 / c.speed() );
 
 		if (c == Dungeon.hero){
-			if (Dungeon.hero.subClass == HeroSubClass.FREERUNNER){
+			if (Dungeon.hero.hasSubclass(HeroSubClass.FREERUNNER)){
 				Buff.affect(Dungeon.hero, Momentum.class).gainStack();
 			}
 
@@ -395,7 +395,7 @@ public abstract class Char extends Actor {
 				Hero h = (Hero)this;
 				if(h.extractionRaidID != 0)dr=Math.max(0,dr-com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().armorPierce(h.growthWeapon()));
 				if (h.belongings.attackingWeapon() instanceof MissileWeapon
-						&& h.subClass == HeroSubClass.SNIPER
+						&& h.hasSubclass(HeroSubClass.SNIPER)
 						&& !Dungeon.level.adjacent(h.pos, enemy.pos)){
 					dr = 0;
 				}
@@ -428,7 +428,7 @@ public abstract class Char extends Actor {
 				if (this == Dungeon.hero && Dungeon.hero.hasTalent(Talent.SEARING_LIGHT)){
 					dmg += 1 + 2*Dungeon.hero.pointsInTalent(Talent.SEARING_LIGHT);
 				}
-				if (this != Dungeon.hero && Dungeon.hero.subClass == HeroSubClass.PRIEST){
+				if (this != Dungeon.hero && Dungeon.hero.hasSubclass(HeroSubClass.PRIEST)){
 					enemy.damage(5+Dungeon.hero.lvl, GuidingLight.INSTANCE);
 				}
 			}
@@ -1034,7 +1034,7 @@ public abstract class Char extends Actor {
 
 			//special case for sniper when using ranged attacks
 			if (src == Dungeon.hero
-					&& Dungeon.hero.subClass == HeroSubClass.SNIPER
+					&& Dungeon.hero.hasSubclass(HeroSubClass.SNIPER)
 					&& !Dungeon.level.adjacent(Dungeon.hero.pos, pos)
 					&& Dungeon.hero.belongings.attackingWeapon() instanceof MissileWeapon){
 				icon = FloatingText.PHYS_DMG_NO_BLOCK;

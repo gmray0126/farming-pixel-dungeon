@@ -195,7 +195,14 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 
 public class Hero extends Char {
+    public boolean hasSubclass(HeroSubClass kind){
+        if(extractionRaidID!=0)return kind!=HeroSubClass.NONE && com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().nodes.contains("subclass_"+kind.name().toLowerCase(java.util.Locale.ROOT));
+        return subClass==kind;
+    }
+    public boolean hasWeaponAbilities(){return heroClass==HeroClass.DUELIST || hasSubclass(HeroSubClass.CHAMPION) || hasSubclass(HeroSubClass.MONK);}
+
 	public int extractionRaidID = 0;
+	public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.State extractionSkills;
 	public boolean extractionDebugInvulnerable=false;
 	public int extractionXP = 0;
 	public int extractionVisited = 0;
@@ -313,6 +320,7 @@ public class Hero extends Char {
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put("extraction_raid", extractionRaidID);
+		bundle.put("extraction_skills", extractionSkills);
 		bundle.put("extraction_debug_invulnerable",extractionDebugInvulnerable);
 		bundle.put("extraction_xp", extractionXP);
 		bundle.put("extraction_visited",extractionVisited);
@@ -342,6 +350,7 @@ public class Hero extends Char {
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		extractionRaidID=bundle.getInt("extraction_raid");
+		extractionSkills=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.State)bundle.get("extraction_skills");
 		extractionDebugInvulnerable=bundle.getBoolean("extraction_debug_invulnerable");
 		extractionXP=bundle.getInt("extraction_xp");
 		extractionVisited=bundle.getInt("extraction_visited");
@@ -389,6 +398,7 @@ public class Hero extends Char {
 	}
 
 	public int pointsInTalent( Talent talent ){
+		if(extractionRaidID!=0)return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassUtilities.rank(this,talent);
 		for (LinkedHashMap<Talent, Integer> tier : talents){
 			for (Talent f : tier.keySet()){
 				if (f == talent) return tier.get(f);
@@ -506,11 +516,11 @@ public class Hero extends Char {
 		Invisibility.dispel();
 		belongings.thrownWeapon = null;
 
-		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy){
+		if (hit && hasSubclass(HeroSubClass.GLADIATOR) && wasEnemy){
 			Buff.affect( this, Combo.class ).hit( enemy );
 		}
 
-		if (hit && heroClass == HeroClass.DUELIST && wasEnemy){
+		if (hit && hasWeaponAbilities() && wasEnemy){
 			Buff.affect( this, Sai.ComboStrikeTracker.class).addHit( attackTarget );
 		}
 
@@ -546,7 +556,7 @@ public class Hero extends Char {
 					&& belongings.abilityWeapon != wep && buff(MonkEnergy.MonkAbility.UnarmedAbilityTracker.class) == null){
 
 				//non-duelist benefit for precise assault, can stack with liquid agility
-				if (heroClass != HeroClass.DUELIST) {
+				if (!hasWeaponAbilities()) {
 					//persistent +10%/20%/30% ACC for other heroes
 					accuracy *= 1f + 0.1f * pointsInTalent(Talent.PRECISE_ASSAULT);
 				}
@@ -717,7 +727,7 @@ public class Hero extends Char {
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG, 0.75f, 1.2f);
 		}
 
-		if (heroClass != HeroClass.DUELIST
+		if (!hasWeaponAbilities()
 				&& hasTalent(Talent.WEAPON_RECHARGING)
 				&& (buff(Recharging.class) != null || buff(ArtifactRecharge.class) != null)){
 			dmg = Math.round(dmg * 1.025f + (.025f*pointsInTalent(Talent.WEAPON_RECHARGING)));
@@ -1498,7 +1508,7 @@ public class Hero extends Char {
 
 		if (attackTarget.isAlive() && canAttack(attackTarget) && attackTarget.invisible == 0) {
 
-			if (heroClass != HeroClass.DUELIST
+			if (!hasWeaponAbilities()
 					&& hasTalent(Talent.AGGRESSIVE_BARRIER)
 					&& buff(Talent.AggressiveBarrierCooldown.class) == null
 					&& (HP / (float)HT) <= 0.5f){
@@ -1536,7 +1546,7 @@ public class Hero extends Char {
 	public void rest( boolean fullRest ) {
 		spendAndNextConstant( TIME_TO_REST );
 		if (hasTalent(Talent.HOLD_FAST)){
-			if (heroClass != HeroClass.WARRIOR || buff(BrokenSeal.WarriorShield.class) != null) {
+			if (extractionRaidID!=0 || heroClass != HeroClass.WARRIOR || buff(BrokenSeal.WarriorShield.class) != null) {
 				Buff.affect(this, HoldFast.class).pos = pos;
 			}
 		}
@@ -1573,7 +1583,7 @@ public class Hero extends Char {
 				damage = buff(BodyForm.BodyFormBuff.class).enchant().proc(new WornShortsword(), this, enemy, damage);
 			}
 			if (enemy.isAlive() && buff(HolyWeapon.HolyWepBuff.class) != null) {
-				int dmg = subClass == HeroSubClass.PALADIN ? 6 : 2;
+				int dmg = hasSubclass(HeroSubClass.PALADIN) ? 6 : 2;
 				enemy.damage(Math.round(dmg * Weapon.Enchantment.genericProcChanceMultiplier(this)), HolyWeapon.INSTANCE);
 			}
 			if (enemy.isAlive() && buff(Smite.SmiteTracker.class) != null) {
@@ -1581,7 +1591,7 @@ public class Hero extends Char {
 			}
 		}
 		
-		switch (subClass) {
+		switch (hasSubclass(HeroSubClass.SNIPER) ? HeroSubClass.SNIPER : subClass) {
 		case SNIPER:
 			if (wep instanceof MissileWeapon && !(wep instanceof SpiritBow.SpiritArrow) && enemy != this) {
 				Actor.add(new Actor() {
@@ -1617,7 +1627,7 @@ public class Hero extends Char {
 	@Override
 	public int defenseProc( Char enemy, int damage ) {
 		
-		if (damage > 0 && subClass == HeroSubClass.BERSERKER){
+		if (damage > 0 && hasSubclass(HeroSubClass.BERSERKER)){
 			Berserk berserk = Buff.affect(this, Berserk.class);
 			berserk.damage(damage);
 		}
@@ -1630,7 +1640,7 @@ public class Hero extends Char {
 				damage = buff(BodyForm.BodyFormBuff.class).glyph().proc(new ClothArmor(), enemy, this, damage);
 			}
 			if (buff(HolyWard.HolyArmBuff.class) != null){
-				int blocking = subClass == HeroSubClass.PALADIN ? 3 : 1;
+				int blocking = hasSubclass(HeroSubClass.PALADIN) ? 3 : 1;
 				damage -= Math.round(blocking * Armor.Glyph.genericProcChanceMultiplier(enemy));
 			}
 		}
@@ -1931,7 +1941,7 @@ public class Hero extends Char {
 				buff(GreaterHaste.class).spendMove();
 			}
 
-			if (subClass == HeroSubClass.FREERUNNER){
+			if (hasSubclass(HeroSubClass.FREERUNNER)){
 				Buff.affect(this, Momentum.class).gainStack();
 			}
 			
@@ -2426,11 +2436,11 @@ public class Hero extends Char {
 		Invisibility.dispel();
 		spend( attackDelay() );
 
-		if (hit && subClass == HeroSubClass.GLADIATOR && wasEnemy){
+		if (hit && hasSubclass(HeroSubClass.GLADIATOR) && wasEnemy){
 			Buff.affect( this, Combo.class ).hit(attackTarget);
 		}
 
-		if (hit && heroClass == HeroClass.DUELIST && wasEnemy){
+		if (hit && hasWeaponAbilities() && wasEnemy){
 			Buff.affect( this, Sai.ComboStrikeTracker.class).addHit( attackTarget );
 		}
 

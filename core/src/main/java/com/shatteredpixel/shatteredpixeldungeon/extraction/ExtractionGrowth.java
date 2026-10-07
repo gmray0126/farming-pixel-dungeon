@@ -11,7 +11,7 @@ import java.util.*;
 public final class ExtractionGrowth {
     private ExtractionGrowth() {}
     public static final int MAGIC = 11, FIST = 9;
-    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식"};
+    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술"};
     public enum Stat {
         KNOW_HEALING("회복 물약 식별",false), KNOW_STRENGTH("힘 물약 식별",false), KNOW_EXPERIENCE("경험 물약 식별",false),
         KNOW_MINDVISION("심안 물약 식별",false), KNOW_LEVITATION("부유 물약 식별",false), KNOW_INVISIBILITY("투명 물약 식별",false),
@@ -32,7 +32,7 @@ public final class ExtractionGrowth {
         FOOD_VALUE("음식 포만감",true), FOOD_HEAL("식사 시 체력 회복",false), FOOD_SHIELD("식사 시 보호막",false), FOOD_HASTE("식사 시 가속 지속 턴",false), FOOD_RECHARGE("식사 시 마법 충전 지속 턴",false), FOOD_INVIS("식사 시 투명화 지속 턴",false), EAT_SPEED("식사 시간 감소",true), HUNGER_SLOW("허기 증가량 감소",true),
         STEALTH("은밀성",false), SURPRISE_DAMAGE("기습 피해",true), SURPRISE_RECHARGE("기습 시 마법 충전 지속 턴",false), TRAP_REDUCTION("함정 직접 피해 감소",true), FALL_REDUCTION("추락 직접 피해 감소",true), FLOOR_INVIS("새 층 첫 진입 시 투명화 지속 턴",false),
         KILL_HEAL("주변 적 처치 시 체력 회복",false), KILL_SHIELD("주변 적 처치 시 보호막",false), KILL_HASTE("주변 적 처치 시 가속 지속 턴",false), KILL_RECHARGE("주변 적 처치 시 마법 충전 지속 턴",false), LOW_HP_EVASION("체력 35% 이하 회피",true), LOW_HP_DAMAGE("체력 35% 이하 공격 피해",true), LOW_HP_SPEED("체력 35% 이하 이동 속도",true),
-        DOT_REDUCTION("독·화상·출혈·산성 피해 감소",true), POISON_REDUCTION("독 피해 감소",true), BURN_REDUCTION("화상 피해 감소",true), BLEED_REDUCTION("출혈 피해 감소",true), BOSS_REDUCTION("보스 직접 피해 감소",true), RANGED_REDUCTION("멀리 있는 적의 직접 피해 감소",true);
+        DOT_REDUCTION("독·화상·출혈·산성 피해 감소",true), POISON_REDUCTION("독 피해 감소",true), BURN_REDUCTION("화상 피해 감소",true), BLEED_REDUCTION("출혈 피해 감소",true), BOSS_REDUCTION("보스 직접 피해 감소",true), RANGED_REDUCTION("멀리 있는 적의 직접 피해 감소",true), PRAYER_CAPACITY("기도 최대 충전",false);
         public final String label; public final boolean percent;
         Stat(String label, boolean percent) { this.label=label; this.percent=percent; }
     }
@@ -41,12 +41,15 @@ public final class ExtractionGrowth {
         private final String[] required;
         public int[] parents;
         public int[] alternatives=new int[0];
+        public com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent talent;
+        public int talentRank; public String skill,utilityDescription;
         public final EnumMap<Stat,Float> effects=new EnumMap<>(Stat.class);
         Node(String id,String name,int branch,int row,int col,int cost,String[] required,Object... effects) {
             this.id=id;this.name=name;this.branch=branch;this.row=row;this.col=col;this.cost=cost;this.required=required;
             for(int i=0;i<effects.length;i+=2)this.effects.put((Stat)effects[i],(Float)effects[i+1]);
         }
         public String description() {
+            if(utilityDescription!=null)return utilityDescription;
             if(branch==18)return name+"을 습득하면 매 원정 시작부터 해당 물약의 정체를 압니다. 색이 달라져도 효과가 유지됩니다.\n\n대응하는 특수 물약도 함께 식별됩니다. 다른 종류의 물약은 직접 식별해야 합니다.";
             StringBuilder text=new StringBuilder();
             for(Map.Entry<Stat,Float> e:effects.entrySet()){
@@ -65,6 +68,7 @@ public final class ExtractionGrowth {
             return text.toString();
         }
         public String summary() {
+            if(utilityDescription!=null)return skill!=null?"사용 스킬":talent!=null?talentRank+"단계":effects.isEmpty()?"고유 능력":"기도 +2";
             if(branch==18)return "미리 식별";
             Stat s=effects.keySet().iterator().next();
             String label;
@@ -265,6 +269,7 @@ public final class ExtractionGrowth {
         add(list,"strength_mid","신체 단련",1,6,2,3,new String[]{"survival_left_end"},Stat.STRENGTH,1f);
         add(list,"strength_advanced","중량 적응",2,6,0,4,new String[]{"explore_merge"},Stat.STRENGTH,1f);
         add(list,"strength_master","완력 완성",0,6,2,5,new String[]{"combat_cap"},Stat.STRENGTH,3f);
+        ExtractionClassUtilities.append(list);
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];

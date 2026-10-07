@@ -49,6 +49,9 @@ public class ExtractionNodeTree extends Component {
         nav("+",bx,14,()->{lens.zoomAt(lens.scale*1.5f,lens.width/2,lens.height/2);apply();});bx+=16;
         nav("시작",bx,21,()->{lens.origin();apply();});bx+=23;
         if(enlarge!=null){nav("크게",bx,24,enlarge);bx+=26;}
+        nav("기술",bx,21,()->Game.scene().add(new com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions("기술 계통","이동할 계통을 선택하세요.",java.util.Arrays.copyOfRange(ExtractionGrowth.BRANCHES,19,25)){
+            @Override protected void onSelect(int i){lens.focus(GrowthAtlasLayout.GROUP_X[19+i],GrowthAtlasLayout.GROUP_Y[19+i]);apply();}
+        }));bx+=23;
         zoomText=null;
         if(width-(bx-x)>=22){zoomText=PixelScene.renderTextBlock(5);zoomText.hardlight(MUTED);zoomText.setPos(bx+1,y+3);add(zoomText);}
         Point screen=camera().cameraToScreen(x,y+15);
@@ -60,7 +63,7 @@ public class ExtractionNodeTree extends Component {
     }
     private void buildAtlas(){
         ExtractionProfile p=ExtractionProfile.get();
-        for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++)circle(GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b],42,GrowthAtlasLayout.COLORS[b],false,0.13f);
+        for(int b=0;b<19;b++)circle(GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b],42,GrowthAtlasLayout.COLORS[b],false,0.13f);
         for(int n=0;n<ExtractionGrowth.NODES.length;n++){
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];
             for(int parent:node.parents)edge(parent,n,false);
@@ -76,8 +79,8 @@ public class ExtractionNodeTree extends Component {
         label("시작점",8,GrowthAtlasLayout.CENTER,GrowthAtlasLayout.CENTER+26,70,GOLD);
         for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++){
             int learned=0;for(int n:ExtractionGrowth.BRANCH_NODES[b])if(p.nodes.contains(ExtractionGrowth.IDS[n]))learned++;
-            label(ExtractionGrowth.BRANCHES[b],6,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]-5,70,GrowthAtlasLayout.COLORS[b]);
-            label(learned+" / "+ExtractionGrowth.BRANCH_NODES[b].length,4,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]+7,52,MUTED);
+            label(ExtractionGrowth.BRANCHES[b],6,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]-(b>=19?(((ExtractionGrowth.BRANCH_NODES[b].length+5)/6)*14+25):5),b>=19?150:70,GrowthAtlasLayout.COLORS[b]);
+            label(learned+" / "+ExtractionGrowth.BRANCH_NODES[b].length,4,GrowthAtlasLayout.GROUP_X[b],GrowthAtlasLayout.GROUP_Y[b]-(b>=19?(((ExtractionGrowth.BRANCH_NODES[b].length+5)/6)*14+13):-7),52,MUTED);
         }
         for(int n=0;n<ExtractionGrowth.NODES.length;n++){
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];boolean learned=p.nodes.contains(node.id);
@@ -119,7 +122,7 @@ public class ExtractionNodeTree extends Component {
         sprite.x=cx-sprite.width()/2;sprite.y=cy-sprite.height()/2;sprite.alpha(alpha);world.add(sprite);
     }
     private int nodeIcon(ExtractionGrowth.Node node){
-        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.POTION_AZURE};
+        int[] family={ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.BACKPACK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSWORD,ItemSpriteSheet.DAGGER,ItemSpriteSheet.SPEAR,ItemSpriteSheet.HAND_AXE,ItemSpriteSheet.MACE,ItemSpriteSheet.GLOVES,ItemSpriteSheet.SPIRIT_BOW,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_TALISMAN,ItemSpriteSheet.POTION_CRIMSON,ItemSpriteSheet.RATION,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.SWORD,ItemSpriteSheet.GREATSHIELD,ItemSpriteSheet.POTION_AZURE,ItemSpriteSheet.ROUND_SHIELD,ItemSpriteSheet.WAND_MAGIC_MISSILE,ItemSpriteSheet.ARTIFACT_CLOAK,ItemSpriteSheet.ARTIFACT_BOOTS,ItemSpriteSheet.SAI,ItemSpriteSheet.ARTIFACT_TOME};
         if(node.branch>=12||node.row==0||node.row>=4)return family[node.branch];
         ExtractionGrowth.Stat stat=node.effects.keySet().iterator().next();
         switch(stat){

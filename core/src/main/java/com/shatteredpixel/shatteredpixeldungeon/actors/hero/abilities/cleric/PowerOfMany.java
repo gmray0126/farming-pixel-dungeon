@@ -157,7 +157,7 @@ public class PowerOfMany extends ArmorAbility {
 					return;
 				}
 
-				ch = new LightAlly(hero.lvl);
+				ch = new LightAlly(hero.combatLevel());
 				ch.pos = target;
 				GameScene.add((Mob) ch);
 				ScrollOfTeleportation.appear(ch, ch.pos);

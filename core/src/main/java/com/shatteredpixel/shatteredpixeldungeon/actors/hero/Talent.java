@@ -629,11 +629,11 @@ public enum Talent {
 				ScrollOfRecharging.charge( hero );
 			} else {
 				// lvl/3 / lvl/2 bonus dmg on next hit for other classes
-				Buff.affect( hero, PhysicalEmpower.class).set(Math.round(hero.lvl / (4f - hero.pointsInTalent(FOCUSED_MEAL))), 1);
+				Buff.affect( hero, PhysicalEmpower.class).set((hero.extractionRaidID!=0?2*hero.pointsInTalent(FOCUSED_MEAL):Math.round(hero.lvl / (4f - hero.pointsInTalent(FOCUSED_MEAL)))), 1);
 			}
 		}
 		if (hero.hasTalent(SATIATED_SPELLS)){
-			if (hero.heroClass == HeroClass.CLERIC) {
+			if (hero.heroClass == HeroClass.CLERIC || com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.learned(hero,"prayer")) {
 				Buff.affect(hero, SatiatedSpellsTracker.class);
 			} else {
 				//3/5 shielding, delayed up to 10 turns
@@ -646,8 +646,8 @@ public enum Talent {
 			}
 		}
 		if (hero.hasTalent(ENLIGHTENING_MEAL)){
-			if (hero.heroClass == HeroClass.CLERIC) {
-				HolyTome tome = hero.belongings.getItem(HolyTome.class);
+			if (hero.heroClass == HeroClass.CLERIC || com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.learned(hero,"prayer")) {
+				HolyTome tome = hero.extractionSkills!=null?hero.extractionSkills.prayer:hero.belongings.getItem(HolyTome.class);
 				if (tome != null) {
 					// 2/3 of a charge at +1, 1 full charge at +2
 					tome.directCharge( (1+hero.pointsInTalent(ENLIGHTENING_MEAL))/3f );
@@ -770,7 +770,7 @@ public enum Talent {
 			Sample.INSTANCE.play( Assets.Sounds.MELD );
 		}
 		if (hero.hasTalent(RECALL_INSCRIPTION) && Scroll.class.isAssignableFrom(cls) && cls != ScrollOfUpgrade.class){
-			if (hero.heroClass == HeroClass.CLERIC){
+			if (hero.heroClass == HeroClass.CLERIC || com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.learned(hero,"prayer")){
 				Buff.prolong(hero, RecallInscription.UsedItemTracker.class, hero.pointsInTalent(RECALL_INSCRIPTION) == 2 ? 300 : 10).item = cls;
 			} else {
 				// 10/15%
@@ -784,7 +784,7 @@ public enum Talent {
 
 	public static void onRunestoneUsed( Hero hero, int pos, Class<?extends Item> cls ){
 		if (hero.hasTalent(RECALL_INSCRIPTION) && Runestone.class.isAssignableFrom(cls)){
-			if (hero.heroClass == HeroClass.CLERIC){
+			if (hero.heroClass == HeroClass.CLERIC || com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.learned(hero,"prayer")){
 				Buff.prolong(hero, RecallInscription.UsedItemTracker.class, hero.pointsInTalent(RECALL_INSCRIPTION) == 2 ? 300 : 10).item = cls;
 			} else {
 

@@ -64,7 +64,7 @@ public abstract class Plant implements Bundlable {
 		if (ch instanceof Hero){
 			((Hero) ch).interrupt();
 			if(((Hero) ch).hasTalent(Talent.BARKSKIN)){
-				Barkskin.conditionallyAppend(ch, (((Hero) ch).lvl* ((Hero) ch).pointsInTalent(Talent.BARKSKIN))/3, 1 );
+				Barkskin.conditionallyAppend(ch, (((Hero)ch).extractionRaidID!=0?2*((Hero)ch).pointsInTalent(Talent.BARKSKIN):(((Hero) ch).lvl* ((Hero) ch).pointsInTalent(Talent.BARKSKIN))/3), 1 );
 			}
 		}
 
@@ -124,7 +124,7 @@ public abstract class Plant implements Bundlable {
 
 	public String desc() {
 		String desc = Messages.get(this, "desc");
-		if (Dungeon.hero != null && Dungeon.hero.subClass == HeroSubClass.WARDEN){
+		if (Dungeon.hero != null && Dungeon.hero.hasSubclass(HeroSubClass.WARDEN)){
 			desc += "\n\n" + Messages.get(this, "warden_desc");
 		}
 		return desc;
@@ -160,7 +160,7 @@ public abstract class Plant implements Bundlable {
 			} else {
 				Catalog.countUse(getClass());
 				Dungeon.level.plant( this, cell );
-				if (Dungeon.hero.subClass == HeroSubClass.WARDEN) {
+				if (Dungeon.hero.hasSubclass(HeroSubClass.WARDEN)) {
 					for (int i : PathFinder.NEIGHBOURS8) {
 						int c = Dungeon.level.map[cell + i];
 						if ( c == Terrain.EMPTY || c == Terrain.EMPTY_DECO
@@ -222,7 +222,7 @@ public abstract class Plant implements Bundlable {
 		@Override
 		public String desc() {
 			String desc = Messages.get(plantClass, "desc");
-			if (Dungeon.hero != null && Dungeon.hero.subClass == HeroSubClass.WARDEN){
+			if (Dungeon.hero != null && Dungeon.hero.hasSubclass(HeroSubClass.WARDEN)){
 				desc += "\n\n" + Messages.get(plantClass, "warden_desc");
 			}
 			return desc;

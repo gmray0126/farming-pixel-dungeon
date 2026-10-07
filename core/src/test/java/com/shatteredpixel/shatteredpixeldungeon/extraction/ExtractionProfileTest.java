@@ -741,21 +741,70 @@ public class ExtractionProfileTest {
         profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();assertEquals(20,profile.startingStrength());
         profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(20,next.STR);assertNull(next.belongings.ring);hero.sprite=null;
     }
-    @Test public void graphHas178UniqueNodesWithBranchingAndConvergence() {
-        assertEquals(178, ExtractionGrowth.NODES.length);
+
+    @Test public void allTwelveSubclassCoresAndTheirOriginalTalentsRequireNodes(){
+        Hero h=new Hero();h.extractionRaidID=1;
+        for(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass cls:com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.values()){
+            if(cls==com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.NONE)continue;
+            assertFalse(h.hasSubclass(cls));
+            String id="subclass_"+cls.name().toLowerCase(java.util.Locale.ROOT);
+            assertTrue(ExtractionGrowth.index(id)>=178);profile.nodes.add(id);assertTrue(h.hasSubclass(cls));
+            java.util.ArrayList<java.util.LinkedHashMap<com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent,Integer>> original=new java.util.ArrayList<>();
+            com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initSubclassTalents(cls,original);
+            for(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent talent:original.get(2).keySet()){
+                assertEquals(0,h.pointsInTalent(talent));
+                String node="utility_"+talent.name().toLowerCase(java.util.Locale.ROOT)+"_3";
+                assertTrue(ExtractionGrowth.index(node)>=178);profile.nodes.add(node);assertEquals(3,h.pointsInTalent(talent));
+            }
+        }
+        assertEquals(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.NONE,h.subClass);
+        assertTrue(h.hasWeaponAbilities());
+    }
+    @Test public void learnedCrossClassTalentsSurviveDeathAndProfileReload() throws Exception{
+        profile.points=1000;learnPath("utility_thiefs_intuition_2");learnPath("utility_soul_eater_3");
+        profile.begin();Hero h=new Hero();profile.initialize(h);
+        assertEquals(2,h.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.THIEFS_INTUITION));
+        assertEquals(3,h.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.SOUL_EATER));
+        assertTrue(h.hasSubclass(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.WARLOCK));
+        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();profile.begin();
+        Hero next=new Hero();profile.initialize(next);assertEquals(3,next.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.SOUL_EATER));assertEquals(20,next.HT);
+    }
+    @Test public void activeSkillsSaveSeparateResourcesAndNeverRequireArmorOrArtifacts(){
+        profile.nodes.add("skill_stealth");profile.nodes.add("skill_prayer");profile.nodes.add("utility_sunray_2");
+        Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;ExtractionClassSkills.ensure(h);
+        assertNull(h.belongings.armor);assertNull(h.belongings.artifact);assertEquals(3,h.extractionSkills.prayer.capacity());
+        assertTrue(ExtractionClassSkills.spells(h).contains(com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Sunray.INSTANCE));
+        assertFalse(ExtractionClassSkills.spells(h).contains(com.shatteredpixel.shatteredpixeldungeon.actors.hero.spells.Smite.INSTANCE));
+        h.extractionSkills.armor.charge=37;h.extractionSkills.prayer.spendCharge(1.5f);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("state",h.extractionSkills);
+        ExtractionClassSkills.State restored=(ExtractionClassSkills.State)saved.get("state");
+        assertEquals(37,restored.armor.charge,0.001f);assertEquals(1.5f,restored.prayer.remaining(),0.001f);
+        h.extractionSkills=restored;h.lvl=30;ExtractionClassSkills.ensure(h);assertEquals(3,restored.prayer.capacity());assertEquals(1.5f,restored.prayer.remaining(),0.001f);
+        for(int i=1;i<=4;i++)profile.nodes.add("prayer_capacity_"+i);ExtractionClassSkills.ensure(h);assertEquals(11,restored.prayer.capacity());assertEquals(1.5f,restored.prayer.remaining(),0.001f);
+    }
+    @Test public void subclassResourcesDoNotGrowAutomaticallyWithLevel(){
+        profile.nodes.add("subclass_monk");profile.nodes.add("subclass_champion");
+        Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy monk=new com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy();
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon.Charger weapons=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon.Charger();
+        h.lvl=1;assertEquals(10,monk.energyCap());assertEquals(4,weapons.chargeCap());
+        h.lvl=30;assertEquals(10,monk.energyCap());assertEquals(4,weapons.chargeCap());
+    }
+    @Test public void graphPreserves178ExistingNodesAndAddsClassSkillsAndSubclasses() {
+        assertEquals(532, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[i];
             assertTrue(ids.add(node.id));
-            assertFalse(node.effects.isEmpty());
+            assertTrue(!node.effects.isEmpty()||node.utilityDescription!=null);
             for(int parent:node.parents)assertTrue("Primary paths must be acyclic", parent<i);
             if(node.parents.length==2)convergences++;
-            totalCost+=node.cost;
+            if(i<178)totalCost+=node.cost;
         }
         assertEquals(18,convergences);
         assertEquals(422,totalCost);
-        for(int b=0;b<ExtractionGrowth.BRANCH_NODES.length;b++)assertEquals(b==18?12:b==0?11:b==1||b==2?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
+        for(int b=0;b<19;b++)assertEquals(b==18?12:b==0?11:b==1||b==2?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
         profile.points=1000;

@@ -609,6 +609,8 @@ public class GameScene extends PixelScene {
 			Dungeon.droppedItems.remove( Dungeon.depth );
 		}
 
+		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.sceneReady(Dungeon.hero);
+
 		// Foresight searches immediately when attached, including discovery particles.
 		// Apply entry traits only after this floor's sprites, fog and UI exist.
 		if (Dungeon.hero.isAlive()
@@ -755,6 +757,13 @@ public class GameScene extends PixelScene {
 
 			
 		}
+
+        if(Dungeon.hero.extractionRaidID!=0){
+            com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton skills=new com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"스킬",6){
+                @Override protected void onClick(){com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.open();}
+            };
+            skills.camera=uiCamera;skills.setRect(menuBarMaxLeft-28,screentop+2,26,16);add(skills);
+        }
 
 		//Tutorial
 		if (SPDSettings.intro()){
