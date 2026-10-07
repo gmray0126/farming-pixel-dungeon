@@ -1,4 +1,14 @@
-# Shattered Pixel Dungeon
+# 파밍픽셀던전
+
+Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.
+
+현재 모딩 작업 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다.
+
+## 원작 안내
+
+아래는 원작 Shattered Pixel Dungeon의 소개와 제작자 링크입니다.
+
+### Shattered Pixel Dungeon
 
 [Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://watabou.itch.io/).
 
