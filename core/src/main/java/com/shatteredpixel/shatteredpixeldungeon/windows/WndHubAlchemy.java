@@ -24,7 +24,7 @@ public class WndHubAlchemy extends Window {
         button("에너지 구매",0,29,(w-2)/2f,16,this::energyMenu);button("재료 분해",(w+2)/2f,29,(w-2)/2f,16,()->chooseItem(true,0));
         button("창고 재료 넣기 ("+selected.size()+" / 3)",0,50,w,17,()->{if(selected.size()<3)chooseItem(false,0);});
         float sw=(w-4)/3f;
-        for(int i=0;i<3;i++){final int slot=i;ItemButton cell=new ItemButton(){@Override protected void onClick(){run(()->{if(slot<selected.size()){selected.remove(slot);page=0;refresh();}else chooseItem(false,0);});}};
+        for(int i=0;i<3;i++){final int slotIndex=i;ItemButton cell=new ItemButton(){@Override protected void onClick(){run(()->{if(slotIndex<selected.size()){selected.remove(slotIndex);page=0;refresh();}else chooseItem(false,0);});}};
             cell.setRect(i*(sw+2),71,sw,26);if(i<selected.size())cell.item(selected.get(i));body.add(cell);
             if(i<selected.size())label(selected.get(i).name(),5,i*(sw+2),99,Math.round(sw),0xD5DFE4);
         }
