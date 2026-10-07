@@ -704,12 +704,12 @@ public class ExtractionProfileTest {
         for(String id:new String[]{"strength_early","strength_mid","strength_advanced","strength_master"}){
             int index=ExtractionGrowth.index(id);assertTrue(profile.unlocked(index));profile.learn(index);
         }
-        assertEquals(18,profile.startingStrength());profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
-        Hero hero=Dungeon.hero;assertEquals(18,hero.STR);assertNull(hero.belongings.ring);
-        hero.sprite=new EffectSprite();hero.sprite.visible=false;new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength().apply(hero);assertEquals(19,hero.STR);
-        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();hero.storeInBundle(saved);Hero restored=new Hero();restored.restoreFromBundle(saved);assertEquals(19,restored.STR);
-        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();assertEquals(18,profile.startingStrength());
-        profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(18,next.STR);assertNull(next.belongings.ring);hero.sprite=null;
+        assertEquals(20,profile.startingStrength());profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Hero hero=Dungeon.hero;assertEquals(20,hero.STR);assertTrue(hero.STR>=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greataxe().STRReq(0));assertNull(hero.belongings.ring);
+        hero.sprite=new EffectSprite();hero.sprite.visible=false;new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength().apply(hero);assertEquals(21,hero.STR);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();hero.storeInBundle(saved);Hero restored=new Hero();restored.restoreFromBundle(saved);assertEquals(21,restored.STR);
+        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();assertEquals(20,profile.startingStrength());
+        profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(20,next.STR);assertNull(next.belongings.ring);hero.sprite=null;
     }
     @Test public void graphHas178UniqueNodesWithBranchingAndConvergence() {
         assertEquals(178, ExtractionGrowth.NODES.length);

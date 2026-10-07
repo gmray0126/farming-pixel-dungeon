@@ -264,7 +264,7 @@ public final class ExtractionGrowth {
         add(list,"strength_early","기초 근력",0,6,0,2,new String[]{"edge"},Stat.STRENGTH,1f);
         add(list,"strength_mid","신체 단련",1,6,2,3,new String[]{"survival_left_end"},Stat.STRENGTH,1f);
         add(list,"strength_advanced","중량 적응",2,6,0,4,new String[]{"explore_merge"},Stat.STRENGTH,1f);
-        add(list,"strength_master","완력 완성",0,6,2,5,new String[]{"combat_cap"},Stat.STRENGTH,1f);
+        add(list,"strength_master","완력 완성",0,6,2,5,new String[]{"combat_cap"},Stat.STRENGTH,3f);
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];
