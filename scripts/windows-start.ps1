@@ -12,6 +12,7 @@ public static class DesktopInput {
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr w);
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] public static extern void mouse_event(uint flags, uint x, uint y, uint data, UIntPtr extra);
+    [DllImport("user32.dll")] public static extern void keybd_event(byte key, byte scan, uint flags, UIntPtr extra);
 }
 '@
 New-Item -ItemType Directory -Force pc-evidence | Out-Null
@@ -63,7 +64,7 @@ function Capture($p, $name) {
         $image.Save((Join-Path (Resolve-Path pc-evidence) "$name.png"))
     } finally { $graphics.Dispose(); $image.Dispose() }
 }
-function Depart($p) {
+function Depart($p, [bool]$fresh = $false) {
     $p.Refresh()
     $rect = [DesktopInput+Rect]::new()
     [void][DesktopInput]::GetClientRect($p.MainWindowHandle, [ref]$rect)
@@ -74,20 +75,25 @@ function Depart($p) {
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
     Start-Sleep -Seconds 8
+    if ($fresh) {
+        [DesktopInput]::keybd_event(13,0,0,[UIntPtr]::Zero)
+        [DesktopInput]::keybd_event(13,0,2,[UIntPtr]::Zero)
+        Start-Sleep -Seconds 4
+    }
     $p.Refresh()
     if ($p.HasExited -or $p.MainWindowTitle -match 'Crashed|Error') { throw 'Windows raid failed' }
 }
 function Close-Game($p) {
     [void]$p.CloseMainWindow()
     if (!$p.WaitForExit(15000)) { $p.Kill(); throw 'Windows game did not close normally' }
-    if ($p.ExitCode -ne 0) { throw "Windows game exited with code $($p.ExitCode)" }
+    if ($null -ne $p.ExitCode -and $p.ExitCode -ne 0) { throw "Windows game exited with code $($p.ExitCode)" }
 }
 $p = $null
 try {
     $p = Start-Game
     Capture $p '01-hub'
     if (!(Test-Path "$saveDir/extraction-profile.dat")) { throw 'Hub profile was not created' }
-    Depart $p
+    Depart $p $true
     Capture $p '02-raid'
     Close-Game $p
     $run = Read-Bundle "$saveDir/game1/game.dat"
