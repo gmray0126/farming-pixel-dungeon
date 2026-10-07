@@ -1216,7 +1216,7 @@ public class ExtractionProfileTest {
         assertEquals(8,pants.missingStrength(hero));assertEquals(8,boots.missingStrength(hero));assertTrue(boots.movementFactor(hero)<1);assertTrue(pants.evasionFactor(hero)<1);
         pants.cursed=true;ExpeditionClothing replacement=new ExpeditionClothing.ClothPants();hero.belongings.backpack.items.add(replacement);
         assertFalse(replacement.doEquip(hero));assertSame(pants,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(replacement));
-        hero.belongings.uncurseEquipped();assertFalse(pants.cursed);assertTrue(replacement.doEquip(hero));assertSame(replacement,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(pants));
+        hero.sprite=new EffectSprite();hero.sprite.visible=false;hero.belongings.uncurseEquipped();hero.sprite=null;assertFalse(pants.cursed);assertTrue(replacement.doEquip(hero));assertSame(replacement,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(pants));
         assertTrue(boots.doUnequip(hero,true));assertNull(hero.belongings.boots);assertTrue(hero.belongings.backpack.contains(boots));
     }
     @Test public void preparedClothesEquipIndependentlyResumeAndReturnToStash() throws Exception {

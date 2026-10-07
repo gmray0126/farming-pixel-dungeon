@@ -217,6 +217,7 @@ public class Bag extends Item implements Iterable<Item> {
 
 		private int index = 0;
 		private Iterator<Item> nested = null;
+        private boolean lastNested,canRemove;
 		
 		@Override
 		public boolean hasNext() {
@@ -231,13 +232,15 @@ public class Bag extends Item implements Iterable<Item> {
 		public Item next() {
 			if (nested != null && nested.hasNext()) {
 				
-				return nested.next();
+				Item item=nested.next();lastNested=true;canRemove=true;return item;
 				
 			} else {
 				
 				nested = null;
 				
-				Item item = items.get( index++ );
+				if(index>=items.size())throw new java.util.NoSuchElementException();
+                Item item = items.get( index++ );
+                lastNested=false;canRemove=true;
 				if (item instanceof Bag) {
 					nested = ((Bag)item).iterator();
 				}
@@ -248,11 +251,10 @@ public class Bag extends Item implements Iterable<Item> {
 
 		@Override
 		public void remove() {
-			if (nested != null) {
-				nested.remove();
-			} else {
-				items.remove( index );
-			}
+			if(!canRemove)throw new IllegalStateException();
+            if(lastNested)nested.remove();
+            else{items.remove(--index);nested=null;}
+            canRemove=false;
 		}
 	}
 }
