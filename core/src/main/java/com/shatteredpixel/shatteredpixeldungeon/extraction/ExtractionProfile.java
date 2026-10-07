@@ -86,8 +86,8 @@ public final class ExtractionProfile {
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
         contracts.clear();completedContracts.clear();contractProgress.clear();
-        for(String id:b.getStringArray("contracts")){contracts.add(id);contractProgress.put(id,b.getInt("contract_progress_"+id));}
-        for(String id:b.getStringArray("completed_contracts"))completedContracts.add(id);
+        if(b.contains("contracts"))for(String id:b.getStringArray("contracts")){contracts.add(id);contractProgress.put(id,b.getInt("contract_progress_"+id));}
+        if(b.contains("completed_contracts"))for(String id:b.getStringArray("completed_contracts"))completedContracts.add(id);
         contractSealAwarded=b.getBoolean("contract_seal");
         growthPointRate=b.contains("growth_point_rate")?b.getInt("growth_point_rate"):1;
         for(int i=0;i<PRESET_SLOTS;i++)presets[i]=b.contains("growth_preset_"+i)?b.getStringArray("growth_preset_"+i):null;

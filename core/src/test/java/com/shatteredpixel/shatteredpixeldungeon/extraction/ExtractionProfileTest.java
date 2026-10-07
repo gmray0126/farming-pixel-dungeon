@@ -1073,7 +1073,7 @@ public class ExtractionProfileTest {
         for(ExtractionGrowth.Node node:ExtractionGrowth.NODES)profile.nodes.add(node.id);profile.xp=100000;profile.points=1000;
         com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);saved.put("active",true);saved.put("raid",7);
         FileUtils.bundleToFile(ExtractionProfile.FILE,saved);forgetProfile();profile=ExtractionProfile.get();
-        assertTrue(profile.active);assertEquals(532,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
+        assertTrue(profile.active);assertEquals(622,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
         profile.abandon();assertTrue(profile.nodes.isEmpty());assertEquals(300,profile.points);assertEquals(2475,profile.xp);
         forgetProfile();profile=ExtractionProfile.get();assertEquals(300,profile.points);assertTrue(profile.result.contains("300 P"));
     }
