@@ -18,8 +18,9 @@ import java.util.HashSet;
 /** Separate permanent state. Run equipment is escrowed before starting a raid. */
 public final class ExtractionProfile {
     public static final String FILE = "extraction-profile.dat";
-    public static final int MAX_GROWTH_LEVEL=100, MAX_GROWTH_XP=2475, MAX_GROWTH_POINTS=102, PRESET_SLOTS=3;
+    public static final int MAX_GROWTH_LEVEL=100, MAX_GROWTH_XP=2475, MAX_GROWTH_POINTS=300, PRESET_SLOTS=3;
     private static ExtractionProfile instance;
+    private int growthPointRate=3;
     private final String[][] presets=new String[PRESET_SLOTS][];
     public final ArrayList<Item> stash = new ArrayList<>();
     public final ArrayList<Item> prepared = new ArrayList<>();
@@ -59,6 +60,7 @@ public final class ExtractionProfile {
         b.put("difficulty_unlocks",unlockedDifficulty);
         b.put("raid_rules",raidRules);
         b.put("debug_enabled",debugEnabled);
+        b.put("growth_point_rate",growthPointRate);
         for(int i=0;i<PRESET_SLOTS;i++)if(presets[i]!=null)b.put("growth_preset_"+i,presets[i]);
         return b;
     }
@@ -77,6 +79,7 @@ public final class ExtractionProfile {
         raidDifficulty=b.contains("raid_difficulty")?b.getInt("raid_difficulty"):1;
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
+        growthPointRate=b.contains("growth_point_rate")?b.getInt("growth_point_rate"):1;
         for(int i=0;i<PRESET_SLOTS;i++)presets[i]=b.contains("growth_preset_"+i)?b.getStringArray("growth_preset_"+i):null;
         int[] unlocked=b.contains("difficulty_unlocks")?b.getIntArray("difficulty_unlocks"):new int[0];
         java.util.Arrays.fill(unlockedDifficulty,0);unlockedDifficulty[0]=1;
@@ -228,7 +231,7 @@ public final class ExtractionProfile {
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
         if (!unlocked(index)) throw new IllegalStateException("선행 경로나 연결된 계통의 노드를 먼저 배워 주세요.");
-        if (spentPoints()+COSTS[index]>MAX_GROWTH_POINTS) throw new IllegalStateException("성장 배분 한도는 총 102 P입니다. 다른 노드를 초기화하거나 프리셋을 바꿔 주세요.");
+        if (spentPoints()+COSTS[index]>MAX_GROWTH_POINTS) throw new IllegalStateException("성장 배분 한도는 총 300 P입니다. 다른 노드를 초기화하거나 프리셋을 바꿔 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
         change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); });
     }
@@ -281,7 +284,7 @@ public final class ExtractionProfile {
     private void awardGrowthXP(long amount){
         int old=Math.min(MAX_GROWTH_XP,Math.max(0,xp));
         xp=(int)Math.min(MAX_GROWTH_XP,old+Math.max(0,amount));
-        points=(int)Math.min(Math.max(0,MAX_GROWTH_POINTS-spentPoints()),(long)points+xp/25-old/25);
+        points=(int)Math.min(Math.max(0,MAX_GROWTH_POINTS-spentPoints()),(long)points+3*(xp/25-old/25));
     }
     private void trimPrepared(){while(prepared.size()>capacity())stash.add(prepared.remove(prepared.size()-1));}
     /** Preserve a running hero; over-budget legacy allocations are refunded at the hub. */
@@ -289,9 +292,10 @@ public final class ExtractionProfile {
         int used=spentPoints(), cappedXP=Math.min(MAX_GROWTH_XP,Math.max(0,xp));
         boolean refund=!active&&used>MAX_GROWTH_POINTS;
         int remaining=Math.max(0,MAX_GROWTH_POINTS-(refund?0:used));
-        int cappedPoints=refund?MAX_GROWTH_POINTS:Math.min(remaining,Math.max(0,points));
-        if(xp==cappedXP&&points==cappedPoints&&!refund)return;
-        change(()->{xp=cappedXP;points=cappedPoints;if(refund){nodes.clear();trimPrepared();result+="\n성장 한도 102 P 적용: 기존 배분을 초기화하고 포인트를 반환했습니다.";}});
+        long backpay=growthPointRate<3?(long)(3-growthPointRate)*(cappedXP/25):0;
+        int cappedPoints=refund?MAX_GROWTH_POINTS:(int)Math.min(remaining,Math.max(0L,(long)points+backpay));
+        if(xp==cappedXP&&points==cappedPoints&&!refund&&growthPointRate==3)return;
+        change(()->{xp=cappedXP;points=cappedPoints;growthPointRate=3;if(refund){nodes.clear();trimPrepared();result+="\n성장 한도 300 P 적용: 기존 배분을 초기화하고 포인트를 반환했습니다.";}});
     }
     private void checkPresetSlot(int slot){if(slot<0||slot>=PRESET_SLOTS)throw new IllegalArgumentException("없는 프리셋입니다.");}
     public boolean hasPreset(int slot){checkPresetSlot(slot);return presets[slot]!=null;}

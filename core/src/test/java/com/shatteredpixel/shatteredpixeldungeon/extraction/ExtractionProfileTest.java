@@ -82,7 +82,7 @@ public class ExtractionProfileTest {
         Item sword=profile.stash.get(0);profile.prepare(sword,true);profile.begin();int id=profile.raidID;
         profile.credit(id,30);Dungeon.hero=null;Dungeon.level=null;
         profile.abandon();profile.abandon();
-        assertFalse(profile.active);assertEquals(30,profile.xp);assertEquals(4,profile.points);
+        assertFalse(profile.active);assertEquals(30,profile.xp);assertEquals(6,profile.points);
         assertEquals(3,profile.stash.size());assertTrue(profile.prepared.isEmpty());assertEquals(100,profile.gold);
         assertTrue(profile.result.contains("포기"));
         forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.active);assertEquals(30,profile.xp);
@@ -163,7 +163,7 @@ public class ExtractionProfileTest {
         Hero hero=new Hero();int hp=hero.HT,str=hero.STR;
         profile.setDebugEnabled(true);profile.debugResources(10000,250,100);profile.debugUnlockPrison();
         forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.debugEnabled);
-        assertEquals(gold+10000,profile.gold);assertEquals(250,profile.xp);assertEquals(102,profile.points);
+        assertEquals(gold+10000,profile.gold);assertEquals(250,profile.xp);assertEquals(133,profile.points);
         assertEquals(hp,hero.HT);assertEquals(str,hero.STR);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.setDebugEnabled(false);forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.debugEnabled);
     }
@@ -478,9 +478,9 @@ public class ExtractionProfileTest {
         assertEquals(20,h.HT);assertEquals(10,h.attackSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
         assertEquals(5,h.defenseSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
         h.HP=7;h.earnExp(15,com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat.class);
-        assertEquals(25,profile.xp);assertEquals(4,profile.points);assertEquals(7,h.HP);assertEquals(20,h.HT);
+        assertEquals(25,profile.xp);assertEquals(6,profile.points);assertEquals(7,h.HP);assertEquals(20,h.HT);
         assertEquals(Hero.STARTING_STR,h.STR);assertEquals(1,h.combatLevel());
-        profile.settle(profile.raidID,false);assertEquals(25,profile.xp);assertEquals(4,profile.points);
+        profile.settle(profile.raidID,false);assertEquals(25,profile.xp);assertEquals(6,profile.points);
         profile.learn(ExtractionGrowth.index("vital"));profile.learn(ExtractionGrowth.index("power"));
         profile.learn(ExtractionGrowth.index("combat_right_1"));profile.begin();
         Hero next=new Hero();next.extractionRaidID=profile.raidID;Dungeon.hero=next;profile.initialize(next);
@@ -541,7 +541,7 @@ public class ExtractionProfileTest {
         assertEquals(attack,h.attackSkill(target));assertEquals(defense,h.defenseSkill(target));
         profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();
         assertEquals(2,profile.growthLevel());assertEquals(1,profile.growthExperience());
-        assertEquals(25,profile.growthExperienceRequired());assertEquals(4,profile.points);
+        assertEquals(25,profile.growthExperienceRequired());assertEquals(6,profile.points);
         profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(20,next.HT);assertEquals(10,next.STR);
     }
     @Test public void waterskinIsReissuedAfterDeathAndPreparedDewSurvivesWithoutDuplicates() throws Exception {
@@ -623,7 +623,7 @@ public class ExtractionProfileTest {
         assertEquals(30, profile.xp);
         profile.credit(id, 50);
         assertEquals(50, profile.xp);
-        assertEquals(5, profile.points);
+        assertEquals(9, profile.points);
         profile.credit(id+1, 1000);
         assertEquals(50, profile.xp);
     }
@@ -806,10 +806,10 @@ public class ExtractionProfileTest {
         Item item=profile.stash.get(0);profile.prepare(item,true);profile.xp=77;
         int before=profile.points,used=profile.spentPoints(),gold=profile.gold,stash=profile.stash.size();
         assertEquals(1000,before+used);assertTrue(used>0);
-        assertEquals(used,profile.resetNodes());assertEquals(102,profile.points);assertEquals(0,profile.spentPoints());assertTrue(profile.nodes.isEmpty());
+        assertEquals(used,profile.resetNodes());assertEquals(300,profile.points);assertEquals(0,profile.spentPoints());assertTrue(profile.nodes.isEmpty());
         assertEquals(gold,profile.gold);assertEquals(77,profile.xp);assertEquals(stash,profile.stash.size());assertEquals(1,profile.prepared.size());assertEquals(10,profile.startingStrength());
-        assertEquals(0,profile.resetNodes());assertEquals(102,profile.points);
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(102,profile.points);assertEquals(0,profile.spentPoints());assertEquals(77,profile.xp);assertEquals(1,profile.prepared.size());
+        assertEquals(0,profile.resetNodes());assertEquals(300,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(300,profile.points);assertEquals(0,profile.spentPoints());assertEquals(77,profile.xp);assertEquals(1,profile.prepared.size());
     }
     @Test public void resetCannotChangeAnActiveRaidAndFailedSaveRollsBackTheRefund() throws Exception {
         profile.points=100;learnPath("utility_protective_shadows_2");int before=profile.points,used=profile.spentPoints();
@@ -1031,12 +1031,12 @@ public class ExtractionProfileTest {
     @Test public void growthStopsAt100AndCreditsStayIdempotentWithoutChangingStats() throws Exception {
         profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
         int ht=Dungeon.hero.HT,str=Dungeon.hero.STR;
-        profile.credit(profile.raidID,2474);assertEquals(99,profile.growthLevel());assertEquals(24,profile.growthExperience());assertEquals(101,profile.points);
-        profile.credit(profile.raidID,Integer.MAX_VALUE);assertEquals(100,profile.growthLevel());assertEquals(2475,profile.xp);assertEquals(102,profile.points);assertEquals(0,profile.growthExperienceRequired());
+        profile.credit(profile.raidID,2474);assertEquals(99,profile.growthLevel());assertEquals(24,profile.growthExperience());assertEquals(297,profile.points);
+        profile.credit(profile.raidID,Integer.MAX_VALUE);assertEquals(100,profile.growthLevel());assertEquals(2475,profile.xp);assertEquals(300,profile.points);assertEquals(0,profile.growthExperienceRequired());
         profile.credit(profile.raidID,Integer.MAX_VALUE);Dungeon.gold=0;profile.settle(profile.raidID,true);
-        assertEquals(2475,profile.xp);assertEquals(102,profile.points);assertEquals(ht,Dungeon.hero.HT);assertEquals(str,Dungeon.hero.STR);
+        assertEquals(2475,profile.xp);assertEquals(300,profile.points);assertEquals(ht,Dungeon.hero.HT);assertEquals(str,Dungeon.hero.STR);
         forgetProfile();profile=ExtractionProfile.get();profile.debugEnabled=true;profile.debugResources(0,Integer.MAX_VALUE,Integer.MAX_VALUE);
-        assertEquals(100,profile.growthLevel());assertEquals(102,profile.points);
+        assertEquals(100,profile.growthLevel());assertEquals(300,profile.points);
     }
     @Test public void presetsSaveSwitchAndReloadUsingOneBudget() throws Exception {
         profile.points=30;learnPath("strength");profile.savePreset(0);int cost=profile.spentPoints();
@@ -1074,7 +1074,17 @@ public class ExtractionProfileTest {
         com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);saved.put("active",true);saved.put("raid",7);
         FileUtils.bundleToFile(ExtractionProfile.FILE,saved);forgetProfile();profile=ExtractionProfile.get();
         assertTrue(profile.active);assertEquals(532,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
-        profile.abandon();assertTrue(profile.nodes.isEmpty());assertEquals(102,profile.points);assertEquals(2475,profile.xp);
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(102,profile.points);assertTrue(profile.result.contains("102 P"));
+        profile.abandon();assertTrue(profile.nodes.isEmpty());assertEquals(300,profile.points);assertEquals(2475,profile.xp);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(300,profile.points);assertTrue(profile.result.contains("300 P"));
+    }
+    @Test public void oldOnePointLevelsReceiveBackpayOnceAndFutureLevelsGrantThree() throws Exception {
+        learnPath("porter");profile.xp=250;profile.points=11;
+        Field rate=ExtractionProfile.class.getDeclaredField("growthPointRate");rate.setAccessible(true);rate.setInt(profile,1);
+        java.lang.reflect.Method snapshot=ExtractionProfile.class.getDeclaredMethod("bundle");snapshot.setAccessible(true);
+        FileUtils.bundleToFile(ExtractionProfile.FILE,(com.watabou.utils.Bundle)snapshot.invoke(profile));
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(11,profile.growthLevel());assertEquals(31,profile.points);assertEquals(2,profile.spentPoints());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(31,profile.points);
+        profile.begin();profile.credit(profile.raidID,25);assertEquals(12,profile.growthLevel());assertEquals(34,profile.points);
+        profile.credit(profile.raidID,25);assertEquals(34,profile.points);
     }
 }

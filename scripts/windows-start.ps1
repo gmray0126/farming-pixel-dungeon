@@ -205,7 +205,7 @@ try {
     [IO.File]::WriteAllText($settingsPath,$settings)
     # Load a 100-level hub and inspect the new preset controls in the native renderer.
     $profile=Read-Bundle $profilePath
-    $profile.active=$false; $profile.xp=2475; $profile.points=102; $profile.nodes=@(); $profile.prepared=@(); $profile.escrow=@()
+    $profile.active=$false; $profile.xp=2475; $profile.points=300; $profile.nodes=@(); $profile.prepared=@(); $profile.escrow=@()
     Write-Bundle $profilePath $profile
     Remove-Item "$saveDir/game1" -Recurse -Force -ErrorAction SilentlyContinue
     $p=Start-Game
@@ -215,7 +215,7 @@ try {
     Capture $p '11-growth-presets'
     Close-Game $p
     $profile=Read-Bundle $profilePath
-    if ($profile.xp -ne 2475 -or $profile.points -ne 102) { throw 'Growth cap was not preserved' }
+    if ($profile.xp -ne 2475 -or $profile.points -ne 300) { throw 'Growth cap was not preserved' }
     @{inventory_scroll_render=$true;growth_cap=$true;growth_presets_render=$true;class_skill_save=$true;class_skill_resume=$true;windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }

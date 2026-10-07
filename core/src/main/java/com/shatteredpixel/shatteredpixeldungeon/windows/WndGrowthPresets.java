@@ -9,7 +9,7 @@ public final class WndGrowthPresets {
         String[] labels=new String[4];
         for(int i=0;i<3;i++)labels[i]="프리셋 "+(i+1)+(p.hasPreset(i)?" · "+p.presetCost(i)+" P":" · 비어 있음");
         labels[3]="닫기";
-        Game.scene().add(new WndOptions("성장 프리셋","현재 배분을 3칸에 저장합니다. 불러오면 사용한 포인트를 돌려받고 저장한 배분을 적용합니다. 총 포인트가 부족하면 바뀌지 않습니다.\n\n"+p.growthDisplay()+"\n남은 "+p.points+" P · 사용한 "+p.spentPoints()+" P · 한도 102 P",labels){
+        Game.scene().add(new WndOptions("성장 프리셋","현재 배분을 3칸에 저장합니다. 불러오면 사용한 포인트를 돌려받고 저장한 배분을 적용합니다. 총 포인트가 부족하면 바뀌지 않습니다.\n\n"+p.growthDisplay()+"\n남은 "+p.points+" P · 사용한 "+p.spentPoints()+" P · 한도 300 P · 레벨업당 3 P",labels){
             @Override protected void onSelect(int slot){if(slot<3)choose(slot,refreshed);}
         });
     }
