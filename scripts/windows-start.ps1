@@ -46,6 +46,7 @@ function Click-Hero($p) {
     [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
     [void][DesktopInput]::SetCursorPos($origin.X + [int]($rect.Right / 2), $origin.Y + [int]($rect.Bottom / 2) + 12)
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 80
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
 }
 function Click-Client($p, [int]$x, [int]$y) {
@@ -55,6 +56,7 @@ function Click-Client($p, [int]$x, [int]$y) {
     [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
     [void][DesktopInput]::SetCursorPos($origin.X+$x,$origin.Y+$y)
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 80
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
 }
 function Start-Game {
@@ -100,10 +102,12 @@ function Depart($p, [bool]$fresh = $false) {
     [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
     [void][DesktopInput]::SetCursorPos($origin.X + [int]($rect.Right / 2) - 35, $origin.Y + $rect.Bottom - 34)
     [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 80
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
     Start-Sleep -Seconds 8
     if ($fresh) {
         [DesktopInput]::keybd_event(13,0,0,[UIntPtr]::Zero)
+        Start-Sleep -Milliseconds 80
         [DesktopInput]::keybd_event(13,0,2,[UIntPtr]::Zero)
         Start-Sleep -Seconds 4
     }
@@ -120,21 +124,6 @@ try {
     $p = Start-Game
     Capture $p '01-hub'
     if (!(Test-Path "$saveDir/extraction-profile.dat")) { throw 'Hub profile was not created' }
-    # Inspect the native atlas once before departure; no extra game restarts.
-    Click-Client $p 466 110
-    Start-Sleep -Seconds 2
-    Capture $p '01a-full-growth-atlas'
-    Click-Client $p 193 110
-    Start-Sleep -Seconds 1
-    Click-Client $p 512 310
-    Start-Sleep -Seconds 2
-    Capture $p '01b-round-utility-atlas'
-    for ($i=0; $i -lt 2; $i++) {
-        [DesktopInput]::keybd_event(27,0,0,[UIntPtr]::Zero)
-        [DesktopInput]::keybd_event(27,0,2,[UIntPtr]::Zero)
-        Start-Sleep -Milliseconds 300
-    }
-    Start-Sleep -Seconds 1
     Depart $p $true
     Capture $p '02-raid'
     Close-Game $p

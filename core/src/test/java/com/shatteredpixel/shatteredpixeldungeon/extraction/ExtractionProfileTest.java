@@ -989,8 +989,8 @@ public class ExtractionProfileTest {
                     assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomArmor().tier<=ExtractionDifficulty.chapterMaxTier(c));
                 }
             }
-            Dungeon.hero.pos=Dungeon.level.entrance();Dungeon.saveGame(1);Dungeon.saveLevel();Dungeon.hero=null;Dungeon.level=null;
-            Dungeon.loadGame(1);Dungeon.level=Dungeon.loadLevel();
+            Dungeon.hero.pos=Dungeon.level.entrance();Dungeon.saveGame(1);Dungeon.saveLevel(1);Dungeon.hero=null;Dungeon.level=null;
+            Dungeon.loadGame(1);Dungeon.level=Dungeon.loadLevel(1);
             assertEquals(start+4,Dungeon.depth);assertEquals(boss[c-3],Dungeon.level.getClass());assertEquals(profile.raidID,Dungeon.hero.extractionRaidID);
             profile.settle(profile.raidID,false);
         }
