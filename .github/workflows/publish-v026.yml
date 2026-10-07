@@ -1,0 +1,110 @@
+name: Publish Farming Pixel Dungeon v0.26
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v026.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v026
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37622946829
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37622946844
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.26.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.26_Windows.zip release-output/
+          cd release-output
+          cat > SHA256SUMS.txt <<'SUMS'
+          ba03c000b5948e34bd88301abea4ef0e51c61100ad999e0227afb8d62cff7e80  Farming_Pixel_Dungeon_v0.26.apk
+          d3612dea752186a818351e5934b3edc78c03b9bf720231974ee751a1d1b949c2  Farming_Pixel_Dungeon_PC_v0.26_Windows.zip
+          SUMS
+          sha256sum -c SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.26 / Farming Pixel Dungeon v0.26
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어
+          장비를 준비해 5층 원정을 떠나고, 보스를 처치한 뒤 탈출하여 장비와 성장 노드를 쌓는 파밍 게임입니다. 사망해도 성장 경험치와 노드는 유지되며, 레벨 자체는 능력치를 올리지 않습니다.
+          
+          ### v0.26 변경 사항
+          - 여섯 직업 계통 사이에 혼합 트리 6개, 각각 15개씩 총 90개 노드를 추가했습니다.
+          - 마검사: 근접 공격과 완드를 교대해 다음 공격을 강화합니다.
+          - 그림자술사: 단검 표식을 완드로 폭발시키고 표식한 적에게 접근합니다.
+          - 연금 사냥꾼: 원거리 무기에 독·냉기·화염을 코팅하고 상태이상을 조합합니다.
+          - 폭풍 유격수: 원거리와 근접 공격을 교대하며 기동 기술을 사용합니다.
+          - 성전사: 근접 명중으로 성력을 모아 회복과 심판에 사용합니다.
+          - 혈기사: 체력을 지불하는 서약과 출혈·회복을 조합합니다.
+          - 로비에 의뢰 게시판을 추가했습니다. 사냥·기록 회수·무기 납품 15개, 혼합 실전 의뢰 6개 중 최대 3개를 수락합니다.
+          - 탈출하면 의뢰 진행도를 저장합니다. 사망·포기 시 이번 원정의 진행도는 잃고 의뢰와 이전 진행도는 유지됩니다.
+          - 최초 완료 장비 선택 보상과 하수도 연속 의뢰 유물 ‘의뢰인의 인장’을 추가했습니다.
+          - 이전 세이브와 성장 프리셋을 유지하도록 새 노드를 추가했습니다.
+          
+          ### 실행
+          - Android: 아래 APK를 설치합니다.
+          - Windows 64비트: ZIP 전체를 압축 해제하고 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Java 런타임이 포함되어 있습니다.
+          - 성장 지도: **계통 → 혼합 트리**. 전투 중: **원정 스킬 → 혼합 트리 기술**. 의뢰는 로비 **의뢰** 탭에서 받습니다.
+          
+          ## English
+          Prepare your equipment, enter a five-floor expedition, defeat the boss, and extract to build your stash and permanent growth tree. Earned growth experience and nodes survive defeat; levels do not directly raise stats.
+          
+          ### Changes in v0.26
+          - Six hybrid trees connect neighbouring class themes, adding 15 nodes each and 90 nodes in total.
+          - Spellblade alternates melee attacks and wands to empower the next attack.
+          - Shadowcaster detonates dagger marks with wands and moves toward marked enemies.
+          - Alchemical Hunter combines poison, frost, and fire coatings on ranged weapons.
+          - Storm Skirmisher alternates ranged and melee attacks with movement abilities.
+          - Crusader builds faith through melee hits and spends it on healing or judgment.
+          - Blood Knight trades health for an oath and combines bleeding with recovery.
+          - The hub contract board offers 15 chapter hunting, recovery, and weapon delivery contracts, plus six hybrid training contracts. Accept up to three at a time.
+          - Extraction banks contract progress. Death or abandonment loses progress from that run while keeping accepted contracts and previously banked progress.
+          - First completion grants a choice of equipment. Completing the Sewers contract chain awards the Commission Seal artifact.
+          - Existing saves and growth presets retain their original nodes.
+          
+          ### Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - The current game interface uses Korean labels. Hybrid trees are under **계통 → 혼합 트리** in the growth map; active skills are under **원정 스킬 → 혼합 트리 기술** during a run.
+          
+          ## Validation / 검증
+          126 automated tests passed. Native Android and Windows departure and save/resume checks passed. Android contract-board and three expedition-guide pages were also exercised. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          - **gmray0126** — Farming Pixel Dungeon creator, design, and maintenance.
+          - **Evan Debenham / 00-Evan** — Creator of Shattered Pixel Dungeon.
+          - **Oleg Dolya / Watabou** — Creator of the original Pixel Dungeon.
+          - Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod.
+          - AI assistance was used during development. Existing upstream copyright notices are retained under GPL v3 or later.
+          
+          [Mod source / 모딩 소스](https://github.com/gmray0126/farming-pixel-dungeon/tree/ff51a86e48e230630940e0e6f59ce9516e982c7d) · [Project overview / 게임 소개](https://github.com/gmray0126/farming-pixel-dungeon#readme)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.26.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target ff51a86e48e230630940e0e6f59ce9516e982c7d --title '파밍픽셀던전 v0.26 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
