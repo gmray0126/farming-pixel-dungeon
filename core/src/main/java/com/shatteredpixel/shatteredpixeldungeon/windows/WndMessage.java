@@ -24,33 +24,52 @@ package com.shatteredpixel.shatteredpixeldungeon.windows;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
+import com.watabou.noosa.ui.Component;
 
 public class WndMessage extends Window {
 
 	private static final int WIDTH_MIN = 120;
 	private static final int WIDTH_MAX = 220;
 	private static final int MARGIN = 4;
+	private ScrollPane scroll;
 	
 	public WndMessage( String text ) {
 		
 		super();
 
-		int width = WIDTH_MIN;
+		int limit = Math.min(WIDTH_MAX, maxContentWidth());
+		int width = Math.min(WIDTH_MIN, limit);
 		
 		RenderedTextBlock info = PixelScene.renderTextBlock( text, 6 );
 		info.maxWidth(width - MARGIN * 2);
 		info.setPos(MARGIN, MARGIN);
-		add( info );
 
 		while (PixelScene.landscape()
 				&& info.height() > 120
-				&& width < WIDTH_MAX){
-			width += 20;
+				&& width < limit){
+			width = Math.min(limit, width + 20);
 			info.maxWidth(width - MARGIN * 2);
 		}
 
-		resize(
-			(int)info.width() + MARGIN * 2,
-			(int)info.height() + MARGIN * 2 );
+		int contentHeight = (int)Math.ceil(info.height()) + MARGIN * 2;
+		int height = Math.min(contentHeight, maxContentHeight());
+		if (contentHeight > height){
+			Component content = new Component();
+			content.add(info);
+			content.setSize(width, contentHeight);
+			scroll = new ScrollPane(content);
+			add(scroll);
+			resize(width, height);
+			scroll.setRect(0, 0, width, height);
+		} else {
+			add(info);
+			resize(width, contentHeight);
+		}
+	}
+
+	@Override public void offset(int x, int y){
+		super.offset(x, y);
+		if (scroll != null) scroll.setRect(scroll.left(), scroll.top(), scroll.width(), scroll.height());
 	}
 }

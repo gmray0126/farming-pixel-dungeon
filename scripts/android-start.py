@@ -47,6 +47,24 @@ try:
     time.sleep(1)
     screenshot('01-hub')
     assert not read_state('extraction-profile.dat')['active']
+    # Shop staff details must work before any expedition hero exists.
+    adb('shell', 'input', 'tap', '494', '278')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '215', '505')
+    time.sleep(1)
+    adb('shell', 'input', 'swipe', '277', '955', '277', '955', '1000')
+    time.sleep(1)
+    check_crash()
+    screenshot('07-hub-staff-description')
+    adb('shell', 'input', 'keyevent', '4')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '226', '278')
+    time.sleep(1)
+    screenshot('08-transparent-growth-map')
+    adb('shell', 'input', 'keyevent', '4')
+    time.sleep(1)
+    adb('shell', 'input', 'tap', '110', '278')
+    time.sleep(1)
     # Hub alchemy must open without a live expedition hero or floor.
     adb('shell', 'input', 'tap', '620', '375')
     time.sleep(1)
@@ -106,6 +124,6 @@ try:
     time.sleep(3)
     restored = read_state('game1/game.dat')
     assert restored['depth'] == 1 and restored['hero']['extraction_raid'] == raid_id, 'Resume changed the raid'
-    (OUT / 'result.json').write_text(json.dumps({'hub_alchemy_open': True, 'guide_pages_checked': 3, 'native_start': True, 'native_cold_resume': True, 'raid_id': raid_id}, indent=2))
+    (OUT / 'result.json').write_text(json.dumps({'hub_staff_description': True, 'transparent_growth_map': True, 'hub_alchemy_open': True, 'guide_pages_checked': 3, 'native_start': True, 'native_cold_resume': True, 'raid_id': raid_id}, indent=2))
 finally:
     (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))

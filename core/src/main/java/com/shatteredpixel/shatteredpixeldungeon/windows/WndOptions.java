@@ -27,6 +27,8 @@ import com.shatteredpixel.shatteredpixeldungeon.ui.Icons;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
+import com.watabou.noosa.ui.Component;
 import com.watabou.noosa.Image;
 
 public class WndOptions extends Window {
@@ -36,6 +38,7 @@ public class WndOptions extends Window {
 
 	protected static final int MARGIN 		= 2;
 	protected static final int BUTTON_HEIGHT	= 18;
+	private ScrollPane messageScroll;
 
 	public WndOptions(Image icon, String title, String message, String... options) {
 		super();
@@ -79,9 +82,17 @@ public class WndOptions extends Window {
 		RenderedTextBlock tfMesage = PixelScene.renderTextBlock( 6 );
 		tfMesage.text(message, width);
 		tfMesage.setPos( 0, pos );
-		add( tfMesage );
-
-		pos = tfMesage.bottom() + 2*MARGIN;
+		int available = Math.max(20, maxContentHeight()-(int)Math.ceil(pos)-options.length*(BUTTON_HEIGHT+MARGIN)-2*MARGIN);
+		if (tfMesage.height() > available){
+			tfMesage.setPos(0, 0);
+			Component content = new Component();content.add(tfMesage);content.setSize(width, tfMesage.height());
+			messageScroll = new ScrollPane(content);add(messageScroll);
+			messageScroll.setRect(0, pos, width, available);
+			pos += available + 2*MARGIN;
+		} else {
+			add(tfMesage);
+			pos = tfMesage.bottom() + 2*MARGIN;
+		}
 
 		for (int i=0; i < options.length; i++) {
 			final int index = i;
@@ -116,6 +127,12 @@ public class WndOptions extends Window {
 		}
 
 		resize( width, (int)(pos - MARGIN) );
+		if (messageScroll != null) messageScroll.setRect(messageScroll.left(), messageScroll.top(), messageScroll.width(), messageScroll.height());
+	}
+
+	@Override public void offset(int x, int y){
+		super.offset(x, y);
+		if (messageScroll != null) messageScroll.setRect(messageScroll.left(), messageScroll.top(), messageScroll.width(), messageScroll.height());
 	}
 
 	protected boolean enabled( int index ){

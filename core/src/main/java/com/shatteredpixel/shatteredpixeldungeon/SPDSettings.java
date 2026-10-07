@@ -138,6 +138,7 @@ public class SPDSettings extends GameSettings {
 	}
 
 	public static int interfaceSize(){
+		if (DeviceCompat.isDesktop() && desktopPortrait()) return 0;
 		int size = getInt( KEY_UI_SIZE, DeviceCompat.isDesktop() ? 2 : 0 );
 		if (size > 0){
 			//force mobile UI if there is not enough space for full UI
@@ -449,6 +450,27 @@ public class SPDSettings extends GameSettings {
 	public static final String KEY_WINDOW_HEIGHT    = "window_height";
 	public static final String KEY_WINDOW_MAXIMIZED = "window_maximized";
 	public static final String KEY_FULLSCREEN_MONITOR = "fullscreen_monitor";
+	public static final String KEY_DESKTOP_PORTRAIT = "desktop_portrait";
+
+	public static boolean desktopPortrait(){
+		return getBoolean(KEY_DESKTOP_PORTRAIT, false);
+	}
+
+	public static void desktopPortrait(boolean value){
+		if (value == desktopPortrait()) return;
+		if (value){
+			Point old = windowResolution();
+			put("landscape_window_width", old.x);
+			put("landscape_window_height", old.y);
+			windowResolution(new Point(480, 800));
+		} else {
+			windowResolution(new Point(getInt("landscape_window_width", 800), getInt("landscape_window_height", 600)));
+		}
+		put(KEY_DESKTOP_PORTRAIT, value);
+		put(KEY_FULLSCREEN, false);
+		windowMaximized(false);
+		ShatteredPixelDungeon.updateSystemUI();
+	}
 
 	public static void windowResolution( Point p ){
 		put(KEY_WINDOW_WIDTH, p.x);
@@ -457,8 +479,8 @@ public class SPDSettings extends GameSettings {
 	
 	public static Point windowResolution(){
 		return new Point(
-				getInt( KEY_WINDOW_WIDTH, 800, 720, Integer.MAX_VALUE ),
-				getInt( KEY_WINDOW_HEIGHT, 600, 400, Integer.MAX_VALUE )
+				getInt( KEY_WINDOW_WIDTH, desktopPortrait() ? 480 : 800, 400, Integer.MAX_VALUE ),
+				getInt( KEY_WINDOW_HEIGHT, desktopPortrait() ? 800 : 600, 400, Integer.MAX_VALUE )
 		);
 	}
 	
@@ -467,6 +489,7 @@ public class SPDSettings extends GameSettings {
 	}
 	
 	public static boolean windowMaximized(){
+		if (desktopPortrait()) return false;
 		return getBoolean( KEY_WINDOW_MAXIMIZED, false );
 	}
 

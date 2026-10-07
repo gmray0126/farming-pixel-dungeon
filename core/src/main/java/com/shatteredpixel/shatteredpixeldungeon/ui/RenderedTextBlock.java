@@ -127,6 +127,22 @@ public class RenderedTextBlock extends Component {
 				words.add(SPACE);
 			} else {
 				RenderedText word = new RenderedText(str, size);
+				word.scale.set(zoom);
+				// Long paths, error signatures, and unspaced Korean text must fit too.
+				if (multiline && word.width() > maxWidth && str.codePointCount(0, str.length()) > 1){
+					word.destroy();
+					for (int offset = 0; offset < str.length();){
+						int next = offset + Character.charCount(str.codePointAt(offset));
+						RenderedText glyph = new RenderedText(str.substring(offset, next), size);
+						glyph.scale.set(zoom);
+						if (highlighting) glyph.hardlight(hightlightColor);
+						else if (color != -1) glyph.hardlight(color);
+						words.add(glyph);
+						add(glyph);
+						offset = next;
+					}
+					continue;
+				}
 				
 				if (highlighting) word.hardlight(hightlightColor);
 				else if (color != -1) word.hardlight(color);
@@ -239,6 +255,8 @@ public class RenderedTextBlock extends Component {
 					fullWidth += words.get(j).width() - 0.667f;
 					j++;
 				}
+				// Preserve ordinary words, but permit emergency breaks inside oversized ones.
+				if (fullWidth > maxWidth) fullWidth = word.width();
 
 				if ((x - this.x) + fullWidth - 0.001f > maxWidth && !curLine.isEmpty()){
 					y += height+2f;

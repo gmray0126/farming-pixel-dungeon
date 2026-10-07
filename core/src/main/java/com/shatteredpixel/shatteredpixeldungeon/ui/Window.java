@@ -53,6 +53,16 @@ public class Window extends Group implements Signal.Listener<KeyEvent> {
 	public static final int WHITE = 0xFFFFFF;
 	public static final int TITLE_COLOR = 0xFFFF44;
 	public static final int SHPX_COLOR = 0x33BB33;
+
+	public static int maxContentWidth(){
+		RectF insets = Game.platform.getSafeInsets(PlatformSupport.INSET_BLK);
+		return Math.max(80, (int)((Game.width-insets.left-insets.right)/PixelScene.defaultZoom)-20);
+	}
+
+	public static int maxContentHeight(){
+		RectF insets = Game.platform.getSafeInsets(PlatformSupport.INSET_BLK);
+		return Math.max(60, (int)((Game.height-insets.top-insets.bottom)/PixelScene.defaultZoom)-24);
+	}
 	
 	public Window() {
 		this( 0, 0, Chrome.get( Chrome.Type.WINDOW ) );

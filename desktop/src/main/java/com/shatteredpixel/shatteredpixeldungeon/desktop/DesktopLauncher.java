@@ -174,7 +174,7 @@ public class DesktopLauncher {
 		if (!preferences.contains(SPDSettings.KEY_LANG)) SPDSettings.language(com.shatteredpixel.shatteredpixeldungeon.messages.Languages.KOREAN);
 		FileUtils.setDefaultFileProperties( baseFileType, basePath );
 		
-		config.setWindowSizeLimits( 720, 400, -1, -1 );
+		config.setWindowSizeLimits( 400, 400, -1, -1 );
 		Point p = SPDSettings.windowResolution();
 		config.setWindowedMode( p.x, p.y );
 

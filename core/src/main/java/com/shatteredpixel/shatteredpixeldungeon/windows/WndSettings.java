@@ -257,7 +257,17 @@ public class WndSettings extends WndTabbed {
 			}
 			add(chkFullscreen);
 
-			if (DeviceCompat.isAndroid()) {
+			if (DeviceCompat.isDesktop()) {
+				chkLandscape = new CheckBox(Messages.get(this, "portrait")) {
+					@Override protected void onClick(){
+						super.onClick();
+						SPDSettings.desktopPortrait(checked());
+					}
+				};
+				chkLandscape.checked(SPDSettings.desktopPortrait());
+				chkFullscreen.enable(!SPDSettings.desktopPortrait());
+				add(chkLandscape);
+			} else if (DeviceCompat.isAndroid()) {
 				chkLandscape = new CheckBox(Messages.get(this, "landscape")) {
 					@Override
 					protected void onClick() {

@@ -58,13 +58,19 @@ public class DesktopPlatformSupport extends PlatformSupport {
 	}
 
 	private static boolean first = true;
+	private Boolean previousPortrait;
 
 	@Override
 	public void updateSystemUI() {
 		Gdx.app.postRunnable( new Runnable() {
 			@Override
 			public void run () {
-				if (SPDSettings.fullscreen()){
+				boolean portrait = SPDSettings.desktopPortrait();
+				if (previousPortrait != null && previousPortrait != portrait){
+					((Lwjgl3Graphics)Gdx.graphics).getWindow().restoreWindow();
+				}
+				previousPortrait = portrait;
+				if (SPDSettings.fullscreen() && !portrait){
 					int monitorNum = 0;
 					if (!first){
 						Graphics.Monitor[] monitors = Gdx.graphics.getMonitors();
@@ -86,6 +92,13 @@ public class DesktopPlatformSupport extends PlatformSupport {
 					SPDSettings.fulLScreenMonitor(monitorNum);
 				} else {
 					Point p = SPDSettings.windowResolution();
+					if (portrait){
+						int maxHeight = Math.max(500, Gdx.graphics.getDisplayMode().height-80);
+						if (p.y > maxHeight){
+							p.x = Math.max(400, Math.round(p.x*maxHeight/(float)p.y));
+							p.y = maxHeight;
+						}
+					}
 					Gdx.graphics.setWindowedMode( p.x, p.y );
 				}
 				first = false;

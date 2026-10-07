@@ -27,6 +27,8 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.ItemSlot;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
+import com.watabou.noosa.ui.Component;
 
 public class WndInfoItem extends Window {
 	
@@ -37,6 +39,7 @@ public class WndInfoItem extends Window {
 
 	//only one WndInfoItem can appear at a time
 	private static WndInfoItem INSTANCE;
+	private ScrollPane scroll;
 
 	public WndInfoItem( Heap heap ) {
 
@@ -103,15 +106,16 @@ public class WndInfoItem extends Window {
 	}
 
 	private void layoutFields(IconTitle title, RenderedTextBlock info){
-		int width = WIDTH_MIN;
+		int limit = Math.min(WIDTH_MAX, maxContentWidth());
+		int width = Math.min(WIDTH_MIN, limit);
 
 		info.maxWidth(width);
 
 		//window can go out of the screen on landscape, so widen it as appropriate
 		while (PixelScene.landscape()
 				&& info.height() > 100
-				&& width < WIDTH_MAX){
-			width += 20;
+				&& width < limit){
+			width = Math.min(limit, width + 20);
 			info.maxWidth(width);
 		}
 
@@ -124,8 +128,22 @@ public class WndInfoItem extends Window {
 		add( title );
 
 		info.setPos(title.left(), title.bottom() + GAP);
-		add( info );
+		int available = Math.max(20, maxContentHeight()-(int)Math.ceil(info.top())-2-(this instanceof WndUseItem ? 60 : 0));
+		if (info.height() > available){
+			float top = info.top();
+			info.setPos(0, 0);
+			Component content = new Component();content.add(info);content.setSize(width, info.height());
+			scroll = new ScrollPane(content);add(scroll);
+			resize(width, (int)Math.ceil(top)+available+2);
+			scroll.setRect(0, top, width, available);
+		} else {
+			add(info);
+			resize(width, (int)Math.ceil(info.bottom())+2);
+		}
+	}
 
-		resize( width, (int)(info.bottom() + 2) );
+	@Override public void offset(int x, int y){
+		super.offset(x, y);
+		if (scroll != null) scroll.setRect(scroll.left(), scroll.top(), scroll.width(), scroll.height());
 	}
 }

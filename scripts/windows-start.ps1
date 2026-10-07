@@ -166,7 +166,32 @@ try {
     Start-Sleep -Seconds 1
     Capture $p '04-shoe-shop'
     Close-Game $p
-    @{clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    # Portrait mode must render a real portrait client window on the native desktop.
+    $settings=[IO.File]::ReadAllText($settingsPath)
+    function Setting($xml,$key,$type,$value) {
+        $entry='<entry key="'+$key+'" type="'+$type+'">'+$value+'</entry>'
+        if($xml -match ('key="'+$key+'"')) {return [regex]::Replace($xml,'<entry key="'+$key+'"[^>]*>[^<]*</entry>',$entry)}
+        return $xml.Replace('</properties>',$entry+'</properties>')
+    }
+    $portrait=Setting $settings 'desktop_portrait' 'Boolean' 'true'
+    $portrait=Setting $portrait 'fullscreen' 'Boolean' 'false'
+    $portrait=Setting $portrait 'window_width' 'Integer' '480'
+    $portrait=Setting $portrait 'window_height' 'Integer' '800'
+    $portrait=Setting $portrait 'window_maximized' 'Boolean' 'false'
+    [IO.File]::WriteAllText($settingsPath,$portrait)
+    $p=Start-Game
+    $rect=[DesktopInput+Rect]::new()
+    [void][DesktopInput]::GetClientRect($p.MainWindowHandle,[ref]$rect)
+    if($rect.Right -ge $rect.Bottom){throw 'Portrait setting did not produce a portrait window'}
+    Capture $p '05-portrait-hub'
+    $zoom=[Math]::Min(3,[Math]::Max(2,[Math]::Floor([Math]::Min($rect.Right/144.0,$rect.Bottom/250.0))))
+    $virtualWidth=$rect.Right/$zoom; $hubWidth=[Math]::Min(180,$virtualWidth-12); $left=($virtualWidth-$hubWidth)/2
+    $tabWidth=($hubWidth-8)/5
+    Click-Client $p ([int](($left+$tabWidth+2+$tabWidth/2)*$zoom)) ([int](55*$zoom))
+    Start-Sleep -Seconds 1
+    Capture $p '06-portrait-growth-map'
+    Close-Game $p
+    @{portrait_window=$true;transparent_growth_map=$true;clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

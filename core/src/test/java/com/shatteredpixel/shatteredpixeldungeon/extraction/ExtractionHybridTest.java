@@ -207,4 +207,13 @@ public class ExtractionHybridTest {
         p.begin();try{ExtractionAlchemy.buyEnergy(p,1);fail("Running raid");}catch(IllegalStateException expected){}
         try{ExtractionAlchemy.recipes(p,picks());fail("Running raid");}catch(IllegalStateException expected){}
     }
+    @Test public void shopDescriptionsWorkAtHubWithoutAnExpeditionHero(){
+        Dungeon.hero=null;
+        com.shatteredpixel.shatteredpixeldungeon.messages.Messages.setup(com.shatteredpixel.shatteredpixeldungeon.messages.Languages.KOREAN);
+        for(ExtractionShop.Offer offer:ExtractionShop.OFFERS){
+            Item item=offer.item();assertNotNull(item.info());assertFalse(item.info().isEmpty());
+        }
+        Item staff=new MagesStaff(new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile()).identify(false);
+        assertTrue(staff.info().contains("마탄"));
+    }
 }
