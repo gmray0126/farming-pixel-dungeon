@@ -103,11 +103,13 @@ public class ExtractionHubScene extends PixelScene {
         grid(p.prepared,bagPage*12,3,bagY+12,true);
         float after=bagY+12+3*cellStep;
         if(after+10<bottom-26)label(p.nodes.contains("ranged_0")?"물통·영혼의 활 자동 지급 · 탭: 넣기 / 빼기":"탭: 넣기 / 빼기 · 물통 기본 지급",6,left,after+3,width,MUTED);
-        if(after+51<bottom-26){
-            panel(left,after+16,width,33);
+        if(after+77<bottom-26){
+            panel(left,after+16,width,61);
             Item weapon=p.preparedWeapon(), armor=p.preparedArmor();
             label("착용 무기  "+(weapon==null?"보급 낡은 검 (자동 지급)":weapon.title()),6,left+5,after+20,width-10,GOLD);
             label("착용 갑옷  "+(armor==null?"없음":armor.title()),6,left+5,after+34,width-10,GREEN);
+            label("착용 바지  "+(p.preparedPants()==null?"없음":p.preparedPants().title()),6,left+5,after+48,width-10,GREEN);
+            label("착용 신발  "+(p.preparedBoots()==null?"없음":p.preparedBoots().title()),6,left+5,after+62,width-10,GREEN);
         }
     }
     private void debugMenu(){new com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDebugMenu(this::add,this::refresh,false).open();}
@@ -126,14 +128,14 @@ public class ExtractionHubScene extends PixelScene {
                     @Override protected boolean onLongClick(){itemDetails(i,bag);return true;}
                 };
                 slot.setRect(x+1,sy+1,cw-2,cellStep-4);body.add(slot);
-                if(bag&&(i==weapon||i==armor||p.preparedRelics().contains(i)))label("착용",5,x+2,sy+cellStep-10,cw-4,GREEN);
+                if(bag&&(p.preparedEquipment(i)))label("착용",5,x+2,sy+cellStep-10,cw-4,GREEN);
             }
         }
     }
     private void itemDetails(final Item i,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();
-        boolean gear=bag&&(!(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)&&i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
-        boolean worn=i==p.preparedWeapon()||i==p.preparedArmor()||p.preparedRelics().contains(i);
+        boolean gear=bag&&(!(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)&&i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
+        boolean worn=p.preparedEquipment(i);
         ArrayList<String> options=new ArrayList<>();
         options.add(bag?"창고로 빼기":"출격 가방에 넣기");
         options.add("성능 / 상세 보기");
@@ -160,8 +162,8 @@ public class ExtractionHubScene extends PixelScene {
             label("창고 물품 · 준비한 물품은 먼저 빼 주세요",6,left,y+24,width,MUTED);
             items.addAll(p.stash);
         }else{
-            float cw=(width-4)/3f;
-            for(int c=0;c<3;c++){final int category=c;
+            float cw=(width-2*(ExtractionShop.CATEGORIES.length-1))/ExtractionShop.CATEGORIES.length;
+            for(int c=0;c<ExtractionShop.CATEGORIES.length;c++){final int category=c;
                 button(ExtractionShop.CATEGORIES[c],left+c*(cw+2),y+22,cw,16,()->{shopCategory=category;shopPage=0;refresh();},c==shopCategory);
             }
             for(int n=0;n<ExtractionShop.OFFERS.size();n++)if(ExtractionShop.OFFERS.get(n).category==shopCategory&&ExtractionShop.OFFERS.get(n).available()){

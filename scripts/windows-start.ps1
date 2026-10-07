@@ -130,13 +130,42 @@ try {
     Close-Game $p
     $saved=Read-Bundle "$saveDir/game1/game.dat"
     if($saved.depth -ne 1){throw 'Fresh raid did not start at floor 1'}
+    $saved.hero | Add-Member -Force NoteProperty pants @{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing$PlatePants';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}
+    $saved.hero | Add-Member -Force NoteProperty boots @{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing$PlateBoots';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}
+    Write-Bundle "$saveDir/game1/game.dat" $saved
     $p=Start-Game
     Depart $p
     Capture $p '02-resumed-raid'
     Close-Game $p
     $resumed=Read-Bundle "$saveDir/game1/game.dat"
     if($resumed.depth -ne 1){throw 'Resumed raid changed floors'}
-    @{windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    if($resumed.hero.pants.__className -notmatch 'PlatePants' -or $resumed.hero.boots.__className -notmatch 'PlateBoots'){throw 'Clothing slots did not survive resume'}
+    $settingsPath=Join-Path $saveDir 'settings.xml'
+    $settings=[IO.File]::ReadAllText($settingsPath)
+    if($settings -match 'key="full_ui"'){ $compact=[regex]::Replace($settings,'(<entry key="full_ui"[^>]*>)\d+(</entry>)','${1}0${2}') }
+    else { $compact=$settings.Replace('</properties>','<entry key="full_ui" type="Integer">0</entry></properties>') }
+    [IO.File]::WriteAllText($settingsPath,$compact)
+    $p=Start-Game
+    Depart $p
+    [DesktopInput]::keybd_event(73,0,0,[UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 100
+    [DesktopInput]::keybd_event(73,0,2,[UIntPtr]::Zero)
+    Start-Sleep -Seconds 1
+    Capture $p '03-mobile-equipment'
+    Close-Game $p
+    [IO.File]::WriteAllText($settingsPath,$settings)
+    $profilePath="$saveDir/extraction-profile.dat"
+    $profile=Read-Bundle $profilePath
+    $profile.active=$false; $profile.prepared=@(); $profile.escrow=@()
+    Write-Bundle $profilePath $profile
+    $p=Start-Game
+    Click-Client $p 648 110
+    Start-Sleep -Seconds 1
+    Click-Client $p 654 218
+    Start-Sleep -Seconds 1
+    Capture $p '04-shoe-shop'
+    Close-Game $p
+    @{clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

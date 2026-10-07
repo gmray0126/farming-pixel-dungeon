@@ -129,6 +129,9 @@ public final class ExtractionProfile {
         for (Item i : prepared) if (i instanceof Armor) return i;
         return null;
     }
+    public Item preparedPants(){for(Item item:prepared)if(item instanceof ExpeditionClothing.Pants)return item;return null;}
+    public Item preparedBoots(){for(Item item:prepared)if(item instanceof ExpeditionClothing.Boots)return item;return null;}
+    public boolean preparedEquipment(Item item){return item==preparedWeapon()||item==preparedArmor()||item==preparedPants()||item==preparedBoots()||preparedRelics().contains(item);}
     public ArrayList<Item> preparedRelics(){
         ArrayList<Item> result=new ArrayList<>();
         for(Item i:prepared)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact&&result.size()<2
@@ -139,7 +142,7 @@ public final class ExtractionProfile {
     public void selectEquipment(final Item i) {
         if (active) throw new IllegalStateException("원정 중에는 착용 장비를 바꿀 수 없습니다.");
         if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow) return;
-        if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor || i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)) return;
+        if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor || i instanceof ExpeditionClothing || i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)) return;
         change(() -> { prepared.remove(i); prepared.add(0, i); });
     }
     public void returnPrepared() {
@@ -156,6 +159,8 @@ public final class ExtractionProfile {
             if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow){if(!i.collect(h.belongings.backpack))throw new IllegalStateException("영혼의 활을 가방에 넣지 못했습니다.");}
             else if (i instanceof KindOfWeapon && h.belongings.weapon == null) { h.belongings.weapon=(KindOfWeapon)i; h.belongings.weapon.activate(h); }
             else if (i instanceof Armor && h.belongings.armor == null) { h.belongings.armor=(Armor)i; h.belongings.armor.activate(h); }
+            else if(i instanceof ExpeditionClothing.Pants&&h.belongings.pants==null){h.belongings.pants=(ExpeditionClothing)i;}
+            else if(i instanceof ExpeditionClothing.Boots&&h.belongings.boots==null){h.belongings.boots=(ExpeditionClothing)i;}
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact&&h.belongings.artifact==null){h.belongings.artifact=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)i;h.belongings.artifact.activate(h);}
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact&&h.belongings.misc==null&&h.belongings.artifact.getClass()!=i.getClass()){h.belongings.misc=(com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)i;h.belongings.misc.activate(h);}
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring&&h.belongings.ring==null){h.belongings.ring=(com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring)i;h.belongings.ring.activate(h);}

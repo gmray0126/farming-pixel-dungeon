@@ -643,6 +643,11 @@ public class Hero extends Char {
 			}
 		}
 
+        if(extractionRaidID!=0){
+            if(belongings.pants()!=null)evasion*=belongings.pants().evasionFactor(this);
+            if(belongings.boots()!=null)evasion*=belongings.boots().evasionFactor(this);
+        }
+
 		return Math.max(1, Math.round(evasion));
 	}
 
@@ -679,6 +684,8 @@ public class Hero extends Char {
 	public int drRoll() {
 		int dr = super.drRoll();
 
+        if(extractionRaidID!=0)dr+=com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing.bodyDefense(this);
+        else {
 		if (belongings.armor() != null) {
 			int armDr = Random.NormalIntRange( belongings.armor().DRMin(), belongings.armor().DRMax());
 			if (STR() < belongings.armor().STRReq()){
@@ -686,6 +693,7 @@ public class Hero extends Char {
 			}
 			if (armDr > 0) dr += armDr;
 		}
+        }
 		if (belongings.weapon() != null && !RingOfForce.fightingUnarmed(this))  {
 			int wepDr = Random.NormalIntRange( 0 , belongings.weapon().defenseFactor( this ) );
 			if (STR() < ((Weapon)belongings.weapon()).STRReq()){
@@ -773,6 +781,11 @@ public class Hero extends Char {
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
 		
 		if(extractionRaidID != 0)speed *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier()*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_SPEED);
+        if(extractionRaidID!=0){
+            if(belongings.pants()!=null)speed*=belongings.pants().movementFactor(this);
+            if(belongings.boots()!=null)speed*=belongings.boots().movementFactor(this);
+        }
+
 		return speed*com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this);
 		
 	}

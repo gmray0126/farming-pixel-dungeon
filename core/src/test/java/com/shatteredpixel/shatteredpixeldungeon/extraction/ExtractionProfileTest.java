@@ -1183,4 +1183,84 @@ public class ExtractionProfileTest {
         }
     }
 
+    @Test public void tenClothingItemsKeepTheirTierImageUpgradeAndIdentityOnSave() {
+        java.util.HashSet<Integer> images=new java.util.HashSet<>();
+        for(int t=1;t<=5;t++)for(boolean boots:new boolean[]{false,true}){
+            ExpeditionClothing item=ExpeditionClothing.create(boots,t);assertTrue(images.add(item.image));
+            assertEquals(8+2*t,item.STRReq());assertEquals(t*3,WeaponUpgradeLimit.cap(item));
+            item.upgrade(100);assertEquals(t*3,item.trueLevel());item.level(100);assertEquals(t*3,item.trueLevel());
+            item.identify(false);com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("item",item);
+            ExpeditionClothing copy=(ExpeditionClothing)saved.get("item");
+            assertEquals(item.getClass(),copy.getClass());assertEquals(item.name(),copy.name());assertEquals(t,copy.tier);assertEquals(item.image,copy.image);assertEquals(item.trueLevel(),copy.trueLevel());
+        }
+        assertEquals(10,images.size());
+    }
+    @Test public void allFiveBodyTiersCanBeBoughtWhileHighWeaponsRemainRestricted() throws Exception {
+        profile.gold=10000;int armors=0,pants=0,boots=0;
+        for(int n=0;n<ExtractionShop.OFFERS.size();n++){
+            ExtractionShop.Offer offer=ExtractionShop.OFFERS.get(n);Item item=offer.item();
+            if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor||item instanceof ExpeditionClothing){
+                assertTrue(offer.available());int size=profile.stash.size();profile.buy(n);assertEquals(size+1,profile.stash.size());
+                if(item instanceof ExpeditionClothing){if(((ExpeditionClothing)item).boots())boots++;else pants++;}else armors++;
+            }else if(WeaponUpgradeLimit.tier(item)>2)assertFalse(offer.available());
+        }
+        assertEquals(5,armors);assertEquals(5,pants);assertEquals(5,boots);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(19,profile.stash.size());
+    }
+    @Test public void weakHeroCanEquipBothSlotsSwapAndUncurseThem() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();
+        Hero hero=Dungeon.hero;hero.pos=Dungeon.level.entrance();
+        ExpeditionClothing pants=new ExpeditionClothing.PlatePants(),boots=new ExpeditionClothing.PlateBoots();
+        hero.belongings.backpack.items.add(pants);hero.belongings.backpack.items.add(boots);
+        assertTrue(pants.doEquip(hero));assertTrue(boots.doEquip(hero));assertTrue(pants.isEquipped(hero));assertTrue(boots.isEquipped(hero));
+        assertEquals(8,pants.missingStrength(hero));assertEquals(8,boots.missingStrength(hero));assertTrue(boots.movementFactor(hero)<1);assertTrue(pants.evasionFactor(hero)<1);
+        pants.cursed=true;ExpeditionClothing replacement=new ExpeditionClothing.ClothPants();hero.belongings.backpack.items.add(replacement);
+        assertFalse(replacement.doEquip(hero));assertSame(pants,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(replacement));
+        hero.belongings.uncurseEquipped();assertFalse(pants.cursed);assertTrue(replacement.doEquip(hero));assertSame(replacement,hero.belongings.pants);assertTrue(hero.belongings.backpack.contains(pants));
+        assertTrue(boots.doUnequip(hero,true));assertNull(hero.belongings.boots);assertTrue(hero.belongings.backpack.contains(boots));
+    }
+    @Test public void preparedClothesEquipIndependentlyResumeAndReturnToStash() throws Exception {
+        ExpeditionClothing first=new ExpeditionClothing.ClothPants(),chosen=new ExpeditionClothing.PlatePants(),boots=new ExpeditionClothing.LeatherBoots();
+        for(Item item:new Item[]{first,chosen,boots}){profile.stash.add(item);profile.prepare(item,true);}
+        profile.selectEquipment(chosen);assertSame(chosen,profile.preparedPants());assertSame(boots,profile.preparedBoots());
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();Dungeon.hero.pos=Dungeon.level.entrance();
+        assertTrue(Dungeon.hero.belongings.pants instanceof ExpeditionClothing.PlatePants);assertTrue(Dungeon.hero.belongings.boots instanceof ExpeditionClothing.LeatherBoots);
+        assertNotNull(Dungeon.hero.belongings.getItem(ExpeditionClothing.ClothPants.class));
+        Dungeon.hero.belongings.pants.upgrade();Dungeon.saveAll();Dungeon.hero=null;Dungeon.level=null;Dungeon.loadGame(1);Dungeon.switchLevel(Dungeon.loadLevel(1),-1);
+        assertEquals(1,Dungeon.hero.belongings.pants.trueLevel());assertEquals(2,Dungeon.hero.belongings.boots.tier);
+        Dungeon.gold=0;profile.settle(profile.raidID,true);forgetProfile();profile=ExtractionProfile.get();
+        int count=0;for(Item item:profile.stash)if(item instanceof ExpeditionClothing)count++;assertEquals(3,count);
+    }
+    @Test public void bodyArmorIsRedistributedAndStrengthBurdenIsShared() {
+        Hero hero=new Hero();hero.extractionRaidID=1;hero.STR=30;Dungeon.hero=hero;
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.MailArmor();armor.level(6);
+        ExpeditionClothing pants=new ExpeditionClothing.MailPants(),boots=new ExpeditionClothing.MailBoots();pants.level(6);boots.level(6);
+        hero.belongings.armor=armor;hero.belongings.pants=pants;hero.belongings.boots=boots;
+        float average=0;for(int i=0;i<4000;i++){int defense=ExpeditionClothing.bodyDefense(hero);assertTrue(defense>=armor.DRMin());assertTrue(defense<=armor.DRMax());average+=defense;}
+        assertEquals((armor.DRMin()+armor.DRMax())/2f,average/4000,.4f);
+        hero.belongings.pants=null;hero.belongings.boots=null;average=0;for(int i=0;i<4000;i++)average+=ExpeditionClothing.bodyDefense(hero);
+        assertEquals((armor.DRMin()+armor.DRMax())/4f,average/4000,.4f);
+        hero.belongings.pants=pants;hero.belongings.boots=boots;hero.STR=10;int deficit=armor.STRReq()-hero.STR();
+        assertEquals((float)Math.pow(1.2,-deficit),armor.speedFactor(hero,1)*pants.movementFactor(hero)*boots.movementFactor(hero),.00001f);
+        assertEquals((float)Math.pow(1.5,-deficit),armor.evasionFactor(hero,1)*pants.evasionFactor(hero)*boots.evasionFactor(hero),.00001f);
+        hero.STR=30;assertEquals(1,pants.movementFactor(hero),0);assertEquals(1,boots.movementFactor(hero),0);assertEquals(1,boots.evasionFactor(hero),0);
+    }
+    @Test public void clothingLootRespectsEveryChapterTierAndIterationCanRemoveSlots() {
+        profile.debugEnabled=true;profile.debugUnlockChapters();
+        for(int chapter=1;chapter<=5;chapter++){
+            profile.selectRaid(chapter);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+            int pants=0,boots=0;
+            for(int i=0;i<100;i++){
+                Item item=com.shatteredpixel.shatteredpixeldungeon.items.Generator.random(com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARMOR);
+                int tier=item instanceof ExpeditionClothing?((ExpeditionClothing)item).tier:((com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)item).tier;
+                assertTrue(tier<=ExtractionDifficulty.chapterMaxTier(chapter));
+                if(item instanceof ExpeditionClothing){if(((ExpeditionClothing)item).boots())boots++;else pants++;}
+            }
+            assertTrue(pants>0);assertTrue(boots>0);profile.settle(profile.raidID,false);
+        }
+        Hero hero=new Hero();hero.belongings.pants=new ExpeditionClothing.ClothPants();hero.belongings.boots=new ExpeditionClothing.ClothShoes();hero.belongings.backpack.items.add(new Food());
+        java.util.Iterator<Item> items=hero.belongings.iterator();while(items.hasNext()){items.next();items.remove();}
+        assertNull(hero.belongings.pants);assertNull(hero.belongings.boots);assertTrue(hero.belongings.backpack.items.isEmpty());
+    }
+
 }

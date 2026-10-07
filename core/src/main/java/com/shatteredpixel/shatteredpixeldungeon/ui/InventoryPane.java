@@ -83,7 +83,7 @@ public class InventoryPane extends Component {
 
 	private ArrayList<BagButton> bags;
 
-	public static final int WIDTH = 187;
+	public static final int WIDTH = 223;
 	public static final int HEIGHT = 82;
 
 	private static final int SLOT_WIDTH = 17;
@@ -156,7 +156,7 @@ public class InventoryPane extends Component {
 		};
 
 		equipped = new ArrayList<>();
-		for (int i = 0; i < 5; i++){
+		for (int i = 0; i < 7; i++){
 			InventorySlot btn = new InventoryPaneSlot(null);
 			equipped.add(btn);
 			add(btn);
@@ -252,17 +252,11 @@ public class InventoryPane extends Component {
 			left = b.right()+1;
 		}
 
-		pageButton.setRect(x+159,y+14,24,14);
+		pageButton.setRect(x+width-28,y+14,24,14);
 		left = x+4;
 		float top = y+4+SLOT_HEIGHT+1;
-		for (InventorySlot b : bagItems){
-			b.setRect(left, top, SLOT_WIDTH, SLOT_HEIGHT);
-			left = b.right()+1;
-			if (left - x > width - 17){
-				left = x+4;
-				top += SLOT_HEIGHT+1;
-			}
-		}
+        float bagWidth=(width-17)/10f;
+        for(int index=0;index<bagItems.size();index++)bagItems.get(index).setRect(x+4+(index%10)*(bagWidth+1),top+(index/10)*(SLOT_HEIGHT+1),bagWidth,SLOT_HEIGHT);
 
 		super.layout();
 	}
@@ -312,6 +306,8 @@ public class InventoryPane extends Component {
 		equipped.get(3).item(stuff.misc == null ? new WndBag.Placeholder( ItemSpriteSheet.SOMETHING ) : stuff.misc);
 		equipped.get(4).item(stuff.ring == null ? new WndBag.Placeholder( ItemSpriteSheet.RING_HOLDER ) : stuff.ring);
 
+        equipped.get(5).item(stuff.pants==null?new WndBag.Placeholder(ItemSpriteSheet.PANTS_HOLDER):stuff.pants);
+        equipped.get(6).item(stuff.boots==null?new WndBag.Placeholder(ItemSpriteSheet.BOOTS_HOLDER):stuff.boots);
 		ArrayList<Item> items = (ArrayList<Item>) lastBag.items.clone();
 
 		if (lastBag == stuff.backpack && stuff.secondWep != null){
@@ -324,7 +320,7 @@ public class InventoryPane extends Component {
 		int pages=Math.max(1,(items.size()+prefix+19)/20);
 		bagPage%=pages;
 		pageButton.visible=pageButton.active=pages>1;
-		pageButton.text((bagPage+1)+"/"+pages+" ›");
+		pageButton.text((bagPage+1)+"/"+pages+" >");
 		int j = Math.max(0,bagPage*20-prefix);
 		for (int i = 0; i < 20; i++){
 			if (i == 0 && bagPage==0 && lastBag != stuff.backpack){

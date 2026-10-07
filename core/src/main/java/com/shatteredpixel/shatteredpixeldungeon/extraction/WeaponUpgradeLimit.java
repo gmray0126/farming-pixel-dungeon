@@ -9,6 +9,7 @@ public final class WeaponUpgradeLimit {
     public static int tier(Item item){
         if(item instanceof MeleeWeapon)return ((MeleeWeapon)item).tier;
         if(item instanceof MissileWeapon)return ((MissileWeapon)item).tier;
+        if(item instanceof ExpeditionClothing)return ((ExpeditionClothing)item).tier;
         return 0;
     }
     public static int cap(Item item){

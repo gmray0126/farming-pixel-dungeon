@@ -249,10 +249,10 @@ public class ItemSlot extends Button {
 			itemIcon.frame(ItemSpriteSheet.Icons.film.get(item.icon));
 			add(itemIcon);
 
-		} else if (item instanceof Weapon || item instanceof Armor) {
+		} else if (item instanceof Weapon || item instanceof Armor || item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing) {
 
 			if (item.levelKnown){
-				int str = item instanceof Weapon ? ((Weapon)item).STRReq() : ((Armor)item).STRReq();
+				int str = item instanceof Weapon ? ((Weapon)item).STRReq() : item instanceof Armor ? ((Armor)item).STRReq() : ((com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item).STRReq();
 				extra.text( Messages.format( TXT_STRENGTH, str ) );
 				if (Dungeon.hero != null && str > Dungeon.hero.STR()) {
 					extra.hardlight( DEGRADED );
@@ -264,7 +264,7 @@ public class ItemSlot extends Button {
 					extra.resetColor();
 				}
 			} else {
-				int str = item instanceof Weapon ? ((Weapon)item).STRReq(0) : ((Armor)item).STRReq(0);
+				int str = item instanceof Weapon ? ((Weapon)item).STRReq(0) : item instanceof Armor ? ((Armor)item).STRReq(0) : ((com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)item).STRReq(0);
 				extra.text( Messages.format( TXT_TYPICAL_STR, str ) );
 				extra.hardlight( WARNING );
 			}

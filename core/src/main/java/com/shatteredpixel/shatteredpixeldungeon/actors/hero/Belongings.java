@@ -81,6 +81,7 @@ public class Belongings implements Iterable<Item> {
 
 	public KindOfWeapon weapon = null;
 	public Armor armor = null;
+    public com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing pants = null, boots = null;
 	public Artifact artifact = null;
 	public KindofMisc misc = null;
 	public Ring ring = null;
@@ -131,6 +132,9 @@ public class Belongings implements Iterable<Item> {
 		}
 	}
 
+    public com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing pants(){return !lostInventory()||pants!=null&&pants.keptThroughLostInventory()?pants:null;}
+    public com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing boots(){return !lostInventory()||boots!=null&&boots.keptThroughLostInventory()?boots:null;}
+
 	public Artifact artifact(){
 		if (!lostInventory() || (artifact != null && artifact.keptThroughLostInventory())){
 			return artifact;
@@ -179,6 +183,7 @@ public class Belongings implements Iterable<Item> {
 		
 		bundle.put( WEAPON, weapon );
 		bundle.put( ARMOR, armor );
+        bundle.put("pants",pants);bundle.put("boots",boots);
 		bundle.put( ARTIFACT, artifact );
 		bundle.put( MISC, misc );
 		bundle.put( RING, ring );
@@ -210,6 +215,8 @@ public class Belongings implements Iterable<Item> {
 		secondWep = (KindOfWeapon) bundle.get(SECOND_WEP);
 		if (secondWep() != null)    secondWep().activate(owner);
 
+        pants=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)bundle.get("pants");
+        boots=(com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing)bundle.get("boots");
 		bundleRestoring = false;
 	}
 
@@ -217,6 +224,7 @@ public class Belongings implements Iterable<Item> {
 		backpack.clear();
 		weapon = secondWep = null;
 		armor = null;
+        pants = boots = null;
 		artifact = null;
 		misc = null;
 		ring = null;
@@ -384,6 +392,7 @@ public class Belongings implements Iterable<Item> {
 		if (ShardOfOblivion.passiveIDDisabled()){
 			GLog.p(Messages.get(ShardOfOblivion.class, "identify_ready_worn"));
 		}
+        if(pants()!=null)pants().identify();if(boots()!=null)boots().identify();
 		for (Item item : backpack) {
 			if (item instanceof EquipableItem || item instanceof Wand) {
 				item.cursedKnown = true;
@@ -393,7 +402,7 @@ public class Belongings implements Iterable<Item> {
 	}
 	
 	public void uncurseEquipped() {
-		ScrollOfRemoveCurse.uncurse( owner, armor(), weapon(), artifact(), misc(), ring(), secondWep());
+		ScrollOfRemoveCurse.uncurse( owner, armor(), weapon(), artifact(), misc(), ring(), secondWep(), pants(), boots());
 	}
 	
 	public Item randomUnequipped() {
@@ -422,10 +431,11 @@ public class Belongings implements Iterable<Item> {
 	private class ItemIterator implements Iterator<Item> {
 
 		private int index = 0;
+        private int lastReturned = -2;
 		
 		private Iterator<Item> backpackIterator = backpack.iterator();
 		
-		private Item[] equipped = {weapon, armor, artifact, misc, ring, secondWep};
+		private Item[] equipped = {weapon, armor, artifact, misc, ring, secondWep, pants, boots};
 		private int backpackIndex = equipped.length;
 		
 		@Override
@@ -446,16 +456,18 @@ public class Belongings implements Iterable<Item> {
 			while (index < backpackIndex) {
 				Item item = equipped[index++];
 				if (item != null) {
+                    lastReturned=index-1;
 					return item;
 				}
 			}
 			
-			return backpackIterator.next();
+			Item item=backpackIterator.next();lastReturned=-1;return item;
 		}
 
 		@Override
 		public void remove() {
-			switch (index) {
+			if(lastReturned==-2)throw new IllegalStateException();
+			switch (lastReturned) {
 			case 0:
 				equipped[0] = weapon = null;
 				break;
@@ -474,9 +486,12 @@ public class Belongings implements Iterable<Item> {
 			case 5:
 				equipped[5] = secondWep = null;
 				break;
+            case 6:equipped[6]=pants=null;break;
+            case 7:equipped[7]=boots=null;break;
 			default:
 				backpackIterator.remove();
 			}
+            lastReturned=-2;
 		}
 	}
 }

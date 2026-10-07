@@ -703,6 +703,10 @@ public class Generator {
 	public static Item random( Category cat ) {
 		switch (cat) {
 			case ARMOR:
+                if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()){
+                    int slot=Random.Int(3);
+                    if(slot!=0)return com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing.create(slot==2,1+Random.chances(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.tierWeights())).random();
+                }
 				return randomArmor();
 			case WEAPON:
 				return randomWeapon();

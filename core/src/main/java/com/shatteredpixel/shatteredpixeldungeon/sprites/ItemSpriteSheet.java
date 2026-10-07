@@ -29,7 +29,7 @@ public class ItemSpriteSheet {
 	public static final int SIZE = 16;
 
 	private static final int TX_WIDTH = 256;
-	private static final int TX_HEIGHT = 512;
+	private static final int TX_HEIGHT = 528;
 
 	private static final int WIDTH = TX_WIDTH / SIZE;
 
@@ -817,6 +817,10 @@ public class ItemSpriteSheet {
 		assignItemRect(CITY_PAGE,   10, 11);
 		assignItemRect(HALLS_PAGE,  10, 11);
 	}
+
+	public static final int EXPEDITION_CLOTHING = xy(1, 33); // five pants, five shoes
+	public static final int PANTS_HOLDER = EXPEDITION_CLOTHING;
+	public static final int BOOTS_HOLDER = EXPEDITION_CLOTHING+5;
 
 	//for smaller 8x8 icons that often accompany an item sprite
 	public static class Icons {

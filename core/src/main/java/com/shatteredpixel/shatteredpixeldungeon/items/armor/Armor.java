@@ -419,7 +419,7 @@ public class Armor extends EquipableItem {
 		
 		if (owner instanceof Hero){
 			int aEnc = STRReq() - ((Hero) owner).STR();
-			if (aEnc > 0) evasion /= Math.pow(1.5, aEnc);
+			if (aEnc > 0) evasion /= Math.pow(1.5, aEnc*(owner instanceof Hero&&((Hero)owner).extractionRaidID!=0?.5f:1f));
 			
 			Momentum momentum = owner.buff(Momentum.class);
 			if (momentum != null){
@@ -434,7 +434,7 @@ public class Armor extends EquipableItem {
 		
 		if (owner instanceof Hero) {
 			int aEnc = STRReq() - ((Hero) owner).STR();
-			if (aEnc > 0) speed /= Math.pow(1.2, aEnc);
+			if (aEnc > 0) speed /= Math.pow(1.2, aEnc*(owner instanceof Hero&&((Hero)owner).extractionRaidID!=0?.5f:1f));
 		}
 		
 		return speed;
@@ -637,6 +637,7 @@ public class Armor extends EquipableItem {
 			info += "\n\n" + Messages.get(Armor.class, "seal_attached", seal.maxShield(tier, level()));
 		}
 		
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())info+="\n\n원정에서는 위 기본 방어량의 50%를 갑옷이 담당합니다. 나머지는 바지 30% · 신발 20%로 분배되며, 세 부위의 방어량을 합산한 뒤 반올림합니다. 힘 부족에 따른 회피·이동 부담도 각 부위의 비율만큼 적용됩니다. 문양과 특수 효과는 갑옷에 유지됩니다.";
 		return info;
 	}
 

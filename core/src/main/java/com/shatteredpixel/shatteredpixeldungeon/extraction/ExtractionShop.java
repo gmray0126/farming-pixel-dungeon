@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 /** Fixed, identified stock; buying and selling always use permanent profile gold. */
 public final class ExtractionShop {
     public static final int UPGRADE_REFUND = 50;
-    public static final String[] CATEGORIES = {"보급품", "무기", "갑옷"};
+    public static final String[] CATEGORIES = {"보급품", "무기", "갑옷", "바지", "신발"};
     public static final ArrayList<Offer> OFFERS = new ArrayList<>();
     public static final class Offer {
         public final int category, price;
@@ -29,7 +29,7 @@ public final class ExtractionShop {
         public boolean available(){
             Item item=item();
             int tier=WeaponUpgradeLimit.tier(item);
-            if(item instanceof Armor)tier=((Armor)item).tier;
+            if(item instanceof Armor||item instanceof ExpeditionClothing)return true;
             return tier<=2;
         }
     }
@@ -59,6 +59,7 @@ public final class ExtractionShop {
         gear(1,Tomahawk::new);gear(1,Trident::new);
         gear(2,ClothArmor::new);gear(2,LeatherArmor::new);gear(2,MailArmor::new);
         gear(2,ScaleArmor::new);gear(2,PlateArmor::new);
+        for(int tier=1;tier<=5;tier++){final int t=tier;gear(3,()->ExpeditionClothing.create(false,t));gear(4,()->ExpeditionClothing.create(true,t));}
 
     }
     public static int salePrice(Item item) {
