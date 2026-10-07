@@ -1,0 +1,90 @@
+name: Publish Farming Pixel Dungeon v0.27
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v027.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v027
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37644219543
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37644219635
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.27.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.27_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.27 / Farming Pixel Dungeon v0.27
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          장비를 준비해 5층 원정을 떠나고, 보스 처치 후 탈출해 창고와 성장 노드를 쌓는 게임입니다. 기존 여섯 혼합 트리와 로비 의뢰에 보급·제작 시스템을 연결했습니다.
+          
+          ## 한국어 변경 사항
+          - **피의 서약:** 기존 명중 시 체력 비용에 더해, 켜 둔 동안 5턴마다 체력 1을 추가 소모합니다. 체력이 1이면 자동으로 해제되며 서약 유지 비용으로 사망하지 않습니다. 실제 시간이 아니라 던전 턴 기준입니다.
+          - **음식:** 자연 음식 생성과 몬스터 음식 전리품을 차단했습니다. 로비 상점에서 구매한 음식은 출격 준비에 넣거나 버리고 다시 주울 수 있습니다.
+          - **로비 연금술:** 준비 탭의 창고 옆 **연금** 버튼에서 재료를 최대 3개 선택해 기존 제작법으로 제작합니다. 같은 재료도 보유 수량만큼 넣을 수 있습니다. 완성품은 창고에 저장됩니다.
+          - **연금 에너지:** 에너지 1당 10 G로 구매하거나 창고 재료를 분해해 얻습니다. 에너지는 영구 저장되어 사망해도 유지됩니다. 재료와 에너지는 제작 성공 시 함께 소비됩니다.
+          - **장신구 촉매:** 세 선택지는 저장되며 창을 다시 열어도 바뀌지 않습니다.
+          - 원정 중에는 로비 제작을 이용할 수 없습니다. 탈출 시 남은 포션·스크롤을 골드로 바꾸는 기존 규칙은 유지됩니다.
+          
+          ## English changes
+          Farming Pixel Dungeon revolves around five-floor expeditions, extraction, equipment farming, and permanent growth nodes. This update adds supply management and hub crafting to the existing hybrid trees and contracts.
+          
+          - **Blood Oath:** While active, it additionally drains one HP every five dungeon turns. It turns off at one HP, so upkeep cannot kill its owner. The existing on-hit health cost remains.
+          - **Food:** Natural food spawns and food dropped by monsters are disabled. Food purchased at the hub can still be prepared, dropped, and picked up.
+          - **Hub alchemy:** Use **연금** beside the stash in the preparation tab. Select up to three ingredients and craft using the original recipes. Outputs go into your stash.
+          - **Alchemy energy:** Buy energy for 10 gold per unit or energize stash materials. Energy persists through death. Ingredient consumption and energy costs are saved together with the output.
+          - **Trinket catalysts:** Their three choices persist when the window is reopened.
+          - Hub crafting is unavailable during active expeditions. The existing extraction conversion of remaining potions and scrolls into gold is unchanged.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme)
+          
+          ## 검증 / Validation
+          135 automated tests passed. Native Android hub-alchemy opening, departure, and save/resume checks passed. Native Windows departure and save/resume checks also passed. This is an in-development build.
+          
+          [모딩 소스 / Mod source](https://github.com/gmray0126/farming-pixel-dungeon/tree/bab270dc2f4fa3021d47f7db8193881a9f90a49d)
+          
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.27.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target bab270dc2f4fa3021d47f7db8193881a9f90a49d --title '파밍픽셀던전 v0.27 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
