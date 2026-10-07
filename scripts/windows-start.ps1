@@ -30,6 +30,24 @@ function Read-Bundle($path) {
     }
     return ([Text.Encoding]::UTF8.GetString($bytes) | ConvertFrom-Json)
 }
+function Write-Bundle($path, $bundle) {
+    $json = $bundle | ConvertTo-Json -Depth 100 -Compress
+    $bytes = [Text.Encoding]::UTF8.GetBytes($json)
+    $stream = [IO.File]::Create($path)
+    $gzip = [IO.Compression.GZipStream]::new($stream, [IO.Compression.CompressionMode]::Compress)
+    try { $gzip.Write($bytes,0,$bytes.Length) } finally { $gzip.Dispose() }
+}
+function Click-Hero($p) {
+    $p.Refresh()
+    $rect = [DesktopInput+Rect]::new()
+    [void][DesktopInput]::GetClientRect($p.MainWindowHandle, [ref]$rect)
+    $origin = [DesktopInput+Point]::new()
+    [void][DesktopInput]::ClientToScreen($p.MainWindowHandle, [ref]$origin)
+    [void][DesktopInput]::SetForegroundWindow($p.MainWindowHandle)
+    [void][DesktopInput]::SetCursorPos($origin.X + [int]($rect.Right / 2), $origin.Y + [int]($rect.Bottom / 2) + 12)
+    [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
+    [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
+}
 function Start-Game {
     $started = Start-Process $exe -WorkingDirectory (Split-Path $exe) -RedirectStandardOutput (Join-Path (Resolve-Path pc-evidence) 'stdout.txt') -RedirectStandardError (Join-Path (Resolve-Path pc-evidence) 'stderr.txt') -PassThru
     for ($i=0; $i -lt 20; $i++) {
@@ -106,7 +124,38 @@ try {
     Close-Game $p
     $resumed = Read-Bundle "$saveDir/game1/game.dat"
     if ($resumed.depth -ne 1 -or $resumed.hero.extraction_raid -ne $raid) { throw 'Cold resume changed the raid' }
-    @{windows_launch=$true; native_start=$true; cold_resume=$true; raid_id=$raid; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    # Place the test hero on the native stairs, then descend through the real UI.
+    # Enable the exact floor trait from the crash report without test hooks in the game.
+    $profilePath = "$saveDir/extraction-profile.dat"
+    $profile = Read-Bundle $profilePath
+    $profile.nodes = @($profile.nodes) + @('scout_4','scout_5','scout_6')
+    Write-Bundle $profilePath $profile
+    $floor = Read-Bundle "$saveDir/game1/depth1.dat"
+    $exit = $floor.level.transitions | Where-Object { $_.type -eq 'REGULAR_EXIT' } | Select-Object -First 1
+    if (!$exit) { throw 'Native sewer stairs missing' }
+    $resumed.hero.pos = $exit.center
+    $resumed.seed = 2467327059549L
+    Write-Bundle "$saveDir/game1/game.dat" $resumed
+    $p = Start-Game
+    Depart $p
+    Capture $p '05-stairs-with-scouting'
+    Click-Hero $p
+    Start-Sleep -Seconds 10
+    $p.Refresh()
+    if ($p.HasExited -or $p.MainWindowTitle -match 'Crashed|Error') { Capture $p 'floor-crash'; throw 'Scouting floor descent crashed' }
+    Capture $p '06-second-floor'
+    Close-Game $p
+    $second = Read-Bundle "$saveDir/game1/game.dat"
+    if ($second.depth -ne 2 -or $second.hero.extraction_raid -ne $raid -or ($second.hero.extraction_visited -band 4) -eq 0) { throw 'Scouting floor descent did not save floor 2' }
+    $foresight = @($second.hero.buffs | Where-Object { $_.__className -like '*.Foresight' })
+    if ($foresight.Count -eq 0) { throw 'Floor scouting effect was lost' }
+    $p = Start-Game
+    Depart $p
+    Capture $p '07-second-floor-resumed'
+    Close-Game $p
+    $again = Read-Bundle "$saveDir/game1/game.dat"
+    if ($again.depth -ne 2 -or $again.hero.extraction_raid -ne $raid -or $again.hero.extraction_visited -ne $second.hero.extraction_visited) { throw 'Second floor resume lost its saved traits' }
+    @{windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

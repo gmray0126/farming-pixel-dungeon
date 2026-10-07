@@ -126,6 +126,36 @@ public class ExtractionProfileTest {
         assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision.class));
         assertFalse(Dungeon.level.mobs.isEmpty());
     }
+    @Test public void floorSwitchDefersScoutingUntilSceneCreationAndResumeKeepsItsReward() throws Exception {
+        profile.points=1000;learnPath("scout_6");profile.begin();
+        Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";
+        Dungeon.seed=2467327059549L;Dungeon.init();
+        Dungeon.switchLevel(Dungeon.newLevel(),-1);
+        assertEquals(1,Dungeon.depth);
+        assertEquals(0,Dungeon.hero.extractionVisited);
+        assertNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight.class));
+        Dungeon.switchLevel(Dungeon.newLevel(),-1);
+        Hero h=Dungeon.hero;assertEquals(2,Dungeon.depth);
+        // Ensure this regression includes a nearby discovery, even if generator changes.
+        int hidden=h.pos+1;
+        com.shatteredpixel.shatteredpixeldungeon.levels.Level.set(hidden,
+                com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.SECRET_DOOR);
+        Dungeon.switchLevel(Dungeon.level,h.pos);
+        assertTrue(Dungeon.level.secret[hidden]);assertEquals(0,h.extractionVisited);
+        assertNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight.class));
+        // Rendering/discovery is covered by the native Windows floor transition test.
+        java.util.Arrays.fill(Dungeon.level.secret,false);
+        assertTrue(ExtractionUtility.floor(h,2));
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight.class));
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Awareness.class));
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision.class));
+        assertTrue(Dungeon.level.mapped[hidden]);
+        Dungeon.saveAll();int id=h.extractionRaidID;
+        Dungeon.hero=null;Dungeon.level=null;Dungeon.loadGame(1);Dungeon.switchLevel(Dungeon.loadLevel(1),-1);
+        assertEquals(2,Dungeon.depth);assertEquals(id,Dungeon.hero.extractionRaidID);
+        assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Foresight.class));
+        assertFalse(ExtractionUtility.floor(Dungeon.hero,2));
+    }
     @Test public void debugIsOptInAndResourcesPersistWithoutChangingStats() throws Exception {
         assertFalse(profile.debugEnabled);int gold=profile.gold,points=profile.points;
         try{profile.debugResources(10000,250,100);fail("Debug must be enabled");}catch(IllegalStateException expected){}

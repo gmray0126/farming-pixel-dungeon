@@ -609,6 +609,18 @@ public class GameScene extends PixelScene {
 			Dungeon.droppedItems.remove( Dungeon.depth );
 		}
 
+		// Foresight searches immediately when attached, including discovery particles.
+		// Apply entry traits only after this floor's sprites, fog and UI exist.
+		if (Dungeon.hero.isAlive()
+				&& com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.floor(Dungeon.hero, Dungeon.depth)) {
+			Dungeon.observe();
+			try {
+				Dungeon.saveAll();
+			} catch (IOException e) {
+				ShatteredPixelDungeon.reportException(e);
+			}
+		}
+
 		Dungeon.hero.next();
 
 		switch (InterlevelScene.mode){

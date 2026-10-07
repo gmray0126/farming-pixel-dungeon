@@ -515,7 +515,6 @@ public class Dungeon {
 		hero.viewDistance = light == null ? level.viewDistance : Math.max( Light.DISTANCE, level.viewDistance );
 		
 		hero.fieldOfView = level.heroFOV;
-		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.floor(hero,depth);
 		hero.curAction = hero.lastAction = null;
 
 		observe();
