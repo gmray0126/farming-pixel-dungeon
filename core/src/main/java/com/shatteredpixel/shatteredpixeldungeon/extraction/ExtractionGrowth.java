@@ -59,6 +59,7 @@ public final class ExtractionGrowth {
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
             if(effects.containsKey(Stat.SECOND_WIND))text.append("\n두 생존 최종 특성은 원정당 한 번의 발동 횟수를 공유합니다.");
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
+            if(effects.containsKey(Stat.STRENGTH))text.append("\n\n영구 힘 보너스입니다. 사망·탈출 후에도 유지되며 매 새 출격에 적용됩니다. 힘 물약으로 얻은 힘은 해당 원정에서만 유지됩니다.");
             if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
             if(parents.length>1)text.append("\n\n양쪽 갈래의 선행 노드를 모두 습득해야 합니다.");
             return text.toString();
@@ -258,6 +259,12 @@ public final class ExtractionGrowth {
         add(list, "ward_8", "생존 안전망", 17, 5, 1, 5, new String[]{"ward_7"}, Stat.SECOND_WIND, 10.0f, Stat.FLOOR_SHIELD, 8.0f);
         for(int i=0;i<ExtractionPotionKnowledge.IDS.length;i++)
             add(list,ExtractionPotionKnowledge.IDS[i],ExtractionPotionKnowledge.NAMES[i]+" 지식",18,i,1,1,new String[]{"pack"},ExtractionPotionKnowledge.STATS[i],1f);
+        // Common strength milestones: any common specialization can unlock them.
+        // Append stable IDs so old saves and existing node indices remain compatible.
+        add(list,"strength_early","기초 근력",0,6,0,2,new String[]{"edge"},Stat.STRENGTH,1f);
+        add(list,"strength_mid","신체 단련",1,6,2,3,new String[]{"survival_left_end"},Stat.STRENGTH,1f);
+        add(list,"strength_advanced","중량 적응",2,6,0,4,new String[]{"explore_merge"},Stat.STRENGTH,1f);
+        add(list,"strength_master","완력 완성",0,6,2,5,new String[]{"combat_cap"},Stat.STRENGTH,1f);
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];
@@ -292,6 +299,10 @@ public final class ExtractionGrowth {
         alternative("scout_0","ranged_4");alternative("medic_0","magic_4");
         alternative("food_0","strength");alternative("stealth_0","dagger_4");
         alternative("momentum_0","fist_4");alternative("ward_0","blunt_4");
+        alternative("strength_early","guard");alternative("strength_early","porter");
+        alternative("strength_mid","combat_left_end");alternative("strength_mid","explore_left_end");
+        alternative("strength_advanced","combat_merge");alternative("strength_advanced","survival_merge");
+        alternative("strength_master","survival_cap");alternative("strength_master","explore_cap");
         for(int i=0;i<NODES.length;i++)DESCS[i]=NODES[i].description();
     }
     private static void alternative(String target,String source){

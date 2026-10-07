@@ -699,8 +699,20 @@ public class ExtractionProfileTest {
         for(int parent:ExtractionGrowth.NODES[index].parents)learnPath(ExtractionGrowth.IDS[parent]);
         if(!profile.nodes.contains(id))profile.learn(index);
     }
-    @Test public void graphHas174UniqueNodesWithBranchingAndConvergence() {
-        assertEquals(174, ExtractionGrowth.NODES.length);
+    @Test public void distributedStrengthNodesReachT5RequirementsWithoutRingAndPotionsStayRaidOnly() throws Exception {
+        profile.points=1000;learnPath("explore_cap");assertEquals(14,profile.startingStrength());
+        for(String id:new String[]{"strength_early","strength_mid","strength_advanced","strength_master"}){
+            int index=ExtractionGrowth.index(id);assertTrue(profile.unlocked(index));profile.learn(index);
+        }
+        assertEquals(18,profile.startingStrength());profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Hero hero=Dungeon.hero;assertEquals(18,hero.STR);assertNull(hero.belongings.ring);
+        hero.sprite=new EffectSprite();hero.sprite.visible=false;new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength().apply(hero);assertEquals(19,hero.STR);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();hero.storeInBundle(saved);Hero restored=new Hero();restored.restoreFromBundle(saved);assertEquals(19,restored.STR);
+        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();assertEquals(18,profile.startingStrength());
+        profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(18,next.STR);assertNull(next.belongings.ring);hero.sprite=null;
+    }
+    @Test public void graphHas178UniqueNodesWithBranchingAndConvergence() {
+        assertEquals(178, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
@@ -712,8 +724,8 @@ public class ExtractionProfileTest {
             totalCost+=node.cost;
         }
         assertEquals(18,convergences);
-        assertEquals(408,totalCost);
-        for(int b=0;b<ExtractionGrowth.BRANCH_NODES.length;b++)assertEquals(b==18?12:9,ExtractionGrowth.BRANCH_NODES[b].length);
+        assertEquals(422,totalCost);
+        for(int b=0;b<ExtractionGrowth.BRANCH_NODES.length;b++)assertEquals(b==18?12:b==0?11:b==1||b==2?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
         profile.points=1000;

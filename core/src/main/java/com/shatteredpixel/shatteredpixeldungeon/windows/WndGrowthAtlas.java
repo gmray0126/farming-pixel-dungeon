@@ -26,7 +26,7 @@ public class WndGrowthAtlas extends Window {
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);ExtractionProfile p=ExtractionProfile.get();
         text("성장 지도",9,0,0,atlasWidth-24,ExtractionNodeTree.GOLD);
-        text(p.points+" P · 습득 "+p.nodes.size()+" / "+ExtractionProfile.IDS.length,6,0,16,atlasWidth,WHITE);
+        text(p.points+" P · 습득 "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+" · 출격 힘 "+p.startingStrength(),6,0,16,atlasWidth,WHITE);
         StyledButton close=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"닫기",6){@Override protected void onClick(){hide();}};
         close.setRect(atlasWidth-23,0,23,13);body.add(close);
         ExtractionNodeTree tree=new ExtractionNodeTree(this::node);body.add(tree);tree.setRect(0,30,atlasWidth,atlasHeight-47);

@@ -213,6 +213,7 @@ public final class ExtractionProfile {
     public int growthLevel(){return 1+xp/25;}
     public int growthExperience(){return xp%25;}
     public int growthExperienceRequired(){return 25;}
+    public int startingStrength(){return Hero.STARTING_STR+Math.round(bonus(ExtractionGrowth.Stat.STRENGTH));}
     public void credit(final int id, final int total) {
         if (!active || id!=raidID || total<=raidXP) return;
         change(() -> { int level=xp/25; xp+=total-raidXP; raidXP=total; points+=xp/25-level; });

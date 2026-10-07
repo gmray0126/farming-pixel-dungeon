@@ -19,6 +19,7 @@ public final class GrowthAtlasLayout {
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
             ExtractionGrowth.Node n=ExtractionGrowth.NODES[i];float a=angles[n.branch],radius=42;
             if(n.branch==18){radius=82;a=n.row*30;}
+            else if(n.row==6){radius=90;a+=n.col==0?-110:110;}
             else if(n.row==0)a+=180;
             else if(n.row==4){}
             else if(n.row==5)radius=72;
@@ -26,7 +27,7 @@ public final class GrowthAtlasLayout {
             double radians=Math.toRadians(a);
             X[i]=GROUP_X[n.branch]+(float)Math.cos(radians)*radius;
             Y[i]=GROUP_Y[n.branch]+(float)Math.sin(radians)*radius;
-            RADIUS[i]=n.branch==18?7:n.row==5?12:n.row==4?9:n.row==0?8:6;
+            RADIUS[i]=n.branch==18?7:n.row==6?9:n.row==5?12:n.row==4?9:n.row==0?8:6;
         }
     }
     public static int nearest(float x,float y,float minimumRadius){
