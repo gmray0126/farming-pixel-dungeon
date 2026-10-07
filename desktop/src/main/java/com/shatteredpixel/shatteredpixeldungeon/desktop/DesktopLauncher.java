@@ -169,7 +169,9 @@ public class DesktopLauncher {
 		}
 
 		config.setPreferencesConfig( basePath, baseFileType );
-		SPDSettings.set( new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) ));
+		Lwjgl3Preferences preferences = new Lwjgl3Preferences( new Lwjgl3FileHandle(basePath + SPDSettings.DEFAULT_PREFS_FILE, baseFileType) );
+		SPDSettings.set(preferences);
+		if (!preferences.contains(SPDSettings.KEY_LANG)) SPDSettings.language(com.shatteredpixel.shatteredpixeldungeon.messages.Languages.KOREAN);
 		FileUtils.setDefaultFileProperties( baseFileType, basePath );
 		
 		config.setWindowSizeLimits( 720, 400, -1, -1 );
