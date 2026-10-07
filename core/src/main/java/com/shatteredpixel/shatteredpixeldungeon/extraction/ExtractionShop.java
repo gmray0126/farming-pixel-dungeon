@@ -59,6 +59,8 @@ public final class ExtractionShop {
         gear(1,Tomahawk::new);gear(1,Trident::new);
         gear(2,ClothArmor::new);gear(2,LeatherArmor::new);gear(2,MailArmor::new);
         gear(2,ScaleArmor::new);gear(2,PlateArmor::new);
+        // Classless sniper paths still need the native bow; keep previous offer indices stable.
+        gear(1,com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow::new);
     }
     public static int salePrice(Item item) {
         int price=item instanceof SupplyHealingPotion ? 15*item.quantity()

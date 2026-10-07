@@ -762,12 +762,22 @@ public class ExtractionProfileTest {
     }
     @Test public void learnedCrossClassTalentsSurviveDeathAndProfileReload() throws Exception{
         profile.points=1000;learnPath("utility_thiefs_intuition_2");learnPath("utility_soul_eater_3");
-        profile.begin();Hero h=new Hero();profile.initialize(h);
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;profile.initialize(h);
         assertEquals(2,h.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.THIEFS_INTUITION));
         assertEquals(3,h.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.SOUL_EATER));
         assertTrue(h.hasSubclass(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.WARLOCK));
         profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();profile.begin();
-        Hero next=new Hero();profile.initialize(next);assertEquals(3,next.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.SOUL_EATER));assertEquals(20,next.HT);
+        Hero next=new Hero();next.extractionRaidID=profile.raidID;profile.initialize(next);assertEquals(3,next.pointsInTalent(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.SOUL_EATER));assertEquals(20,next.HT);
+    }
+    @Test public void stealthUsesSavedEnergyAndActivatesNativeAssassinPreparation() throws Exception{
+        profile.points=1000;learnPath("subclass_assassin");learnPath("utility_protective_shadows_2");profile.begin();
+        Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();
+        Hero h=Dungeon.hero;h.pos=Dungeon.level.entrance();h.sprite=new EffectSprite();h.ready=true;
+        assertTrue(ExtractionClassSkills.stealth(h));assertEquals(80,h.extractionSkills.armor.charge,0.001f);
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility.class));
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Preparation.class));
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.ProtectiveShadowsTracker.class));
+        h.ready=true;h.extractionSkills.armor.charge=19;assertFalse(ExtractionClassSkills.stealth(h));assertEquals(19,h.extractionSkills.armor.charge,0.001f);h.sprite=null;
     }
     @Test public void activeSkillsSaveSeparateResourcesAndNeverRequireArmorOrArtifacts(){
         profile.nodes.add("skill_stealth");profile.nodes.add("skill_prayer");profile.nodes.add("utility_sunray_2");

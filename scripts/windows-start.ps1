@@ -147,6 +147,7 @@ try {
     Close-Game $p
     $second = Read-Bundle "$saveDir/game1/game.dat"
     if ($second.depth -ne 2 -or $second.hero.extraction_raid -ne $raid -or ($second.hero.extraction_visited -band 4) -eq 0) { throw 'Scouting floor descent did not save floor 2' }
+    if (!$second.hero.extraction_skills -or !$second.hero.extraction_skills.armor -or !$second.hero.extraction_skills.prayer) { throw 'Class skill resources were not saved' }
     $foresight = @($second.hero.buffs | Where-Object { $_.__className -like '*.Foresight' })
     if ($foresight.Count -eq 0) { throw 'Floor scouting effect was lost' }
     $p = Start-Game
@@ -155,7 +156,8 @@ try {
     Close-Game $p
     $again = Read-Bundle "$saveDir/game1/game.dat"
     if ($again.depth -ne 2 -or $again.hero.extraction_raid -ne $raid -or $again.hero.extraction_visited -ne $second.hero.extraction_visited) { throw 'Second floor resume lost its saved traits' }
-    @{windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    if (!$again.hero.extraction_skills -or $again.hero.extraction_skills.armor.charge -ne $second.hero.extraction_skills.armor.charge) { throw 'Class skill energy reset on cold resume' }
+    @{class_skill_save=$true;class_skill_resume=$true;windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

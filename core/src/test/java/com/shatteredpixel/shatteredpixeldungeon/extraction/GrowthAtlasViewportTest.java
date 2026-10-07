@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 public class GrowthAtlasViewportTest {
     @Test public void fitShowsTheWholeGraphAndNodeSelectionMatchesPositions(){
         GrowthAtlasViewport view=new GrowthAtlasViewport();view.bounds(128,230);
-        assertTrue(view.worldX(0)<=0.001f);assertTrue(view.worldX(128)>=999.999f);
+        assertTrue(view.worldX(0)<=0.001f);assertTrue(view.worldX(128)>=GrowthAtlasLayout.SIZE-0.001f);
         assertTrue(view.worldY(0)<=0);assertTrue(view.worldY(230)>=GrowthAtlasLayout.SIZE);
         for(int n=0;n<ExtractionGrowth.NODES.length;n++){
             assertTrue(GrowthAtlasLayout.X[n]>0&&GrowthAtlasLayout.X[n]<GrowthAtlasLayout.SIZE);
