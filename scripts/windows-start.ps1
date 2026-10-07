@@ -168,7 +168,7 @@ try {
     Remove-Item "$saveDir/game1" -Recurse -Force -ErrorAction SilentlyContinue
     $p=Start-Game
     Capture $p '10-level-cap-hub'
-    Click-Client $p 405 110
+    Click-Client $p 466 110
     Start-Sleep -Seconds 1
     Capture $p '11-growth-presets'
     Close-Game $p
