@@ -87,7 +87,7 @@ public final class ExpeditionArtifacts {
     public static class GreedPouch extends Relic {
         public GreedPouch(){image=ItemSpriteSheet.POUCH;defaultAction=AC_EQUIP;}
         @Override public String name(){return "탐욕의 주머니";}
-        @Override public String desc(){return "현재 난이도에서 최상위 티어 장비의 생성 비중과 정예 장비 드롭 확률이 10%p 증가합니다. 원정 골드 250 G마다 받는 피해 +10%(최대 +30%). 창고 골드는 계산하지 않습니다."+progress();}
+        @Override public String desc(){return "현재 챕터에서 최상위 티어 장비의 생성 비중과 정예 장비 드롭 확률이 10%p 증가합니다. 원정 골드 250 G마다 받는 피해 +10%(최대 +30%). 창고 골드는 계산하지 않습니다."+progress();}
         @Override public ItemSprite.Glowing glowing(){return new ItemSprite.Glowing(0xE4BD58);}
     }
     public static class BrokenHourglass extends Relic {

@@ -11,8 +11,11 @@ import com.shatteredpixel.shatteredpixeldungeon.scenes.GameScene;
 import com.shatteredpixel.shatteredpixeldungeon.utils.GLog;
 import com.watabou.utils.Random;
 
-/** Selected difficulty is fixed for a raid; it never follows the player's equipment. */
+/** Chapter balance is fixed at departure; legacy raids retain their old snapshot. */
 public final class ExtractionDifficulty {
+    public static int fixedStage(int chapter){return chapter==2?6:1;}
+    public static int chapterMaxTier(int chapter){return chapter==2?3:2;}
+    public static int raidMaxTier(){return ExtractionProfile.get().raidRules>=2?chapterMaxTier(chapter()):maxTier(chapter(),stage());}
     public static boolean active(){return Dungeon.hero!=null&&Dungeon.hero.extractionRaidID!=0;}
     public static int stage(){return active()?ExtractionProfile.get().raidDifficulty:1;}
     public static int chapter(){return active()?ExtractionProfile.get().raidChapter:1;}
@@ -23,12 +26,19 @@ public final class ExtractionDifficulty {
     public static float damageMultiplier(int stage){int d=stage-1;return 1.1f+.09f*d+.018f*d*d;}
     public static float rewardMultiplier(int chapter,int stage){return 1+.18f*(stage-1)+.25f*(chapter-1);}
     public static float[] tierWeights(int chapter,int stage,boolean greed){
-        int max=maxTier(chapter,stage);float[] weights=new float[5];
+        return weightsForMaxTier(maxTier(chapter,stage),greed);
+    }
+    private static float[] weightsForMaxTier(int max,boolean greed){
+        float[] weights=new float[5];
         if(max==2){weights[0]=greed?60:70;weights[1]=greed?40:30;}
         else{weights[max-3]=20;weights[max-2]=greed?45:55;weights[max-1]=greed?35:25;}
         return weights;
     }
-    public static float[] tierWeights(){return tierWeights(chapter(),stage(),ExpeditionArtifacts.has(Dungeon.hero,ExpeditionArtifacts.GreedPouch.class));}
+    public static float[] tierWeights(){
+        boolean greed=ExpeditionArtifacts.has(Dungeon.hero,ExpeditionArtifacts.GreedPouch.class);
+        if(!active()||ExtractionProfile.get().raidRules<2)return tierWeights(chapter(),stage(),greed);
+        return weightsForMaxTier(chapterMaxTier(chapter()),greed);
+    }
     public static int extraMobs(){return active()?2+(stage()-1)/2:0;}
     public static void prepare(Mob mob){
         if(!active()||mob.extractionScaled||mob.alignment!=Char.Alignment.ENEMY)return;
@@ -67,7 +77,7 @@ public final class ExtractionDifficulty {
     }
     public static void bossLoot(Mob boss){
         if(!active()||Dungeon.level==null||!(boss instanceof Goo||boss instanceof Tengu))return;
-        Item gear=Generator.randomUsingDefaults(Generator.wepTiers[maxTier(chapter(),stage())-1]);
+        Item gear=Generator.randomUsingDefaults(Generator.wepTiers[raidMaxTier()-1]);
         dropLoot(gear,boss.pos);
         if(Random.Float()<.12f+.035f*(stage()-1)+.1f*(chapter()-1)){
             Artifact relic=Generator.randomArtifact();if(relic!=null)dropLoot(relic,boss.pos);

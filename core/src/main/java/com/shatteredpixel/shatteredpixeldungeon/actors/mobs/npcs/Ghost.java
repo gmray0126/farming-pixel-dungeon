@@ -319,7 +319,9 @@ public class Ghost extends NPC {
 				depth = Dungeon.depth;
 
 				//50%:tier2, 30%:tier3, 15%:tier4, 5%:tier5
-				switch (Random.chances(new float[]{0, 0, 10, 6, 3, 1})){
+				int armorTier=Random.chances(new float[]{0, 0, 10, 6, 3, 1});
+				if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())armorTier=Math.min(armorTier,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.raidMaxTier());
+				switch (armorTier){
 					default:
 					case 2: armor = new LeatherArmor(); break;
 					case 3: armor = new MailArmor();    break;
@@ -328,6 +330,7 @@ public class Ghost extends NPC {
 				}
 				//50%:tier2, 30%:tier3, 15%:tier4, 5%:tier5
 				int wepTier = Random.chances(new float[]{0, 0, 10, 6, 3, 1});
+				if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())wepTier=Math.min(wepTier,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.raidMaxTier());
 				weapon = (Weapon) Generator.random(Generator.wepTiers[wepTier - 1]);
 
 				//clear weapon's starting properties

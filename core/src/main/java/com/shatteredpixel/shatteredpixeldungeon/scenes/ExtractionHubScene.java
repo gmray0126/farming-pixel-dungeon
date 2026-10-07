@@ -56,7 +56,7 @@ public class ExtractionHubScene extends PixelScene {
         }
         float y=top+65;
         if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else shop(y);
-        button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" · "+p.selectedDifficulty+"단계 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
+        button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
         if(p.active)button("포기하기",left+width-48,bottom-22,48,22,this::abandon,false);
     }
     private void equipment(float y){
@@ -235,26 +235,24 @@ public class ExtractionHubScene extends PixelScene {
             button((c==1?"01 하수도":"02 감옥")+(p.unlockedDifficulty[c-1]==0?" · 잠금":""),left+(c-1)*(half+2),y,half,18,()->{
                 if(p.active)throw new IllegalStateException("진행 중인 원정을 먼저 마치세요.");
                 if(p.unlockedDifficulty[selected-1]==0)throw new IllegalStateException("하수도 보스를 잡고 탈출하면 감옥이 열립니다.");
-                p.selectRaid(selected,Math.min(p.selectedDifficulty,p.unlockedDifficulty[selected-1]));refresh();
+                p.selectRaid(selected);refresh();
             },chapter==c);
         }
-        centered("난이도 "+difficulty+" / 10 · 해금 "+p.unlockedDifficulty[chapter-1],7,left+23,y+26,width-46,GOLD);
-        button("<",left,y+22,21,16,()->{p.selectRaid(chapter,Math.max(1,difficulty-1));refresh();},false);
-        button(">",left+width-21,y+22,21,16,()->{p.selectRaid(chapter,Math.min(10,difficulty+1));refresh();},false);
+        centered(p.active&&p.raidRules<2?"이전 원정 · 기존 난이도 유지":chapter==1?"파밍과 성장":"고난도 · 성장 후 도전",7,left,y+26,width,GOLD);
         panel(left,y+43,width,49);
         int start=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(chapter),end=start+4;
         label(start+"~"+end+"층 · 보스 "+(chapter==1?"구":"텐구"),8,left+5,y+48,width-10,GOLD);
-        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.maxTier(chapter,difficulty)
-            +" · 정예 적과 추가 보스 병력",6,left+5,y+63,width-10,TEXT);
-        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지\n각 난이도 탈출로 다음 단계 해금",6,left,y+99,width,TEXT);
-        button("난이도 / 유물 안내",left,y+120,width,12,this::expeditionGuide,false);
+        int tier=p.active&&p.raidRules<2?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.maxTier(chapter,difficulty):com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterMaxTier(chapter);
+        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+tier+" · "+(chapter==1?"반복 파밍으로 출격 준비":"강화 보스와 지원 병력"),6,left+5,y+63,width-10,TEXT);
+        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지\n하수도에서 장비와 노드를 준비하세요",6,left,y+99,width,TEXT);
+        button("챕터 / 유물 안내",left,y+120,width,12,this::expeditionGuide,false);
         if(!p.result.isEmpty()&&y+156+35<bottom-27)label(p.result,6,left,y+156,width,GREEN);
     }
     private void expeditionGuide(){
-        add(new WndOptions("원정 안내","확인할 내용을 선택하세요.","난이도 / 보상","신규 유물","착용 / 상점"){
+        add(new WndOptions("원정 안내","확인할 내용을 선택하세요.","챕터 / 보상","신규 유물","착용 / 상점"){
             @Override protected void onSelect(int index){
                 String[] pages={
-                    "난이도는 출격 시 고정됩니다. 높은 단계일수록 적의 체력·피해·명중·밀도와 정예 확률이 증가합니다. 3단계부터 보스 강화와 지원 병력이 등장합니다.\n\n하수도 최대 티어: 1~3단계 T2 / 4~6 T3 / 7~9 T4 / 10 T5\n감옥: 1~3단계 T3 / 4~6 T4 / 7~10 T5\n보스는 해당 단계 최상위 티어 무기를 보장합니다.",
+                    "챕터별 난이도는 고정이며 장비나 레벨에 따라 자동으로 오르지 않습니다.\n\n하수도 1~5층: T1~T2 장비를 파밍하고 성장 노드를 준비하세요. 첫 탈출 후 감옥이 열립니다.\n\n감옥 6~10층: 원본 감옥 대비 적 체력 약 4배, 피해 2배. 정예 확률 25.5%, 추가 적 4마리, 강화 텐구와 최대 2회 지원 병력. T1~T3 장비를 얻습니다.\n\n보스는 챕터 최상위 티어 무기를 보장합니다. 감옥은 원정 골드 2.15배, 탈출 경험치 45를 지급합니다. 기존 진행 중인 원정은 이전 규칙을 유지합니다.",
                     "피의 등불: 처치 회복 / 물약 회복 감소\n\n탐욕의 주머니: 좋은 장비 / 골드에 따른 피해 증가\n\n깨진 모래시계: 시간 가속 / 이후 둔화\n\n사냥꾼의 표식: 지정 적 피해 증가 / 다른 적 피해 감소\n\n불안정한 나침반: 비밀 감지 / 주변 적 유인",
                     "유물은 최대 2개 착용하며 같은 유물은 중복 착용할 수 없습니다. 창고나 가방에 있는 유물은 효과가 없습니다.\n\n준비 화면에서 유물을 길게 눌러 착용할 물품을 선택하세요. 유물은 적 처치로 성장하며 +5가 상한입니다.\n\n상점은 보급품과 T1~T2 장비만 판매합니다."
                 };

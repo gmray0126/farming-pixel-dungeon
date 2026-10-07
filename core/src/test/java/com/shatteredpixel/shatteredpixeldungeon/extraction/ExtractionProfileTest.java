@@ -126,25 +126,49 @@ public class ExtractionProfileTest {
         assertNotNull(Dungeon.hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MindVision.class));
         assertFalse(Dungeon.level.mobs.isEmpty());
     }
-    @Test public void chapterAndDifficultyUnlocksPersistAndRaidSelectionIsFrozen() throws Exception {
-        try{profile.selectRaid(2,1);fail("Prison must be locked");}catch(IllegalStateException expected){}
-        try{profile.selectRaid(1,2);fail("Difficulty must be locked");}catch(IllegalStateException expected){}
+    @Test public void chapterUnlocksPersistAndFixedRaidSelectionIsFrozen() throws Exception {
+        try{profile.selectRaid(2);fail("Prison must be locked");}catch(IllegalStateException expected){}
         profile.begin();Dungeon.hero=new Hero();Dungeon.gold=0;profile.settle(profile.raidID,true);
-        assertEquals(2,profile.unlockedDifficulty[0]);assertEquals(1,profile.unlockedDifficulty[1]);
-        profile.selectRaid(2,1);profile.begin();int id=profile.raidID;
-        try{profile.selectRaid(1,1);fail("Active selection must be frozen");}catch(IllegalStateException expected){}
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(1,profile.raidDifficulty);
+        assertEquals(1,profile.unlockedDifficulty[0]);assertEquals(1,profile.unlockedDifficulty[1]);
+        profile.selectRaid(2);profile.begin();int id=profile.raidID;
+        try{profile.selectRaid(1);fail("Active selection must be frozen");}catch(IllegalStateException expected){}
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(2,profile.raidRules);
         profile.settle(id,false);assertEquals(1,profile.unlockedDifficulty[1]);
-        profile.selectRaid(1,2);profile.begin();profile.settle(profile.raidID,true);assertEquals(3,profile.unlockedDifficulty[0]);
+        profile.selectRaid(1);profile.selectedDifficulty=10;profile.begin();assertEquals(1,profile.raidDifficulty);profile.settle(profile.raidID,true);assertEquals(1,profile.unlockedDifficulty[0]);
+        assertFalse(profile.result.contains("난이도"));
     }
     @Test public void selectedPrisonStartsAtSixAndGeneratesScaledOriginalPrison(){
-        profile.unlockedDifficulty[1]=1;profile.selectRaid(2,1);profile.begin();
+        profile.unlockedDifficulty[1]=1;profile.selectRaid(2);profile.begin();
         Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
         assertEquals(6,Dungeon.depth);assertEquals(profile.raidID,Dungeon.hero.extractionRaidID);
         com.shatteredpixel.shatteredpixeldungeon.levels.Level level=Dungeon.newLevel();
         assertTrue(level instanceof com.shatteredpixel.shatteredpixeldungeon.levels.PrisonLevel);
         int scaled=0;for(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob mob:level.mobs)if(mob.extractionScaled)scaled++;
         assertTrue(scaled>0);assertEquals(20,Dungeon.hero.HT);
+    }
+    @Test public void fixedChapterLootAndEnemyPowerRequirePreparation(){
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        assertEquals(2,ExtractionDifficulty.raidMaxTier());
+        assertEquals(30,ExtractionDifficulty.tierWeights()[1],0);assertEquals(0,ExtractionDifficulty.tierWeights()[2],0);
+        profile.settle(profile.raidID,false);profile.unlockedDifficulty[1]=1;profile.selectRaid(2);profile.begin();
+        Dungeon.hero.extractionRaidID=profile.raidID;
+        assertEquals(3,ExtractionDifficulty.raidMaxTier());assertEquals(25,ExtractionDifficulty.tierWeights()[2],0);assertEquals(0,ExtractionDifficulty.tierWeights()[3],0);
+        assertEquals(4,ExtractionDifficulty.extraMobs());
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Guard guard=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Guard();
+        int hp=guard.HT;ExtractionDifficulty.prepare(guard);assertTrue(guard.HT>=Math.round(hp*3.975f));
+        assertEquals(20,ExtractionDifficulty.incoming(10,guard)/(guard.extractionElite==1?1.2f:1),1);
+        Dungeon.gold=100;int beforeGold=profile.gold,beforeXP=profile.xp;
+        profile.settle(profile.raidID,true);assertEquals(215,profile.gold-beforeGold);assertEquals(45,profile.xp-beforeXP);
+    }
+    @Test public void oldActiveRaidKeepsSnapshotUntilNextDeparture() throws Exception {
+        profile.begin();profile.raidRules=1;profile.raidDifficulty=10;
+        java.lang.reflect.Method snapshot=ExtractionProfile.class.getDeclaredMethod("bundle");snapshot.setAccessible(true);
+        com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);
+        saved.remove("raid_rules");
+        java.lang.reflect.Method restore=ExtractionProfile.class.getDeclaredMethod("restore",com.watabou.utils.Bundle.class);restore.setAccessible(true);restore.invoke(profile,saved);
+        profile.begin();assertEquals(10,profile.raidDifficulty);assertEquals(1,profile.raidRules);
+        Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;assertEquals(5,ExtractionDifficulty.raidMaxTier());
+        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(2,profile.raidRules);
     }
     @Test public void lootCeilingsScalingAndShopRestrictionsDoNotFollowPlayerPower(){
         assertEquals(2,ExtractionDifficulty.maxTier(1,1));assertEquals(3,ExtractionDifficulty.maxTier(1,4));
