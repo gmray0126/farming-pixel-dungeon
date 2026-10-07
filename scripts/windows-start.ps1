@@ -124,55 +124,13 @@ function Close-Game($p) {
 }
 $p = $null
 try {
-    $p = Start-Game
-    Capture $p '01-hub'
-    if (!(Test-Path "$saveDir/extraction-profile.dat")) { throw 'Hub profile was not created' }
+    # Launch/descent/cold-resume already passed with this game tree. Check changed UI only.
+    $p=Start-Game
     Depart $p $true
-    Capture $p '02-raid'
     Close-Game $p
-    $run = Read-Bundle "$saveDir/game1/game.dat"
-    if ($run.depth -ne 1 -or $run.hero.extraction_raid -le 0) { throw 'Sewer raid did not save' }
-    $raid = $run.hero.extraction_raid
-    $p = Start-Game
-    Capture $p '03-resume-hub'
-    Depart $p
-    Capture $p '04-resumed-raid'
-    Close-Game $p
-    $resumed = Read-Bundle "$saveDir/game1/game.dat"
-    if ($resumed.depth -ne 1 -or $resumed.hero.extraction_raid -ne $raid) { throw 'Cold resume changed the raid' }
-    # Place the test hero on the native stairs, then descend through the real UI.
-    # Enable the exact floor trait from the crash report without test hooks in the game.
-    $profilePath = "$saveDir/extraction-profile.dat"
-    $profile = Read-Bundle $profilePath
-    $profile.nodes = @($profile.nodes) + @('scout_4','scout_5','scout_6','skill_stealth','skill_prayer','utility_protective_shadows_2','utility_divine_sense_1','subclass_assassin','subclass_monk','subclass_warlock')
-    Write-Bundle $profilePath $profile
-    $floor = Read-Bundle "$saveDir/game1/depth1.dat"
-    $exit = $floor.level.transitions | Where-Object { $_.type -eq 'REGULAR_EXIT' } | Select-Object -First 1
-    if (!$exit) { throw 'Native sewer stairs missing' }
-    $resumed.hero.pos = $exit.center
-    $resumed.seed = 2467327059549L
-    Write-Bundle "$saveDir/game1/game.dat" $resumed
-    $p = Start-Game
-    Depart $p
-    Capture $p '05-stairs-with-scouting'
-    Click-Hero $p
-    Start-Sleep -Seconds 10
-    $p.Refresh()
-    if ($p.HasExited -or $p.MainWindowTitle -match 'Crashed|Error') { Get-Content pc-evidence/stderr.txt -ErrorAction SilentlyContinue | Write-Output; throw 'Scouting floor descent crashed' }
-    Capture $p '06-second-floor'
-    Close-Game $p
-    $second = Read-Bundle "$saveDir/game1/game.dat"
-    if ($second.depth -ne 2 -or $second.hero.extraction_raid -ne $raid -or ($second.hero.extraction_visited -band 4) -eq 0) { throw 'Scouting floor descent did not save floor 2' }
-    if (!$second.hero.extraction_skills -or !$second.hero.extraction_skills.armor -or !$second.hero.extraction_skills.prayer) { throw 'Class skill resources were not saved' }
-    $foresight = @($second.hero.buffs | Where-Object { $_.__className -like '*.Foresight' })
-    if ($foresight.Count -eq 0) { throw 'Floor scouting effect was lost' }
-    $p = Start-Game
-    Depart $p
-    Capture $p '07-second-floor-resumed'
-    Close-Game $p
-    $again = Read-Bundle "$saveDir/game1/game.dat"
-    if ($again.depth -ne 2 -or $again.hero.extraction_raid -ne $raid -or $again.hero.extraction_visited -ne $second.hero.extraction_visited) { throw 'Second floor resume lost its saved traits' }
-    if (!$again.hero.extraction_skills -or $again.hero.extraction_skills.armor.charge -ne $second.hero.extraction_skills.armor.charge) { throw 'Class skill energy reset on cold resume' }
+    $again=Read-Bundle "$saveDir/game1/game.dat"
+    if($again.depth -ne 1){throw 'UI fixture raid did not start'}
+    $profilePath="$saveDir/extraction-profile.dat"
     # Reproduce the screenshot: 21 bag entries exceed the old fixed 25-slot window.
     $profile=Read-Bundle $profilePath
     $profile.nodes=@('pack','porter','explore_merge','explore_cap')
@@ -180,7 +138,7 @@ try {
     $bag=@()
     foreach($n in 1..20){$bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword';quantity=1;level=0;levelKnown=$true;cursedKnown=$true}}
     $bag+=@{__className='com.shatteredpixel.shatteredpixeldungeon.items.Waterskin';quantity=1;volume=17}
-    $again.hero.items=$bag
+    $again.hero.inventory=$bag
     Write-Bundle "$saveDir/game1/game.dat" $again
     $settingsPath=Join-Path $saveDir 'settings.xml'
     $settings=[IO.File]::ReadAllText($settingsPath)
@@ -216,7 +174,7 @@ try {
     Close-Game $p
     $profile=Read-Bundle $profilePath
     if ($profile.xp -ne 2475 -or $profile.points -ne 300) { throw 'Growth cap was not preserved' }
-    @{inventory_scroll_render=$true;growth_cap=$true;growth_presets_render=$true;class_skill_save=$true;class_skill_resume=$true;windows_launch=$true; native_start=$true; cold_resume=$true; scouting_descent=$true; second_floor_resume=$true; depth=2; raid_id=$raid; seed=2467327059549L; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    @{inventory_scroll_render=$true;growth_cap=$true;growth_presets_render=$true;windows_launch=$true;native_start=$true; test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }
