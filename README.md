@@ -1,37 +1,75 @@
-# 파밍픽셀던전
+# 파밍픽셀던전 / Farming Pixel Dungeon
 
-Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.
+**Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
 
-현재 모딩 작업 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다.
+**An extraction and equipment-farming mod of Shattered Pixel Dungeon, developed with AI assistance.**
 
-## 원작 안내
+모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
-아래는 원작 Shattered Pixel Dungeon의 소개와 제작자 링크입니다.
+The mod's game source is on the [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction). Use that branch when building or exploring the changes described here.
 
-### Shattered Pixel Dungeon
+## 한국어 소개
 
-[Shattered Pixel Dungeon](https://shatteredpixel.com/shatteredpd/) is an open-source traditional roguelike dungeon crawler with randomized levels and enemies, and hundreds of items to collect and use. It's based on the [source code of Pixel Dungeon](https://github.com/00-Evan/pixel-dungeon-gradle), by [Watabou](https://watabou.itch.io/).
+파밍픽셀던전은 장비를 챙겨 원정을 떠나고, 보스를 쓰러뜨린 뒤 탈출하여 다음 원정을 준비하는 게임입니다. 거점의 창고에 장비를 보관하고 성장 노드를 선택하면서 반복 플레이로 캐릭터를 만들어 갑니다.
 
-Shattered Pixel Dungeon currently compiles for Android, iOS, and Desktop platforms. You can find official releases of the game on:
+- **원정과 탈출:** 각 챕터는 독립된 5층 원정입니다. 보스를 처치하고 다음 계단을 이용하면 탈출합니다. 탈출에 성공하면 장비를 보관하고, 남은 모든 포션과 스크롤을 골드로 정산합니다.
+- **사망 후에도 성장:** 사망하거나 원정을 포기하면 원정 물품과 전리품을 잃지만, 창고·성장 노드·획득한 성장 경험치는 유지됩니다.
+- **직업 대신 성장 노드:** 무기 계열과 기존 직업·2차 직업의 특성 및 유틸리티를 노드로 선택합니다. 힘도 노드로 성장하며, 힘의 물약 효과는 해당 원정에서만 유지됩니다. 영혼의 활은 궁수 계열의 첫 노드를 통해 얻습니다.
+- **레벨과 프리셋:** 성장 레벨은 최대 100이며 레벨마다 3포인트를 얻습니다. 레벨 자체는 능력치를 올리지 않습니다. 노드 초기화와 3개의 프리셋으로 구성을 바꿀 수 있습니다.
+- **장비 파밍:** 무기·갑옷·바지·신발은 T1~T5로 구성됩니다. 갑옷의 방어 성능을 세 부위에 나누고, 문양은 세 부위 모두에 적용할 수 있습니다. 신발에는 이동 속도 효과도 있습니다. 힘이 부족해도 장착할 수 있지만 성능에 불이익을 받습니다.
+- **유물과 상점:** 신규 유물에는 회복과 물약 효율, 탐욕과 받는 피해, 시간 가속과 둔화처럼 이점과 대가가 함께 있습니다. 상점에서는 물품을 사고팔고 T1~T5 장비를 구매할 수 있습니다. 반지와 유물의 강화 상한은 +15이며 T5 무기도 +15까지 강화할 수 있습니다.
+- **단계별 난이도:** 하수도에서 장비와 성장 포인트를 준비하고 더 강한 적이 있는 다음 챕터에 도전합니다. 챕터별 장비 드롭 상한이 적용됩니다.
 
-[![Get it on Google Play](https://shatteredpixel.com/assets/images/badges/gplay.png)](https://play.google.com/store/apps/details?id=com.shatteredpixel.shatteredpixeldungeon)
-[![Download on the App Store](https://shatteredpixel.com/assets/images/badges/appstore.png)](https://apps.apple.com/app/shattered-pixel-dungeon/id1563121109)
-[![Steam](https://shatteredpixel.com/assets/images/badges/steam.png)](https://store.steampowered.com/app/1769170/Shattered_Pixel_Dungeon/)<br>
-[![GOG.com](https://shatteredpixel.com/assets/images/badges/gog.png)](https://www.gog.com/game/shattered_pixel_dungeon)
-[![Itch.io](https://shatteredpixel.com/assets/images/badges/itch.png)](https://shattered-pixel.itch.io/shattered-pixel-dungeon)
-[![Github Releases](https://shatteredpixel.com/assets/images/badges/github.png)](https://github.com/00-Evan/shattered-pixel-dungeon/releases)
+## English overview
 
-If you like this game, please consider [supporting me on Patreon](https://www.patreon.com/ShatteredPixel)!
+Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at the hub, defeat a chapter boss, extract, and use the rewards to prepare for your next run. Your stash and a branching growth tree carry progression between expeditions.
 
-There is an official blog for this project at [ShatteredPixel.com](https://www.shatteredpixel.com/blog/).
+- **Five-floor expeditions:** Each chapter is a separate run. After defeating its boss, take the next staircase to extract. Successful extraction stores your equipment and converts all remaining potions and scrolls into gold.
+- **Progress through defeat:** Death or abandonment costs expedition supplies and loot. Your stash, learned growth nodes, and earned growth experience remain.
+- **A classless growth tree:** Choose weapon paths, utility skills, and traits adapted from the original classes and subclasses. Permanent strength comes from nodes; strength potions last for the current expedition. The first archer node unlocks the Spirit Bow.
+- **Levels and presets:** The growth level cap is 100, with three points awarded per level. Levels do not directly increase stats. Reset your nodes or switch between three saved presets to change your build.
+- **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
+- **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings and artifacts have a +15 enhancement ceiling; T5 weapons can also reach +15.
+- **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
 
-The game also has a translation project hosted on [Transifex](https://explore.transifex.com/shattered-pixel/shattered-pixel-dungeon/).
+## 챕터 / Chapters
 
-Note that **this repository does not accept pull requests!** The code here is provided in hopes that others may find it useful for their own projects, not to allow community contribution. Issue reports of all kinds (bug reports, feature requests, etc.) are welcome.
+앞 챕터의 보스를 처치하고 탈출하면 다음 챕터가 열립니다. Defeat a chapter boss and extract to unlock the next chapter.
 
-If you'd like to work with the code, you can find the following guides in `/docs`:
-- [Compiling for Android.](docs/getting-started-android.md)
-    - **[If you plan to distribute on Google Play please read the end of this guide.](docs/getting-started-android.md#distributing-your-app)**
-- [Compiling for desktop platforms.](docs/getting-started-desktop.md)
-- [Compiling for iOS.](docs/getting-started-ios.md)
-- [Recommended changes for making your own version.](docs/recommended-changes.md)
+| 챕터 / Chapter | 층 / Floors | 보스 / Boss | 장비 드롭 상한 / Equipment tier cap |
+| --- | --- | --- | --- |
+| 하수도 / Sewers | 1–5 | 구 / Goo | T2 |
+| 감옥 / Prison | 6–10 | 텐구 / Tengu | T3 |
+| 동굴 / Caves | 11–15 | DM-300 | T4 |
+| 드워프 도시 / Dwarven City | 16–20 | 드워프 제왕 / King of Dwarves | T5 |
+| 악마의 전당 / Demon Halls | 21–25 | 요그제바 / Yog-Dzewa | T5 |
+
+## 실행과 빌드 / Playing and building
+
+현재 제공하는 플랫폼은 **Android와 Windows 64비트 PC**입니다. 개발 중인 모드이므로 오류 제보에는 게임 버전과 재현 방법을 함께 적어 주세요.
+
+The currently provided builds target **Android and 64-bit Windows**. This mod is in development; please include the game version and reproduction steps when reporting a bug.
+
+- **Android:** APK를 설치하여 실행합니다. Install the APK on your device.
+- **Windows:** ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Java 런타임이 포함되어 있습니다. Extract the entire ZIP and run that executable; Java is bundled.
+- **Builds:** [Android build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/android-apk.yml) · [Windows build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/desktop-pc.yml). Successful runs provide downloadable artifacts; GitHub may require sign-in.
+- **Source builds:** [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction) · [Android guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-android.md) · [Desktop guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-desktop.md).
+
+## 제작자와 원작 / Credits
+
+| 제작자 / Creator | 역할 / Role |
+| --- | --- |
+| [gmray0126](https://github.com/gmray0126) | 파밍픽셀던전 제작·기획·유지보수 / Farming Pixel Dungeon creator, design, and maintenance |
+| [Evan Debenham / 00-Evan](https://github.com/00-Evan) | [Shattered Pixel Dungeon](https://github.com/00-Evan/shattered-pixel-dungeon) 제작자 / Creator of Shattered Pixel Dungeon |
+| [Oleg Dolya / Watabou](https://watabou.itch.io/) | 원작 Pixel Dungeon 제작자 / Creator of the original Pixel Dungeon |
+| Shattered Pixel Dungeon 및 Pixel Dungeon 기여자 / contributors | 원작 코드·아트·음악·번역 등 / Upstream code, art, music, translations, and other contributions |
+
+개발 과정에서 AI를 사용했습니다. 위 원작 제작자 표기는 기반 작품에 대한 크레딧이며, 이 모드의 개발 참여나 보증을 뜻하지 않습니다. 개별 원작 기여자에 대한 표기는 게임 내 크레딧과 기존 소스의 저작권 표시를 유지합니다.
+
+AI assistance was used during development. Upstream credits acknowledge the works this mod is based on and do not imply participation in or endorsement of this mod. In-game credits and existing source notices preserve the individual upstream attributions.
+
+## 라이선스 / License
+
+원작 소스의 GNU GPL v3 또는 이후 버전 라이선스를 따릅니다. 기존 저작권 표시를 유지하며, 자세한 내용은 [LICENSE.txt](LICENSE.txt)와 소스 파일의 라이선스 표시를 확인해 주세요.
+
+The source follows the upstream GNU GPL v3 or later license. Existing copyright notices are retained; see [LICENSE.txt](LICENSE.txt) and the notices in the source files.

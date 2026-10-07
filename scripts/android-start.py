@@ -1,4 +1,4 @@
-"""Verify actual Android departure and cold-start resume through touch input."""
+"""Verify expedition guide pages, Android departure, and cold-start resume through touch input."""
 import gzip
 import json
 from pathlib import Path
@@ -30,6 +30,8 @@ def check_crash():
     logs = adb('logcat', '-d').decode(errors='replace')
     assert 'FATAL EXCEPTION' not in logs, 'Android exception occurred'
     assert 'fatal error occurred while moving between floors' not in logs, 'Floor transition failed'
+    crash = subprocess.run(['adb', 'shell', 'run-as', PACKAGE, 'test', '-e', 'files/extraction-last-crash.txt'], timeout=45)
+    assert crash.returncode != 0, 'Game recorded a handled crash'
 
 try:
     adb('install', '-r', 'apk/android-debug.apk')
@@ -42,6 +44,22 @@ try:
     launch()
     screenshot('01-hub')
     assert not read_state('extraction-profile.dat')['active']
+    # Each selection closes WndOptions before creating the next window. Exercise
+    # all three callbacks on the native scene to catch detached-window access.
+    adb('shell', 'input', 'tap', '444', '278')
+    time.sleep(1)
+    for index, button_y in enumerate((740, 840, 940)):
+        adb('shell', 'input', 'tap', '360', '1083')
+        time.sleep(1)
+        screenshot('guide-menu-' + str(index))
+        adb('shell', 'input', 'tap', '360', str(button_y))
+        time.sleep(1)
+        check_crash()
+        screenshot('guide-page-' + str(index))
+        adb('shell', 'input', 'keyevent', '4')
+        time.sleep(1)
+    adb('shell', 'input', 'tap', '110', '278')
+    time.sleep(1)
     adb('shell', 'input', 'tap', '250', '1475')
     time.sleep(12)
     check_crash()
@@ -63,6 +81,6 @@ try:
     time.sleep(3)
     restored = read_state('game1/game.dat')
     assert restored['depth'] == 1 and restored['hero']['extraction_raid'] == raid_id, 'Resume changed the raid'
-    (OUT / 'result.json').write_text(json.dumps({'native_start': True, 'native_cold_resume': True, 'raid_id': raid_id}, indent=2))
+    (OUT / 'result.json').write_text(json.dumps({'guide_pages_checked': 3, 'native_start': True, 'native_cold_resume': True, 'raid_id': raid_id}, indent=2))
 finally:
     (OUT / 'logcat.txt').write_bytes(adb('logcat', '-d'))
