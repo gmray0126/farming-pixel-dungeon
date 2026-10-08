@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
     @Test public void allBagsRoutePreparedSuppliesAndRemainUniqueAfterSave() throws Exception {
-        Item potion=new ExtractionShop.SupplyHealingPotion().quantity(2);
+        Item potion=new SupplyHealingPotion().quantity(2);
         Item scroll=new ExtractionShop.SupplyUpgrade().quantity(3);
         Item seed=new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed();
         for(Item item:new Item[]{potion,scroll,seed}){profile.stash.add(item);profile.prepare(item,true);}
