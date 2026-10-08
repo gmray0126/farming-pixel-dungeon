@@ -39,6 +39,7 @@ public class ExtractionProfileTest {
                 (com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)com.watabou.utils.Reflection.newInstance(type);
             copy.restoreFromBundle(saved);assertEquals(15,copy.trueLevel());assertEquals(15,copy.level());
             copy.identify(false);assertTrue(copy.info().contains("+15 / +15"));
+            copy.upgradeStat2(0); // Hub previews must work without an active hero.
             com.watabou.utils.Bundle roundTrip=new com.watabou.utils.Bundle();copy.storeInBundle(roundTrip);
             assertEquals(15,roundTrip.getInt("level"));
         }

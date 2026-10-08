@@ -288,7 +288,7 @@ public class WandOfRegrowth extends Wand {
 	public String statsDesc() {
 		String desc = Messages.get(this, "stats_desc", chargesPerCast());
 		if (isIdentified()){
-			int chargeLeft = chargeLimit(Dungeon.hero.combatLevel()) - totChrgUsed;
+			int chargeLeft = chargeLimit(Dungeon.hero == null ? 1 : Dungeon.hero.combatLevel()) - totChrgUsed;
 			if (chargeLeft < 10000) desc += " " + Messages.get(this, "degradation", Math.max(chargeLeft, 0));
 		}
 		return desc;
@@ -304,7 +304,7 @@ public class WandOfRegrowth extends Wand {
 		if (level >= 10){
 			return "∞";
 		} else {
-			return Integer.toString(chargeLimit(Dungeon.hero.combatLevel(), level));
+			return Integer.toString(chargeLimit(Dungeon.hero == null ? 1 : Dungeon.hero.combatLevel(), level));
 		}
 	}
 
