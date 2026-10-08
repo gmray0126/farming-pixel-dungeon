@@ -1,0 +1,135 @@
+name: Publish Farming Pixel Dungeon v0.33
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v033.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v033
+  cancel-in-progress: false
+jobs:
+  android:
+    name: Build Android debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v5
+        with:
+          ref: cf787917045f6445db8248ed85ceedd9ffb50b49
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: 'false'
+
+      - name: Install Android SDK packages
+        run: sdkmanager --install "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew :core:test :android:assembleDebug --no-daemon --stacktrace
+
+      - name: Save APK and checksum
+        run: |
+          mkdir -p apk-output
+          cp android/build/outputs/apk/debug/*.apk apk-output/
+          cd apk-output
+          sha256sum *.apk > SHA256SUMS.txt
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          path: apk-output/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload save-state test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extraction-save-tests
+          path: core/build/test-results/test/*.xml
+          if-no-files-found: ignore
+  release:
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: ${{ github.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37725099502
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.33.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.33_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.33 / Farming Pixel Dungeon v0.33
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          장비를 준비해 5층 원정을 떠나고 보스를 처치한 뒤 탈출해 장비와 성장 노드를 쌓는 게임입니다.
+          
+          ## 한국어 변경 사항
+          - 원정 중 **스킬 버튼을 핫바 왼쪽으로 이동**하여 가방 위에 표시되는 기존 행동 버튼을 가리지 않도록 했습니다.
+          - 모바일처럼 핫바 옆 공간이 부족하면 핫바 왼쪽 끝 위에 배치해 기존 슬롯 수를 유지합니다.
+          - 씨앗·룬석 주머니, 스크롤 보관함, 물약 가방, 마법 도구 가방을 새 원정 시작부터 모두 기본 지급합니다. 기존 원정도 이어하기 시 없는 가방만 추가됩니다.
+          - 가방은 중복 지급하지 않으며 상점에서도 추가로 생성되지 않습니다. 탈출 시 내용물만 창고에 보관하고 포션·스크롤은 기존대로 골드로 정산합니다.
+          
+          ## English changes
+          Farming Pixel Dungeon is an equipment-farming mod built around five-floor expeditions, extraction, and permanent growth nodes.
+          
+          - Moved the expedition **Skills button to the left of the hotbar**, keeping the existing action button above the inventory bag visible.
+          - On narrow mobile layouts, it sits above the hotbar's left end to preserve all visible quickslots.
+          - Seed/runestone pouch, scroll holder, potion bandolier, and magical holster are available from the start of every expedition. Resuming an older expedition grants any missing bags.
+          - Bags are not duplicated or generated again in shops. Extraction deposits their contents without stockpiling the free bags, and potions/scrolls are redeemed as before.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Android core tests and APK build passed. Windows build and native launch/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [모딩 소스 / Mod source](https://github.com/gmray0126/farming-pixel-dungeon/tree/cf787917045f6445db8248ed85ceedd9ffb50b49)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.33.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target cf787917045f6445db8248ed85ceedd9ffb50b49 --title '파밍픽셀던전 v0.33 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
