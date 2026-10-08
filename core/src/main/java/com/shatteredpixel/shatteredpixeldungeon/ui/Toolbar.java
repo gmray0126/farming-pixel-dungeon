@@ -63,6 +63,7 @@ public class Toolbar extends Component {
 	private Tool btnWait;
 	private Tool btnSearch;
 	private Tool btnInventory;
+	private StyledButton btnSkills;
 	private QuickslotTool[] btnQuick;
 	private SlotSwapTool btnSwap;
 	
@@ -390,6 +391,15 @@ public class Toolbar extends Component {
 		});
 		btnInventory.icon( 160, 0, 16, 16 );
 
+		if (Dungeon.hero.extractionRaidID != 0) {
+			add(btnSkills = new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON, "스킬", 6) {
+				@Override
+				protected void onClick() {
+					com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.open();
+				}
+			});
+		}
+
 		//hidden button for inventory selector keybind
 		add(new Button(){
 			@Override
@@ -539,6 +549,7 @@ public class Toolbar extends Component {
 
 			//swap button never appears on larger interface sizes
 
+			layoutSkills();
 			return;
 		}
 
@@ -643,6 +654,14 @@ public class Toolbar extends Component {
 
 		}
 
+		layoutSkills();
+	}
+
+	private void layoutSkills() {
+		if (btnSkills != null) {
+			btnSkills.setRect(btnInventory.left(), btnInventory.top() - 18, btnInventory.width(), 16);
+			PixelScene.align(btnSkills);
+		}
 	}
 
 	public static void updateLayout(){
@@ -672,6 +691,7 @@ public class Toolbar extends Component {
 		btnWait.alpha( value );
 		btnSearch.alpha( value );
 		btnInventory.alpha( value );
+		if (btnSkills != null) btnSkills.alpha(value);
 		for (QuickslotTool tool : btnQuick){
 			tool.alpha(value);
 		}
