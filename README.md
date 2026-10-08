@@ -64,9 +64,9 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 
 ## 화면 표시 / Display
 
-PC의 **설정 → 화면 설정 → 세로 모드 (PC)**에서 세로형 창과 모바일식 UI를 선택할 수 있습니다. 끄면 이전 창 크기로 돌아옵니다. 성장 지도 창 배경은 88% 투명하고 지도 뒤의 로비 배경을 가리던 막도 숨기며, 긴 설명과 메시지는 창 안에서 줄바꿈되고 필요한 경우 스크롤됩니다.
+PC의 **설정 → 화면 설정 → 세로 모드 (PC)**에서 세로형 창과 모바일식 UI를 선택할 수 있습니다. 끄면 이전 창 크기로 돌아옵니다. 성장 지도는 검은 배경에 창 전체 높이로 표시하며, 상단 정보·버튼은 지도 위에 겹칩니다. 노드를 상단으로 옮겨도 정보 영역 경계에서 잘리지 않습니다. 긴 설명과 메시지는 창 안에서 줄바꿈되고 필요한 경우 스크롤됩니다.
 
-Enable **세로 모드 (PC)** in the PC display settings for a portrait window and the mobile UI. Disabling it restores the previous window size. The growth-map window background is 88% transparent, and the opaque hub shade is hidden while viewing the map. Long descriptions and messages wrap within the window and scroll when needed.
+Enable **세로 모드 (PC)** in the PC display settings for a portrait window and the mobile UI. Disabling it restores the previous window size. The growth map uses the full window height on a black background. Header controls overlay the map, so nodes remain visible when moved behind the header. Long descriptions and messages wrap within the window and scroll when needed.
 
 ## 내 원정 기록 / Expedition records
 

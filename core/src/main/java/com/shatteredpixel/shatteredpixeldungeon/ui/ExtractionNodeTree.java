@@ -25,25 +25,37 @@ public class ExtractionNodeTree extends Component {
     private final GrowthAtlasViewport lens=new GrowthAtlasViewport();
     private final Selection select;
     private final Runnable enlarge;
+    private final boolean fullViewport;
+    private float mapTop,toolbarY;
     private Camera mapCamera;
     private Group world;
     private Image selectionRing;
     private RenderedTextBlock zoomText;
     private float baseZoom;
     private boolean restored;
-    public ExtractionNodeTree(Selection select){this(select,null);}
-    public ExtractionNodeTree(Selection select,Runnable enlarge){this.select=select;this.enlarge=enlarge;}
+    public ExtractionNodeTree(Selection select){this(select,null,false);}
+    public ExtractionNodeTree(Selection select,Runnable enlarge){this(select,enlarge,false);}
+    public ExtractionNodeTree(Selection select,Runnable enlarge,boolean fullViewport){this.select=select;this.enlarge=enlarge;this.fullViewport=fullViewport;}
     @Override protected void layout(){
         super.layout();
         if(width<=0||height<=15)return;
         if(mapCamera!=null){Camera.remove(mapCamera);mapCamera.destroy();mapCamera=null;}
         for(Gizmo member:members.toArray(new Gizmo[0]))member.destroy();clear();
-        lens.bounds((int)width,(int)(height-15));
+        mapTop=fullViewport?0:15;toolbarY=y+(fullViewport?38:0);
+        lens.bounds((int)width,(int)(height-mapTop));
         if(!restored&&rememberedScale>0){
             lens.scale=rememberedScale;lens.centerX=rememberedX;lens.centerY=rememberedY;
             lens.bounds(lens.width,lens.height);
         }
         restored=true;baseZoom=camera().zoom;
+        // A fixed screen-space backing remains black even outside the world at overview zoom.
+        ColorBlock background=new ColorBlock(width,height-mapTop,0xFF090C0F);background.x=x;background.y=y+mapTop;add(background);
+        Point screen=camera().cameraToScreen(x,y+mapTop);
+        mapCamera=new Camera(screen.x,screen.y,(int)lens.width,(int)lens.height,baseZoom);
+        Camera.add(mapCamera);world=new Group();world.camera=mapCamera;add(world);
+        buildAtlas();
+        // Register the map first so toolbar and overlaid window buttons retain pointer priority.
+        add(new Gestures());
         float bx=x;
         nav("전체",bx,21,()->{lens.fit();apply();});bx+=23;
         nav("-",bx,14,()->{lens.zoomAt(lens.scale/1.5f,lens.width/2,lens.height/2);apply();});bx+=16;
@@ -52,13 +64,8 @@ public class ExtractionNodeTree extends Component {
         if(enlarge!=null){nav("크게",bx,24,enlarge);bx+=26;}
         nav("계통",bx,21,()->chooseGroups(false));bx+=23;
         zoomText=null;
-        if(width-(bx-x)>=22){zoomText=PixelScene.renderTextBlock(5);zoomText.hardlight(MUTED);zoomText.setPos(bx+1,y+3);add(zoomText);}
-        Point screen=camera().cameraToScreen(x,y+15);
-        mapCamera=new Camera(screen.x,screen.y,(int)lens.width,(int)lens.height,baseZoom);
-        Camera.add(mapCamera);world=new Group();world.camera=mapCamera;add(world);
-        ColorBlock background=new ColorBlock(GrowthAtlasLayout.SIZE,GrowthAtlasLayout.SIZE,0x20101315);world.add(background);
-        buildAtlas();
-        add(new Gestures());apply();
+        if(width-(bx-x)>=22){zoomText=PixelScene.renderTextBlock(5);zoomText.hardlight(MUTED);zoomText.setPos(bx+1,toolbarY+3);add(zoomText);}
+        apply();
     }
     private void buildAtlas(){
         ExtractionProfile p=ExtractionProfile.get();
@@ -151,9 +158,9 @@ public class ExtractionNodeTree extends Component {
         text.hardlight(color);text.setPos(cx-text.width()/2,cy);world.add(text);
     }
     private void nav(String value,float bx,float w,Runnable action){
-        Button button=new Button(){@Override protected void onClick(){action.run();}};button.setRect(bx,y,w,12);add(button);
-        ColorBlock bg=new ColorBlock(w,12,0xFF283138);bg.x=bx;bg.y=y;button.add(bg);
-        RenderedTextBlock text=PixelScene.renderTextBlock(value,5);text.hardlight(GOLD);text.setPos(bx+(w-text.width())/2,y+3);button.add(text);
+        Button button=new Button(){@Override protected void onClick(){action.run();}};button.setRect(bx,toolbarY,w,12);add(button);
+        ColorBlock bg=new ColorBlock(w,12,0xFF283138);bg.x=bx;bg.y=toolbarY;button.add(bg);
+        RenderedTextBlock text=PixelScene.renderTextBlock(value,5);text.hardlight(GOLD);text.setPos(bx+(w-text.width())/2,toolbarY+3);button.add(text);
     }
     private void apply(){
         if(mapCamera==null)return;
@@ -167,13 +174,13 @@ public class ExtractionNodeTree extends Component {
         if(selectionRing==null)return;selectionRing.visible=rememberedSelection>=0;
         if(rememberedSelection>=0){int n=rememberedSelection;float r=GrowthAtlasLayout.RADIUS[n]+5;selectionRing.scale.set(r*2/64f);selectionRing.x=GrowthAtlasLayout.X[n]-r;selectionRing.y=GrowthAtlasLayout.Y[n]-r;}
     }
-    private PointF local(PointF screen){PointF p=camera().screenToCamera((int)screen.x,(int)screen.y);return p.offset(-x,-y-15);}
+    private PointF local(PointF screen){PointF p=camera().screenToCamera((int)screen.x,(int)screen.y);return p.offset(-x,-y-mapTop);}
     private class Gestures extends ScrollArea {
         private PointerEvent another;
         private boolean pinching,dragging;
         private float startSpan,startScale,anchorX,anchorY;
         private final PointF last=new PointF();
-        Gestures(){super(ExtractionNodeTree.this.x,ExtractionNodeTree.this.y+15,ExtractionNodeTree.this.width,ExtractionNodeTree.this.height-15);}
+        Gestures(){super(ExtractionNodeTree.this.x,ExtractionNodeTree.this.y+mapTop,ExtractionNodeTree.this.width,ExtractionNodeTree.this.height-mapTop);}
         @Override protected void onPointerDown(PointerEvent event){
             if(event==curEvent){dragging=false;last.set(event.current);}
             else if(another==null&&curEvent!=null){

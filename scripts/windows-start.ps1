@@ -82,6 +82,17 @@ function Start-Game {
     if ($p.MainWindowTitle -match 'Crashed|Error') { Capture $p 'crash'; throw "Game crashed: $($p.MainWindowTitle)" }
     return $p
 }
+function Drag-Client($p, [int]$x, [int]$y, [int]$toX, [int]$toY) {
+    $origin=[DesktopInput+Point]::new()
+    [void][DesktopInput]::ClientToScreen($p.MainWindowHandle,[ref]$origin)
+    [void][DesktopInput]::SetCursorPos($origin.X+$x,$origin.Y+$y)
+    [DesktopInput]::mouse_event(2,0,0,0,[UIntPtr]::Zero)
+    for($step=1;$step -le 10;$step++){
+        [void][DesktopInput]::SetCursorPos($origin.X+[int]($x+($toX-$x)*$step/10),$origin.Y+[int]($y+($toY-$y)*$step/10))
+        Start-Sleep -Milliseconds 50
+    }
+    [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
+}
 function Capture($p, $name) {
     $p.Refresh()
     $rect = [DesktopInput+Rect]::new()
@@ -189,7 +200,12 @@ try {
     $tabWidth=($hubWidth-10)/6
     Click-Client $p ([int](($left+$tabWidth+2+$tabWidth/2)*$zoom)) ([int](55*$zoom))
     Start-Sleep -Seconds 1
+    Click-Client $p ([int](71.5*$zoom)) ([int](50*$zoom))
+    Start-Sleep -Milliseconds 300
     Capture $p '06-portrait-growth-map'
+    Drag-Client $p ([int]($rect.Right/2)) ([int]($rect.Bottom/2)) ([int]($rect.Right/2)) ([int](28*$zoom))
+    Start-Sleep -Milliseconds 300
+    Capture $p '06b-growth-under-header'
     [DesktopInput]::keybd_event(27,0,0,[UIntPtr]::Zero)
     [DesktopInput]::keybd_event(27,0,2,[UIntPtr]::Zero)
     Start-Sleep -Milliseconds 300
@@ -198,7 +214,7 @@ try {
     Start-Sleep -Milliseconds 500
     Capture $p '07-portrait-alchemy'
     Close-Game $p
-    @{portrait_window=$true;transparent_growth_map=$true;clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    @{portrait_window=$true;black_growth_map=$true;full_height_growth_viewport=$true;clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

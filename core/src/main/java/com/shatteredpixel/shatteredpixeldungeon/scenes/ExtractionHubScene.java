@@ -46,7 +46,6 @@ public class ExtractionHubScene extends PixelScene {
     }
     public void showHubControls(boolean visible){
         if(body!=null)body.visible=body.active=visible;
-        if(hubShade!=null)hubShade.visible=visible;
     }
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}

@@ -5,12 +5,12 @@ import com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.PixelScene;
 import com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene;
 import com.shatteredpixel.shatteredpixeldungeon.ui.*;
-import com.watabou.noosa.Camera;
+import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.Group;
 import com.watabou.utils.RectF;
 
-/** The atlas occupies the available screen and preserves the live game behind it. */
+/** A full-height black atlas renders behind transparent overlaid controls. */
 public class WndGrowthAtlas extends Window {
     private final Runnable closed;
     private Group body;
@@ -18,27 +18,29 @@ public class WndGrowthAtlas extends Window {
     public WndGrowthAtlas(){this(null);}
     public WndGrowthAtlas(Runnable closed){
         this.closed=closed;
-        chrome.alpha(0.12f);
+        chrome.visible=false;
         shadow.visible=false;
         RectF insets=Game.platform.getSafeInsets(com.watabou.utils.PlatformSupport.INSET_BLK);
-        atlasWidth=Math.max(100,(int)((Game.width-insets.left-insets.right)/PixelScene.defaultZoom)-16);
-        atlasHeight=Math.max(170,(int)((Game.height-insets.top-insets.bottom)/PixelScene.defaultZoom)-20);
+        atlasWidth=Math.max(100,(int)((Game.width-insets.left-insets.right)/PixelScene.defaultZoom)-chrome.marginHor());
+        atlasHeight=Math.max(80,(int)((Game.height-insets.top-insets.bottom)/PixelScene.defaultZoom)-chrome.marginVer());
         resize(atlasWidth,atlasHeight);refresh();
         if(Game.scene() instanceof ExtractionHubScene)((ExtractionHubScene)Game.scene()).showHubControls(false);
     }
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);ExtractionProfile p=ExtractionProfile.get();
-        text("성장 지도",9,0,0,atlasWidth-109,ExtractionNodeTree.GOLD);
+        ColorBlock black=new ColorBlock(atlasWidth+chrome.marginHor(),atlasHeight+chrome.marginVer(),0xFF090C0F);
+        black.x=-chrome.marginLeft();black.y=-chrome.marginTop();body.add(black);
+        ExtractionNodeTree tree=new ExtractionNodeTree(this::node,null,true);body.add(tree);tree.setRect(0,0,atlasWidth,atlasHeight);
+        text("성장 지도",atlasWidth<170?7:9,0,0,atlasWidth-93,ExtractionNodeTree.GOLD);
         text("남은 "+p.points+" P · 사용한 "+p.spentPoints()+" P",6,0,16,atlasWidth,WHITE);
         text("습득 "+p.nodes.size()+" / "+ExtractionProfile.IDS.length+" · 출격 힘 "+p.startingStrength(),5,0,25,atlasWidth,ExtractionNodeTree.GREEN);
         StyledButton presets=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"프리셋",6){@Override protected void onClick(){WndGrowthPresets.open(WndGrowthAtlas.this::refresh);}};
-        presets.setRect(atlasWidth-107,0,39,13);body.add(presets);
+        presets.setRect(atlasWidth-93,0,31,13);body.add(presets);
         StyledButton reset=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"초기화",6){@Override protected void onClick(){WndGrowthReset.open(WndGrowthAtlas.this::refresh);}};
-        reset.setRect(atlasWidth-65,0,39,13);body.add(reset);
+        reset.setRect(atlasWidth-59,0,31,13);body.add(reset);
         StyledButton close=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"닫기",6){@Override protected void onClick(){hide();}};
         close.setRect(atlasWidth-23,0,23,13);body.add(close);
-        ExtractionNodeTree tree=new ExtractionNodeTree(this::node);body.add(tree);tree.setRect(0,38,atlasWidth,atlasHeight-55);
         text("밀어서 이동 · 두 손가락 확대 · 노드 선택",5,0,atlasHeight-10,atlasWidth,ExtractionNodeTree.GREEN);
     }
     private void node(final int index){
