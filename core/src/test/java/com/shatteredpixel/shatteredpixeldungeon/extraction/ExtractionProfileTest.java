@@ -22,6 +22,34 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void allBagsRoutePreparedSuppliesAndRemainUniqueAfterSave() throws Exception {
+        Item potion=new ExtractionShop.SupplyHealingPotion().quantity(2);
+        Item scroll=new ExtractionShop.SupplyUpgrade().quantity(3);
+        Item seed=new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed();
+        for(Item item:new Item[]{potion,scroll,seed}){profile.stash.add(item);profile.prepare(item,true);}
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
+        com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier potions=h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier.class);
+        assertEquals(2,potions.items.get(0).quantity());
+        assertEquals(3,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder.class).items.get(0).quantity());
+        assertTrue(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch.class).items.get(0) instanceof com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed);
+        assertNotNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster.class));
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);
+        h=(Hero)saved.get("hero");Dungeon.hero=h;ExtractionProfile.ensureBags(h);ExtractionProfile.ensureBags(h);
+        assertEquals(5,h.belongings.getBags().size());
+        assertEquals(2,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier.class).items.get(0).quantity());
+        assertTrue(Dungeon.LimitedDrops.MAGICAL_HOLSTER.dropped());
+    }
+    @Test public void freeBagsDepositContentsOnceAndAreReissuedAfterDeath() throws Exception {
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);Dungeon.gold=0;
+        new ExtractionShop.SupplyUpgrade().quantity(2).collect(h.belongings.backpack);
+        new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed().quantity(3).collect(h.belongings.backpack);
+        int before=profile.gold,id=profile.raidID;profile.settle(id,true);profile.settle(id,true);
+        assertEquals(before+100,profile.gold);
+        int seeds=0;for(Item item:profile.stash){assertFalse(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch || item instanceof com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder || item instanceof com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier || item instanceof com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster);if(item instanceof com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed)seeds+=item.quantity();}
+        assertEquals(3,seeds);assertEquals(2,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder.class).items.get(0).quantity());
+        profile.begin();profile.settle(profile.raidID,false);profile.begin();h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
+        assertEquals(5,h.belongings.getBags().size());
+    }
     private static class EffectSprite extends com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite {
         @Override public void showStatusWithIcon(int color,String text,int icon,Object... args){}
         @Override public void add(State state){}
@@ -509,7 +537,7 @@ public class ExtractionProfileTest {
         profile.settle(profile.raidID,true);assertEquals(5,profile.stash.size());
         Item chosen=profile.stash.get(0);profile.prepare(chosen,true);profile.begin();
         Hero next=new Hero();profile.initialize(next);assertEquals(chosen.getClass(),next.belongings.weapon.getClass());
-        assertEquals(2,next.belongings.backpack.items.size());
+        assertEquals(5,next.belongings.backpack.items.size());
         assertNotNull(next.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class));
     }
     @Test public void preparedSwordAndArmorDoNotGetDuplicateFallbackGearAndStonesSurviveSave(){
@@ -612,7 +640,7 @@ public class ExtractionProfileTest {
         profile.settle(profile.raidID,false);
         for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
         profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
-        assertEquals(14,Dungeon.hero.belongings.backpack.items.size());
+        assertEquals(17,Dungeon.hero.belongings.backpack.items.size());
         assertTrue(Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class).isEmpty());
     }
     @Before public void setUp() throws Exception {
@@ -755,7 +783,7 @@ public class ExtractionProfileTest {
         Dungeon.hero.heroClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
         profile.initialize(Dungeon.hero);
         assertEquals(1, Dungeon.hero.belongings.weapon.level());
-        assertEquals(3, Dungeon.hero.belongings.backpack.items.size());
+        assertEquals(6, Dungeon.hero.belongings.backpack.items.size());
     }
     @Test public void returnAllPreservesEveryPreparedItemAfterReload() throws Exception {
         for (Item item : new java.util.ArrayList<>(profile.stash)) profile.prepare(item, true);
@@ -881,7 +909,7 @@ public class ExtractionProfileTest {
         profile.points=100;learnPath("porter");int cap=profile.capacity(),stored=profile.stash.size();assertTrue(cap>12);
         for(int i=0;i<cap;i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
         profile.resetNodes();assertEquals(12,profile.prepared.size());assertEquals(stored+cap-12,profile.stash.size());
-        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(14,h.belongings.backpack.items.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(17,h.belongings.backpack.items.size());
     }
     @Test public void firstArcherNodeGivesTheNativeBowEveryRaidAndResetLocksItAgain(){
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
@@ -895,7 +923,7 @@ public class ExtractionProfileTest {
     }
     @Test public void freeBowFitsAFullLoadoutAndPreparedBowNeverReplacesTheSword(){
         learnPath("ranged_0");for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
-        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(15,h.belongings.backpack.items.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(17,h.belongings.backpack.items.size());
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");assertNotNull(restored.belongings.getItem(NodeSpiritBow.class));
         Dungeon.gold=0;profile.settle(profile.raidID,true);for(Item item:profile.stash)assertFalse(item instanceof NodeSpiritBow);

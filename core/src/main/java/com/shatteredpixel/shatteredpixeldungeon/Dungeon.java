@@ -826,6 +826,9 @@ public class Dungeon {
 		
 		hero = null;
 		hero = (Hero)bundle.get( HERO );
+		if (hero != null && hero.extractionRaidID != 0) {
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.ensureBags(hero);
+		}
 		
 		depth = bundle.getInt( DEPTH );
 		branch = bundle.getInt( BRANCH );

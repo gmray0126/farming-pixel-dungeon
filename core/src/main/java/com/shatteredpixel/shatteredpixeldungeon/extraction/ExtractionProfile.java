@@ -7,6 +7,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
+import com.shatteredpixel.shatteredpixeldungeon.items.bags.*;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword;
 import com.watabou.utils.Bundlable;
 import com.watabou.utils.Bundle;
@@ -163,6 +164,21 @@ public final class ExtractionProfile {
         if (prepared.isEmpty()) return;
         change(() -> { stash.addAll(prepared); prepared.clear(); });
     }
+    public static void ensureBags(Hero h) {
+        Bag[] bags={new VelvetPouch(),new ScrollHolder(),new PotionBandolier(),new MagicalHolster()};
+        for(Bag bag:bags){
+            if(h.belongings.getItem(bag.getClass())==null && !bag.collect(h.belongings.backpack))
+                throw new IllegalStateException("기본 전용 가방을 지급하지 못했습니다.");
+        }
+        Dungeon.LimitedDrops.VELVET_POUCH.drop();
+        Dungeon.LimitedDrops.SCROLL_HOLDER.drop();
+        Dungeon.LimitedDrops.POTION_BANDOLIER.drop();
+        Dungeon.LimitedDrops.MAGICAL_HOLSTER.drop();
+    }
+    private static boolean isStartingBag(Item item){
+        return item instanceof VelvetPouch || item instanceof ScrollHolder
+                || item instanceof PotionBandolier || item instanceof MagicalHolster;
+    }
     public void initialize(Hero h) {
         h.belongings.clear();
         h.extractionContracts=new ExtractionContracts.Run();h.extractionContracts.ids=contracts.toArray(new String[0]);h.extractionContracts.progress=new int[contracts.size()];
@@ -181,6 +197,7 @@ public final class ExtractionProfile {
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring&&h.belongings.ring==null){h.belongings.ring=(com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring)i;h.belongings.ring.activate(h);}
             else if (!i.collect(h.belongings.backpack)) throw new IllegalStateException("준비 물품이 가방에 들어가지 않습니다.");
         }
+        ensureBags(h);
         if(h.belongings.weapon==null){
             h.belongings.weapon=(KindOfWeapon)new BasicExpeditionSword().identify(false);
             h.belongings.weapon.activate(h);
@@ -287,6 +304,12 @@ public final class ExtractionProfile {
                 // Work on a copy so failed settlement never removes scrolls from the run save.
                 Bundle copied=new Bundle();copied.put("loot",loot);loot.clear();
                 for(Bundlable item:copied.getCollection("loot"))loot.add((Item)item);
+                // Bags are free facilities; deposit their copied contents, not another set of bags.
+                for(int i=0;i<loot.size();){
+                    Item item=loot.get(i);
+                    if(isStartingBag(item)){loot.remove(i);loot.addAll(((Bag)item).items);}
+                    else i++;
+                }
                 ExtractionShop.Redemption redeemed=ExtractionShop.redeemConsumables(loot);
                 // Unmodified free swords are reissued next run instead of filling the stash.
                 loot.removeIf(i -> i instanceof BasicExpeditionSword && i.level()==0 && ((BasicExpeditionSword)i).enchantment==null);
