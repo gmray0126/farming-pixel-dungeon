@@ -1,0 +1,79 @@
+name: Publish Farming Pixel Dungeon v0.38
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v038.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v038
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37797689723
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37797689771
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.38.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.38_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.38 / Farming Pixel Dungeon v0.38
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **애니메이션 배속 버튼:** 원정 화면 오른쪽 위 메뉴 아래의 버튼을 누르면 **×1 → ×3 → ×5 → ×1**로 전환됩니다. 선택한 배속은 저장되어 재시작·이어하기에도 유지됩니다.
+          - 공격·시전·피격·투사체·입자·전투 효과 애니메이션을 선택한 속도로 재생합니다. 화면 흔들림과 효과 시간도 함께 단축합니다.
+          - **캐릭터 이동 제외:** 걷기 프레임과 위치 이동, 점프, 밀려남, 위치 교환은 원래 속도를 유지합니다. 카메라 이동도 그대로입니다.
+          - 배속은 화면 재생에 적용하며 전투 피해, 행동 비용, 턴 소모와 성장 규칙은 바꾸지 않습니다.
+          
+          ## English changes
+          - **Animation speed button:** Click the button below the top-right expedition menu to cycle **×1 → ×3 → ×5 → ×1**. The selected speed is saved across restarts and resumed expeditions.
+          - Attack, casting, hit, projectile, particle, and combat effect animations use the selected speed. Screen shake and effect durations are shortened accordingly.
+          - **Character movement excluded:** Walking frames, travel, jumps, knockback, and position swaps retain their original speed. Camera panning is unchanged.
+          - This controls visual playback; combat damage, action costs, turn consumption, and growth rules remain unchanged.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. Regression checks cover walking versus attack frames, movement versus projectile timing, clock restoration, nested visual effects, and persisted multiplier settings. Windows build and native launch/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/5107f27f91ef4b2620545ea873e3b487c6d4dba3)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.38.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.38 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
