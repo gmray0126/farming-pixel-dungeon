@@ -447,7 +447,7 @@ public class Armor extends EquipableItem {
 		//TODO warrior's seal upgrade should probably be considered here too
 		// instead of being part of true level
 		if (curseInfusionBonus) level += 1 + level/6;
-		return level;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(this,level);
 	}
 	
 	@Override
@@ -456,6 +456,7 @@ public class Armor extends EquipableItem {
 	}
 	
 	public Item upgrade( boolean inscribe ) {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 
 		if (inscribe){
 			if (glyph == null){
@@ -640,7 +641,7 @@ public class Armor extends EquipableItem {
 		}
 		
         if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())info+="\n\n원정에서는 위 기본 방어량의 50%를 갑옷이 담당합니다. 나머지는 바지 30% · 신발 20%로 분배되며, 세 부위의 방어량을 합산한 뒤 반올림합니다. 힘 부족에 따른 회피·이동 부담도 각 부위의 비율만큼 적용됩니다. 기존 문양은 갑옷·바지·신발에 새길 수 있으며 같은 문양은 가장 높은 강화 수치의 한 부위만 적용됩니다.";
-		return info;
+		return info+com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.description(this);
 	}
 
 	@Override

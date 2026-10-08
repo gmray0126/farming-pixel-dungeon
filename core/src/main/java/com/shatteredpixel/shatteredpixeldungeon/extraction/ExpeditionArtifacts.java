@@ -25,11 +25,10 @@ public final class ExpeditionArtifacts {
     }
     public static boolean has(Hero hero,Class<? extends Relic> type){return equipped(hero,type)!=null;}
     public static boolean canDrop(Class<?> type,int chapter,int stage){
-        if(chapter==1&&stage==1)return false;
-        if(type==BloodLantern.class)return chapter==2||stage>=3;
-        if(type==GreedPouch.class)return chapter==2||stage>=4;
-        if(type==BrokenHourglass.class)return chapter==2||stage>=5;
-        if(type==HuntersMark.class)return chapter==2||stage>=7;
+        if(type==BloodLantern.class)return chapter>=2||stage>=3;
+        if(type==GreedPouch.class)return chapter>=2||stage>=4;
+        if(type==BrokenHourglass.class)return chapter>=2||stage>=5;
+        if(type==HuntersMark.class)return chapter>=2||stage>=7;
         return true;
     }
     public static void kill(Hero hero){

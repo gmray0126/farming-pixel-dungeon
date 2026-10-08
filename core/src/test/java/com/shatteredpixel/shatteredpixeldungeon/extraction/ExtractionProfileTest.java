@@ -22,6 +22,65 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void sewerArtifactDrawsRemainPossibleAndDoNotEraseLaterChapterRelics() {
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.fullReset();
+        java.util.Set<Class<?>> drawn=new java.util.HashSet<>();
+        com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact artifact;
+        int expected=0;
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category cat=com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT;
+        for(int i=0;i<cat.classes.length;i++)if(cat.probs[i]>0&&ExpeditionArtifacts.canDrop(cat.classes[i],1,1))expected++;
+        assertTrue(expected>0);
+        for(int i=0;i<=cat.classes.length;i++){
+            artifact=com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomArtifact();if(artifact==null)break;
+            assertTrue(ExpeditionArtifacts.canDrop(artifact.getClass(),1,1));assertTrue(drawn.add(artifact.getClass()));
+        }
+        assertEquals(expected,drawn.size());assertTrue(drawn.contains(ExpeditionArtifacts.UnstableCompass.class));
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();com.shatteredpixel.shatteredpixeldungeon.items.Generator.storeInBundle(saved);
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.restoreFromBundle(saved);
+        assertNull(com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomArtifact());
+        profile.raidChapter=2;profile.raidDifficulty=6;
+        java.util.Set<Class<?>> later=new java.util.HashSet<>();
+        while((artifact=com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomArtifact())!=null){assertFalse(drawn.contains(artifact.getClass()));assertTrue(later.add(artifact.getClass()));}
+        assertEquals(4,later.size());assertTrue(later.contains(ExpeditionArtifacts.HuntersMark.class));
+        for(int c=2;c<=5;c++)for(Class<?> type:later)assertTrue(ExpeditionArtifacts.canDrop(type,c,ExtractionDifficulty.fixedStage(c)));
+    }
+    @Test public void oldBlockedSewerArtifactDeckRepairsOnceAndExcludesCarriedArtifacts() {
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        Dungeon.hero.belongings.artifact=new com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains();
+        com.watabou.utils.Bundle old=new com.watabou.utils.Bundle();old.put("artifact_probs",new float[18]);
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.restoreFromBundle(old);
+        com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact dropped=com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomArtifact();
+        assertNotNull(dropped);assertFalse(dropped instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.EtherealChains);
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();com.shatteredpixel.shatteredpixeldungeon.items.Generator.storeInBundle(saved);
+        float[] before=com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT.probs.clone();
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.restoreFromBundle(saved);
+        assertArrayEquals(before,com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT.probs,0);
+    }
+    @Test public void allArmorTiersClampUpgradesAndOldSavesAndBlockScrollSelection() {
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor[] armor={
+            new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor(),new com.shatteredpixel.shatteredpixeldungeon.items.armor.LeatherArmor(),
+            new com.shatteredpixel.shatteredpixeldungeon.items.armor.MailArmor(),new com.shatteredpixel.shatteredpixeldungeon.items.armor.ScaleArmor(),new com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor()};
+        for(com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor item:armor){
+            int cap=item.tier*3;assertEquals(cap,WeaponUpgradeLimit.cap(item));item.upgrade(cap-1);assertTrue(WeaponUpgradeLimit.eligible(item));item.upgrade();assertEquals(cap,item.trueLevel());
+            assertFalse(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().getSelector(false).itemSelectable(item));
+            item.cursed=true;item.glyphHardened=true;item.curseInfusionBonus=true;item.upgrade(true);item.upgrade(100);assertTrue(item.cursed);assertTrue(item.glyphHardened);assertEquals(cap,item.trueLevel());assertEquals(cap,item.level());
+            assertSame(item,new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().upgradeItem(item));assertSame(item,new com.shatteredpixel.shatteredpixeldungeon.items.spells.MagicalInfusion().upgradeItem(item));
+            item.level(100);assertEquals(cap,item.trueLevel());
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();item.storeInBundle(saved);saved.put("level",100);
+            com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor copy=(com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)com.watabou.utils.Reflection.newInstance(item.getClass());copy.restoreFromBundle(saved);
+            assertEquals(cap,copy.trueLevel());assertEquals(cap,copy.level());assertTrue(copy.cursed);assertTrue(copy.glyphHardened);
+        }
+    }
+    @Test public void classArmorRestoresAndTransfersUsingItsOriginalTierCap() {
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor item=new com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor();item.tier=2;item.level(100);assertEquals(6,item.trueLevel());
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();item.storeInBundle(saved);saved.put("level",100);
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor copy=new com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor();copy.restoreFromBundle(saved);assertEquals(2,copy.tier);assertEquals(6,copy.trueLevel());
+        Hero hero=new Hero();hero.heroClass=com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor source=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();source.upgrade(3);
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor transferred=com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor.upgrade(hero,source);
+        assertEquals(1,transferred.tier);assertEquals(3,transferred.trueLevel());
+    }
     @Test public void emergencyExtractionKeepsLootAndEarnedXpButRejectsAllCurrentContractCredit() throws Exception {
         ExtractionContracts.accept(profile,"hunt_1");ExtractionContracts.accept(profile,"record_1");ExtractionContracts.accept(profile,"supply_1");
         profile.contractProgress.put("hunt_1",2);

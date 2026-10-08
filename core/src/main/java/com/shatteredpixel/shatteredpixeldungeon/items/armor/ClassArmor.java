@@ -120,8 +120,8 @@ abstract public class ClassArmor extends Armor {
 				break;
 		}
 		
-		classArmor.level(armor.trueLevel());
 		classArmor.tier = armor.tier;
+		classArmor.level(armor.trueLevel());
 		classArmor.augment = armor.augment;
 		classArmor.inscribe(armor.glyph);
 		if (armor.seal != null) {
@@ -155,8 +155,8 @@ abstract public class ClassArmor extends Armor {
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
-		super.restoreFromBundle( bundle );
 		tier = bundle.getInt( ARMOR_TIER );
+		super.restoreFromBundle( bundle );
 		charge = bundle.getFloat(CHARGE);
 	}
 	
@@ -237,8 +237,8 @@ abstract public class ClassArmor extends Armor {
 										((HeroSprite) hero.sprite).updateArmor();
 									}
 								}
-								level(armor.trueLevel());
 								tier = armor.tier;
+								level(armor.trueLevel());
 								augment = armor.augment;
 								cursed = armor.cursed;
 								curseInfusionBonus = armor.curseInfusionBonus;

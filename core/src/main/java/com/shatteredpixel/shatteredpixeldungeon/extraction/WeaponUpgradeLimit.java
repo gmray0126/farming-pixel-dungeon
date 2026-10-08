@@ -4,12 +4,13 @@ import com.shatteredpixel.shatteredpixeldungeon.items.Item;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon;
 
-/** Permanent upgrade limits for tiered weapons, rings and artifact ranks. */
+/** Permanent upgrade limits for tiered equipment, rings and artifact ranks. */
 public final class WeaponUpgradeLimit {
     public static int tier(Item item){
         if(item instanceof MeleeWeapon)return ((MeleeWeapon)item).tier;
         if(item instanceof MissileWeapon)return ((MissileWeapon)item).tier;
         if(item instanceof ExpeditionClothing)return ((ExpeditionClothing)item).tier;
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)return ((com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)item).tier;
         return 0;
     }
     public static int cap(Item item){

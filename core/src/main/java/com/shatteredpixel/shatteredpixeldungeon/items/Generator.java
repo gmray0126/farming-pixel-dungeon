@@ -863,17 +863,17 @@ public class Generator {
 
 	//enforces uniqueness of artifacts throughout a run.
 	public static Artifact randomArtifact() {
-        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())for(int n=0;n<Category.ARTIFACT.classes.length;n++)
-            if(!com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.canDrop(Category.ARTIFACT.classes[n],com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapter(),com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()))Category.ARTIFACT.probs[n]=0;
-
 		Category cat = Category.ARTIFACT;
+        float[] eligible=cat.probs.clone();
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())for(int n=0;n<cat.classes.length;n++)
+            if(!com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.canDrop(cat.classes[n],com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapter(),com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()))eligible[n]=0;
 
 		if (cat.defaultProbs != null && cat.seed != null){
 			Random.pushGenerator(cat.seed);
 			for (int i = 0; i < cat.dropped; i++) Random.Long();
 		}
 
-		int i = Random.chances( cat.probs );
+		int i = Random.chances( eligible );
 
 		if (cat.defaultProbs != null && cat.seed != null){
 			Random.popGenerator();
@@ -909,6 +909,7 @@ public class Generator {
 	private static final String CATEGORY_DROPPED = "_dropped";
 
 	public static void storeInBundle(Bundle bundle) {
+        bundle.put("extraction_artifact_rules",1);
 		bundle.put(FIRST_DECK, usingFirstDeck);
 
 		Float[] genProbs = categoryProbs.values().toArray(new Float[0]);
@@ -982,6 +983,14 @@ public class Generator {
 
 			}
 		}
-		
+        // The old sewer gate erased every artifact weight before any random relic could drop.
+        // Repair that legacy deck once, while continuing to exclude brought-in artifacts.
+        if(!bundle.contains("extraction_artifact_rules")
+                &&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()
+                &&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapter()==1
+                &&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()==1){
+            Category.ARTIFACT.probs=Category.ARTIFACT.defaultProbs.clone();
+            for(Item item:Dungeon.hero.belongings)if(item instanceof Artifact)removeArtifact((Class<? extends Artifact>)item.getClass());
+        }
 	}
 }
