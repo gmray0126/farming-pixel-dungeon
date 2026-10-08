@@ -1,0 +1,81 @@
+name: Publish Farming Pixel Dungeon v0.40.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v040.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v040
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37810491129
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37810491233
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.40.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.40.0_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.40.0 / Farming Pixel Dungeon v0.40.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **장비 강화 상한 점검:** 반지·마법 지팡이·성장형 유물은 최대 **+15**, 근접무기·투척무기·갑옷·바지·신발은 **티어 × 3** 상한을 적용합니다. T1 +3 / T2 +6 / T3 +9 / T4 +12 / T5 +15입니다.
+          - **영혼의 활 예외 보강:** 일반 강화 스크롤을 사용할 수 없는 기존 규칙을 유지하며, 직접 강화·수치 설정·저장 불러오기와 계산되는 강화 수치에도 +15 상한을 적용합니다. 로비에서 활 설명을 열 때의 오류도 수정했습니다.
+          - 상한에 도달한 반지를 직접 강화해도 저주와 힘의 반지 상태가 바뀌지 않도록 수정했습니다.
+          - **대장장이 재련:** 상한에 도달한 장비는 선택할 수 없고, 처리 직전에도 상한을 확인하여 재료 장비와 호감도가 낭비되지 않게 했습니다.
+          - 연금술 장신구는 기존 최대 **+3** 규칙을 직접 강화·저장 불러오기에 적용하고, 상한에서 제작을 다시 호출해도 재료를 소모하지 않도록 했습니다. 성장하지 않는 유물은 계속 강화할 수 없습니다.
+          
+          ## English changes
+          - **Equipment upgrade audit:** Rings, magic wands, and growing artifacts cap at **+15**. Melee weapons, thrown weapons, body armor, trousers, and boots cap at **tier × 3**: T1 +3 / T2 +6 / T3 +9 / T4 +12 / T5 +15.
+          - **Spirit Bow safeguards:** It still cannot use regular upgrade scrolls. Direct upgrades, level assignments, save restoration, and its calculated upgrade level now have a +15 ceiling. Opening its description at the hub no longer crashes without an active hero.
+          - Direct attempts to upgrade a capped ring now preserve curses and Ring of Might state.
+          - **Blacksmith reforging:** Capped items cannot be selected, and the ceiling is checked again before processing to prevent losing the second item or favor.
+          - Alchemy trinkets retain their existing **+3** maximum, now enforced during direct upgrades and save restoration. Repeated crafting at the cap does not consume the ingredient. Non-growing artifacts remain non-upgradable.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. Regression checks cover all generated rings, thrown weapon tiers, original and new artifacts, trinkets, both Spirit Bow variants, capped side effects, and legacy saves. Windows build and native launch/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/c0ac1e330dc1bf9860999809e7e7d6010cc28d91)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.40.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.40.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
