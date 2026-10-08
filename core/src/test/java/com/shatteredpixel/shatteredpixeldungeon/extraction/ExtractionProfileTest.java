@@ -520,6 +520,7 @@ public class ExtractionProfileTest {
         assertEquals(sword.getClass(),h.belongings.weapon.getClass());assertEquals(armor.getClass(),h.belongings.armor.getClass());
         int armors=0;for(Item item:h.belongings){assertFalse(item instanceof BasicExpeditionSword);assertFalse(item instanceof BasicExpeditionArmor);if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)armors++;}
         assertEquals(1,armors);assertEquals(3,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");
         assertEquals(armor.getClass(),restored.belongings.armor.getClass());assertEquals(3,restored.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
     }
