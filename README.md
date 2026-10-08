@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.27.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.27.0-farming)
+[v0.28.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.28.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.27.0-farming/Farming_Pixel_Dungeon_v0.27.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.27.0-farming/Farming_Pixel_Dungeon_PC_v0.27_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.28.0-farming/Farming_Pixel_Dungeon_v0.28.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.28.0-farming/Farming_Pixel_Dungeon_PC_v0.28_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -61,6 +61,12 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 - **Windows:** ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Java 런타임이 포함되어 있습니다. Extract the entire ZIP and run that executable; Java is bundled.
 - **Builds:** [Android build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/android-apk.yml) · [Windows build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/desktop-pc.yml). Successful runs provide downloadable artifacts; GitHub may require sign-in.
 - **Source builds:** [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction) · [Android guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-android.md) · [Desktop guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-desktop.md).
+
+## 화면 표시 / Display
+
+PC의 **설정 → 화면 설정 → 세로 모드 (PC)**에서 세로형 창과 모바일식 UI를 선택할 수 있습니다. 끄면 이전 창 크기로 돌아옵니다. 성장 지도 창 배경은 75% 투명하며, 긴 설명과 메시지는 창 안에서 줄바꿈되고 필요한 경우 스크롤됩니다.
+
+Enable **세로 모드 (PC)** in the PC display settings for a portrait window and the mobile UI. Disabling it restores the previous window size. The growth-map window background is 75% transparent. Long descriptions and messages wrap within the window and scroll when needed.
 
 ## 로비 연금술과 보급 / Hub alchemy and supplies
 
