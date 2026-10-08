@@ -186,10 +186,10 @@ public class ExtractionHybridTest {
         try{ExtractionAlchemy.craft(p,picks(supply),recipe);fail("Missing energy");}catch(IllegalStateException expected){}assertEquals(before,p.stash.size());assertTrue(p.stash.contains(supply));
     }
     @Test public void hubEnergyPurchasesAndDisassemblyPersistWithoutDuplicatingValue() throws Exception{
-        ExtractionAlchemy.buyEnergy(p,5);assertEquals(50,p.gold);assertEquals(5,p.alchemyEnergy);
+        ExtractionAlchemy.buyEnergy(p,5);assertEquals(75,p.gold);assertEquals(5,p.alchemyEnergy);
         Item potion=p.stash.get(1);int energy=ExtractionAlchemy.energyValue(potion,1);assertTrue(energy>0);ExtractionAlchemy.energize(p,potion,1);assertEquals(5+energy,p.alchemyEnergy);
         try{ExtractionAlchemy.energize(p,potion,1);fail("Already consumed");}catch(IllegalStateException expected){}
-        Field f=ExtractionProfile.class.getDeclaredField("instance");f.setAccessible(true);f.set(null,null);p=ExtractionProfile.get();assertEquals(5+energy,p.alchemyEnergy);assertEquals(50,p.gold);
+        Field f=ExtractionProfile.class.getDeclaredField("instance");f.setAccessible(true);f.set(null,null);p=ExtractionProfile.get();assertEquals(5+energy,p.alchemyEnergy);assertEquals(75,p.gold);
     }
     @Test public void hubCraftSaveFailureRestoresMaterialsAndEnergy() throws Exception{
         Item supply=p.stash.get(1);p.alchemyEnergy=4;Recipe recipe=ExtractionAlchemy.recipes(p,picks(supply)).stream().filter(r->r instanceof com.shatteredpixel.shatteredpixeldungeon.items.potions.exotic.ExoticPotion.PotionToExotic).findFirst().get();

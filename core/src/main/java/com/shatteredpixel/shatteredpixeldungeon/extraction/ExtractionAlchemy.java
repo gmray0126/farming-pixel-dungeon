@@ -14,7 +14,7 @@ import java.util.function.Supplier;
 
 /** Original recipes, using copied stash ingredients and a single profile transaction. */
 public final class ExtractionAlchemy {
-    public static final int ENERGY_PRICE=10;
+    public static final int ENERGY_PRICE=5;
     private static void atHub(ExtractionProfile p){if(p.active)throw new IllegalStateException("원정을 마친 뒤 로비에서 연금술을 이용하세요.");}
     /** Recipes sometimes consult the hero; never expose or mutate the last expedition hero. */
     private static <T>T context(Supplier<T> action){

@@ -38,7 +38,7 @@ public class WndHubAlchemy extends Window {
         if(recipes.isEmpty())label(selected.isEmpty()?"창고 재료를 선택하세요.\n기존 연금술 제작법을 사용합니다.":"이 조합으로 만들 수 있는 제작법이 없습니다.",6,0,129,w,0xD5DFE4);
         button("이전",0,h-18,29,15,()->{page=(page+pages-1)%pages;refresh();});label((page+1)+" / "+pages,6,w/2f-12,h-15,40,0xD5DFE4);button("다음",w-29,h-18,29,15,()->{page=(page+1)%pages;refresh();});
     }
-    private void energyMenu(){Game.scene().add(new WndOptions("연금 에너지 구매","에너지 1당 "+ExtractionAlchemy.ENERGY_PRICE+" G. 로비에 보관되어 사망해도 유지됩니다.","+1 · 10 G","+5 · 50 G","+10 · 100 G","닫기"){@Override protected void onSelect(int i){if(i<3)run(()->{ExtractionAlchemy.buyEnergy(ExtractionProfile.get(),i==0?1:i==1?5:10);refresh();});}});}
+    private void energyMenu(){Game.scene().add(new WndOptions("연금 에너지 구매","에너지 1당 "+ExtractionAlchemy.ENERGY_PRICE+" G. 로비에 보관되어 사망해도 유지됩니다.","+1 · "+ExtractionAlchemy.ENERGY_PRICE+" G","+5 · "+(5*ExtractionAlchemy.ENERGY_PRICE)+" G","+10 · "+(10*ExtractionAlchemy.ENERGY_PRICE)+" G","닫기"){@Override protected void onSelect(int i){if(i<3)run(()->{ExtractionAlchemy.buyEnergy(ExtractionProfile.get(),i==0?1:i==1?5:10);refresh();});}});}
     private void chooseItem(boolean energy,int page){
         ExtractionProfile p=ExtractionProfile.get();ArrayList<Item> items=new ArrayList<>();
         for(Item item:p.stash){int used=Collections.frequency(selected,item);if(energy?ExtractionAlchemy.energyValue(item,1)>0:Recipe.usableInRecipe(item)&&item.quantity()>used)items.add(item);}
