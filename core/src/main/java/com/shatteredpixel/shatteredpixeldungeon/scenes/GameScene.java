@@ -508,7 +508,7 @@ public class GameScene extends PixelScene {
             @Override protected String hoverText(){return "이동 제외 애니메이션 배속 · 1배 / 3배 / 5배";}
         };
         animationSpeedButton.camera=uiCamera;
-        animationSpeedButton.setRect(uiCamera.width-insets.right-24,screentop+menu.height()+2,24,16);
+        animationSpeedButton.setRect(uiCamera.width-insets.right-24,screentop+33,24,16);
         add(animationSpeedButton);
 
 		boss = new BossHealthBar();
