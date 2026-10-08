@@ -22,6 +22,38 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void everyWandStopsAtFifteenAndLegacySavesAreClamped() {
+        for (Class<?> type : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.WAND.classes) {
+            com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand wand =
+                (com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)com.watabou.utils.Reflection.newInstance(type);
+            assertEquals(type.getName(),15,WeaponUpgradeLimit.cap(wand));
+            wand.upgrade(14);
+            assertTrue(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().getSelector(false).itemSelectable(wand));
+            assertTrue(new com.shatteredpixel.shatteredpixeldungeon.items.spells.MagicalInfusion().getSelector().itemSelectable(wand));
+            wand.upgrade();assertEquals(15,wand.trueLevel());
+            assertFalse(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().getSelector(false).itemSelectable(wand));
+            assertFalse(new com.shatteredpixel.shatteredpixeldungeon.items.spells.MagicalInfusion().getSelector().itemSelectable(wand));
+            wand.upgrade(100);assertEquals(15,wand.trueLevel());wand.level(100);assertEquals(15,wand.trueLevel());
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();wand.storeInBundle(saved);saved.put("level",100);
+            com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand copy =
+                (com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)com.watabou.utils.Reflection.newInstance(type);
+            copy.restoreFromBundle(saved);assertEquals(15,copy.trueLevel());assertEquals(15,copy.level());
+            copy.identify(false);assertTrue(copy.info().contains("+15 / +15"));
+            com.watabou.utils.Bundle roundTrip=new com.watabou.utils.Bundle();copy.storeInBundle(roundTrip);
+            assertEquals(15,roundTrip.getInt("level"));
+        }
+    }
+    @Test public void blockedWandUpgradesDoNotChangeChargesCurseOrResin() {
+        com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand wand=new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile();
+        wand.level(15);wand.curCharges=1;wand.cursed=true;wand.curseInfusionBonus=true;wand.resinBonus=2;
+        for(int i=0;i<100;i++)wand.upgrade();
+        assertSame(wand,new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().upgradeItem(wand));
+        assertSame(wand,new com.shatteredpixel.shatteredpixeldungeon.items.spells.MagicalInfusion().upgradeItem(wand));
+        assertEquals(15,wand.trueLevel());assertEquals(15,wand.level());assertEquals(1,wand.curCharges);
+        assertTrue(wand.cursed);assertTrue(wand.curseInfusionBonus);assertEquals(2,wand.resinBonus);
+        wand.level(14);assertEquals(15,wand.level());wand.curseInfusionBonus=false;wand.resinBonus=0;
+        assertEquals(14,wand.level());wand.upgrade();assertEquals(15,wand.level());
+    }
     @Test public void sewerArtifactDrawsRemainPossibleAndDoNotEraseLaterChapterRelics() {
         profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
         com.shatteredpixel.shatteredpixeldungeon.items.Generator.fullReset();

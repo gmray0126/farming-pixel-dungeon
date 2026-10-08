@@ -310,7 +310,7 @@ public abstract class Wand extends Item {
 			desc += "\n\n" + Messages.get(this, "bmage_desc");
 		}
 
-		return desc;
+		return desc + com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.description(this);
 	}
 
 	public String statsDesc(){
@@ -352,11 +352,12 @@ public abstract class Wand extends Item {
 		int level = super.level();
 		if (curseInfusionBonus) level += 1 + level/6;
 		level += resinBonus;
-		return level;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(this, level);
 	}
 	
 	@Override
 	public Item upgrade() {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 
 		super.upgrade();
 
