@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.30.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.30.0-farming)
+[v0.31.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.31.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.30.0-farming/Farming_Pixel_Dungeon_v0.30.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.30.0-farming/Farming_Pixel_Dungeon_PC_v0.30_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.31.0-farming/Farming_Pixel_Dungeon_v0.31.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.31.0-farming/Farming_Pixel_Dungeon_PC_v0.31_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -82,7 +82,7 @@ The hub's top-right **기록** button opens the original personal records screen
 
 The hub has six tabs: Preparation, Growth, Expedition, Shop, Contracts, and Alchemy. The small quick-potion-purchase button is removed; use the full-width alchemy entry button in the Alchemy tab.
 
-성장 창은 88% 투명하며 지도 뒤의 로비 가림막을 숨겨 움직이는 배경이 실제로 비칩니다. The growth window is 88% transparent and hides the opaque hub shade, revealing the animated backdrop.
+성장 지도는 고정된 검은 배경과 창 전체 높이를 사용합니다. 상단 정보와 버튼은 지도 위에 겹쳐 표시되어 노드가 상단 경계에서 잘리지 않습니다. The growth map uses a stable black background and the full window height. Header controls overlay the map, keeping nodes visible behind the header.
 
 ## 제작자와 원작 / Credits
 
