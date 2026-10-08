@@ -4,7 +4,7 @@ import com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition;
 
 /** Each original chapter is an independent five-floor raid with a boss-gated exit. */
 public final class ExtractionRoute {
-    public enum Action { BLOCK, TRAVEL, EXTRACT }
+    public enum Action { BLOCK, TRAVEL, EXTRACT, EMERGENCY_EXTRACT }
     public static Action action(int depth,int branch,LevelTransition.Type type,int destination,boolean bossDefeated,boolean locked){
         return action(1,depth,branch,type,destination,bossDefeated,locked);
     }
@@ -12,6 +12,8 @@ public final class ExtractionRoute {
         if(!ExtractionDifficulty.validChapter(chapter))return Action.BLOCK;
         int start=ExtractionDifficulty.startDepth(chapter),end=ExtractionDifficulty.endDepth(chapter);
         if(locked||branch!=0)return Action.BLOCK;
+        if(depth==start&&destination==start-1&&(type==LevelTransition.Type.REGULAR_ENTRANCE
+                ||chapter==1&&type==LevelTransition.Type.SURFACE))return Action.EMERGENCY_EXTRACT;
         if(type==LevelTransition.Type.REGULAR_ENTRANCE)
             return depth>start&&depth<=end&&destination==depth-1?Action.TRAVEL:Action.BLOCK;
         if(type!=LevelTransition.Type.REGULAR_EXIT)return Action.BLOCK;

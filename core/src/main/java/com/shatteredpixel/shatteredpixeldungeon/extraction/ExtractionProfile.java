@@ -289,11 +289,20 @@ public final class ExtractionProfile {
         change(() -> { awardGrowthXP((long)total-raidXP); raidXP=total; });
     }
     public void settle(final int id, final boolean success) {
+        settle(id,success,false);
+    }
+    /** Retreat keeps supplies and earned XP, but grants no clear or contract credit. */
+    public void emergencyExtract(final int id) {
+        settle(id,true,true);
+    }
+    private void settle(final int id, final boolean success, final boolean emergency) {
         if (!active || id!=raidID) return;
         change(() -> {
             if (success) {
-                ExtractionContracts.extracted(this,Dungeon.hero);
-                if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)unlockedDifficulty[raidChapter]=Math.max(1,unlockedDifficulty[raidChapter]);
+                if(!emergency){
+                    ExtractionContracts.extracted(this,Dungeon.hero);
+                    if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)unlockedDifficulty[raidChapter]=Math.max(1,unlockedDifficulty[raidChapter]);
+                }
                 // Preserve only top-level inventory entries: Bag.iterator() also yields
                 // nested contents, which would otherwise be deposited twice.
                 com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings b = Dungeon.hero.belongings;
@@ -320,12 +329,15 @@ public final class ExtractionProfile {
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
                 gold+=redeemed.gold;
-                awardGrowthXP(10+5*(raidDifficulty-1)+10*(raidChapter-1));
-                result="탈출 성공! 장비와 전리품을 창고에 보관했습니다."
+                if(!emergency)awardGrowthXP(10+5*(raidDifficulty-1)+10*(raidChapter-1));
+                result=(emergency?"비상탈출!":"탈출 성공!")+" 장비와 전리품을 창고에 보관했습니다."
                         +(redeemed.potions+redeemed.scrolls>0?"\n포션 "+redeemed.potions+"개 · 스크롤 "+redeemed.scrolls+"장 정산 · +"+redeemed.gold+" G":"");
-                if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)result+="\n"+(raidChapter+1)+"챕터 "+ExtractionDifficulty.chapterName(raidChapter+1)+" 출격 가능";
-                else result+="\n5챕터 완주! 모든 지역에 다시 출격할 수 있습니다.";
-                if(!contracts.isEmpty())result+="\n의뢰 진행도를 저장했습니다. 게시판에서 완료할 수 있습니다.";
+                if(emergency)result+="\n이번 원정의 의뢰 진행도는 반영되지 않습니다. 기존 의뢰 진행도와 전투 경험치는 유지됩니다.\n챕터 해금과 완주 경험치 보너스는 없습니다.";
+                else {
+                    if(raidChapter<ExtractionDifficulty.CHAPTER_COUNT)result+="\n"+(raidChapter+1)+"챕터 "+ExtractionDifficulty.chapterName(raidChapter+1)+" 출격 가능";
+                    else result+="\n5챕터 완주! 모든 지역에 다시 출격할 수 있습니다.";
+                    if(!contracts.isEmpty())result+="\n의뢰 진행도를 저장했습니다. 게시판에서 완료할 수 있습니다.";
+                }
             }
             active=false; escrow.clear();
             if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";

@@ -599,6 +599,24 @@ public abstract class Level implements Bundlable {
             if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.BLOCK){
                 com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("이 챕터의 마지막 층 보스를 처치한 뒤 아래 계단으로 탈출하세요.");return false;
             }
+            if(action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.EMERGENCY_EXTRACT){
+                Game.runOnRenderThread(() -> GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions(
+                        "비상탈출", "시작층의 위 계단으로 거점에 돌아갑니다.\n\n장비·전리품과 전투 경험치는 보존하고, 남은 포션·스크롤은 골드로 정산합니다.\n\n이번 원정의 의뢰 진행도는 반영되지 않습니다. 기존 의뢰와 이전 진행도는 유지됩니다. 챕터 해금과 완주 경험치 보너스는 없습니다.",
+                        "비상탈출하기", "계속 원정하기"){
+                    @Override protected void onSelect(int index){
+                        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile profile=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get();
+                        if(index!=0||!profile.active||profile.raidID!=hero.extractionRaidID||Dungeon.hero!=hero||Dungeon.level!=Level.this)return;
+                        try {
+                            beforeTransition();
+                            profile.emergencyExtract(hero.extractionRaidID);
+                        } catch(IllegalStateException error){
+                            GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage("비상탈출 정산을 저장하지 못했습니다. 원정은 유지됩니다.\n"+error.getMessage()));return;
+                        }
+                        ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);
+                    }
+                }));
+                return false;
+            }
             if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.EXTRACT){
                 beforeTransition();
                 com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(hero.extractionRaidID,true);

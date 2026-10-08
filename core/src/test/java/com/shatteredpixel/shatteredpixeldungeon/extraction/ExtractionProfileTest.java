@@ -22,6 +22,24 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void emergencyExtractionKeepsLootAndEarnedXpButRejectsAllCurrentContractCredit() throws Exception {
+        ExtractionContracts.accept(profile,"hunt_1");ExtractionContracts.accept(profile,"record_1");ExtractionContracts.accept(profile,"supply_1");
+        profile.contractProgress.put("hunt_1",2);
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);Dungeon.gold=17;
+        ExtractionContracts.Run run=ExtractionContracts.run(h);for(int i=0;i<run.progress.length;i++)run.progress[i]=6;
+        Item weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword().identify(false);assertTrue(weapon.collect(h.belongings.backpack));
+        assertTrue(new SupplyHealingPotion().quantity(2).collect(h.belongings.backpack));
+        assertTrue(new ExtractionShop.SupplyUpgrade().quantity(3).collect(h.belongings.backpack));
+        int initialGold=profile.gold,initialStash=profile.stash.size(),id=profile.raidID;
+        profile.credit(id,25);int xp=profile.xp,points=profile.points;
+        profile.emergencyExtract(id);int gold=profile.gold,stash=profile.stash.size();profile.emergencyExtract(id);profile.settle(id,true);
+        assertFalse(profile.active);assertEquals(initialGold+17+30+150,gold);assertEquals(gold,profile.gold);assertEquals(stash,profile.stash.size());assertTrue(stash>initialStash);
+        assertTrue(profile.stash.stream().anyMatch(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Shortsword&&!(i instanceof BasicExpeditionSword)));
+        assertEquals(xp,profile.xp);assertEquals(points,profile.points);assertEquals(0,profile.unlockedDifficulty[1]);
+        assertEquals(2,ExtractionContracts.progress(profile,ExtractionContracts.job("hunt_1")));assertEquals(0,ExtractionContracts.progress(profile,ExtractionContracts.job("record_1")));assertEquals(0,ExtractionContracts.progress(profile,ExtractionContracts.job("supply_1")));
+        assertEquals(3,profile.contracts.size());assertTrue(profile.result.startsWith("비상탈출"));
+        forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.active);assertEquals(gold,profile.gold);assertEquals(xp,profile.xp);assertEquals(2,ExtractionContracts.progress(profile,ExtractionContracts.job("hunt_1")));
+    }
     @Test public void starterBowShowsEnchantmentInItsNameAfterSaving() {
         NodeSpiritBow bow=new NodeSpiritBow();
         String plain=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow().name();

@@ -27,7 +27,7 @@ public final class ExtractionContracts {
                 kind==Kind.RECOVER?ExtractionDifficulty.chapterName(chapter)+"의 "+(ExtractionDifficulty.startDepth(chapter)+2)+"층에서 의뢰 기록을 찾아 회수하고 탈출하세요. 기록은 의뢰 주머니에 따로 보관합니다.":
                 kind==Kind.DELIVER?ExtractionDifficulty.chapterName(chapter)+"에서 탈출한 뒤 T"+ExtractionDifficulty.chapterMaxTier(chapter)+" 근접 무기 한 자루를 납품하세요. 창고에서 납품할 무기를 직접 선택하며 해당 무기는 소모됩니다.":
                 ExtractionGrowth.BRANCHES[25+hybrid]+"의 연계 효과를 적용한 적 "+goal+"마리를 처치하고 탈출하세요. 해당 혼합 트리를 배운 뒤 수행할 수 있습니다.";
-            return text+"\n\n탈출한 원정의 진행도만 저장됩니다. 사망·포기 시 이번 원정의 진행도는 잃지만 의뢰와 이전 탈출의 진행도는 유지됩니다.\n\n보상 "+gold+" G · 성장 XP "+xp+". 최초 완료 시 해당 지역 장비 선택 보상을 추가로 받습니다.";
+            return text+"\n\n보스 처치 후 정상 탈출한 원정의 진행도만 저장됩니다. 비상탈출·사망·포기 시 이번 원정의 진행도는 잃지만 의뢰와 이전 탈출의 진행도는 유지됩니다.\n\n보상 "+gold+" G · 성장 XP "+xp+". 최초 완료 시 해당 지역 장비 선택 보상을 추가로 받습니다.";
         }
     }
     public static final Job[] JOBS;
@@ -121,7 +121,7 @@ public final class ExtractionContracts {
     }
     public static String tracker(Hero h){
         if(h==null||h.extractionRaidID==0)return "진행 중인 원정이 없습니다.";
-        Run r=run(h);StringBuilder s=new StringBuilder("현재 원정 진행도 · 탈출해야 저장됩니다.\n");
+        Run r=run(h);StringBuilder s=new StringBuilder("현재 원정 진행도 · 보스 처치 후 정상 탈출해야 저장됩니다.\n");
         for(int i=0;i<r.ids.length;i++){Job j=job(r.ids[i]);s.append('\n').append(j.name).append(" · ").append(j.kind==Kind.DELIVER?"해당 지역 탈출 후 창고에서 납품":Math.min(j.goal,progress(ExtractionProfile.get(),j)+r.progress[i])+" / "+j.goal);}
         if(r.ids.length==0)s.append("\n받은 의뢰가 없습니다. 로비의 의뢰 게시판을 확인하세요.");return s.toString();
     }
@@ -130,7 +130,7 @@ public final class ExtractionContracts {
         public Record(){image=ItemSpriteSheet.SCROLL_HOLDER;unique=true;}
         Record(String id,int raid){this();contract=id;this.raid=raid;}
         @Override public String name(){return "의뢰용 원정 기록";}
-        @Override public String desc(){return "분실된 원정 기록입니다. 해당 의뢰를 받은 원정에서 회수하면 의뢰 주머니에 보관됩니다. 탈출해야 의뢰 진행도로 인정됩니다.";}
+        @Override public String desc(){return "분실된 원정 기록입니다. 해당 의뢰를 받은 원정에서 회수하면 의뢰 주머니에 보관됩니다. 보스 처치 후 정상 탈출해야 의뢰 진행도로 인정됩니다.";}
         @Override public boolean isIdentified(){return true;}
         @Override public boolean isUpgradable(){return false;}
         @Override public boolean doPickUp(Hero h,int pos){

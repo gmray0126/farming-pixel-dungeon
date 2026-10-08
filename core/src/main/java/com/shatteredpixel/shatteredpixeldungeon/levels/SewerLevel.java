@@ -144,6 +144,7 @@ public class SewerLevel extends RegularLevel {
 	
 	@Override
 	public boolean activateTransition(Hero hero, LevelTransition transition) {
+		if(hero.extractionRaidID!=0)return super.activateTransition(hero,transition);
 		if (transition.type == LevelTransition.Type.SURFACE){
 			if (hero.belongings.getItem( Amulet.class ) == null) {
 				Game.runOnRenderThread(new Callback() {
