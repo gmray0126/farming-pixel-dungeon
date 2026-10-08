@@ -234,6 +234,7 @@ public class GameScene extends PixelScene {
 		SPDSettings.lastClass(Dungeon.hero.heroClass.ordinal());
 		
 		super.create();
+		com.watabou.noosa.AnimationClock.reset(SPDSettings.animationSpeed());
 		Camera.main.zoom( GameMath.gate(minZoom, defaultZoom + SPDSettings.zoom(), maxZoom));
 		Camera.main.edgeScroll.set(1);
 
@@ -250,7 +251,7 @@ public class GameScene extends PixelScene {
 
 		scene = this;
 
-		terrain = new Group();
+		terrain = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add( terrain );
 
 		water = new SkinnedBlock(
@@ -297,26 +298,26 @@ public class GameScene extends PixelScene {
 		customTerrain = new Group();
 		terrain.add(customTerrain);
 
-		levelVisuals = Dungeon.level.addVisuals();
+		levelVisuals = new com.watabou.noosa.AnimationClock.AnimatedGroup(Dungeon.level.addVisuals());
 		add(levelVisuals);
 
-		floorEmitters = new Group();
+		floorEmitters = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add(floorEmitters);
 
-		heaps = new Group();
+		heaps = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add( heaps );
 		
 		for ( Heap heap : Dungeon.level.heaps.valueList() ) {
 			addHeapSprite( heap );
 		}
 
-		emitters = new Group();
-		effects = new Group();
-		healthIndicators = new Group();
-		emoicons = new Group();
-		overFogEffects = new Group();
+		emitters = new com.watabou.noosa.AnimationClock.AnimatedGroup();
+		effects = new com.watabou.noosa.AnimationClock.AnimatedGroup();
+		healthIndicators = new com.watabou.noosa.AnimationClock.AnimatedGroup();
+		emoicons = new com.watabou.noosa.AnimationClock.AnimatedGroup();
+		overFogEffects = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		
-		mobs = new Group();
+		mobs = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add( mobs );
 
 		hero = new HeroSprite();
@@ -337,7 +338,7 @@ public class GameScene extends PixelScene {
 		customWalls = new Group();
 		add(customWalls);
 
-		levelWallVisuals = Dungeon.level.addWallVisuals();
+		levelWallVisuals = new com.watabou.noosa.AnimationClock.AnimatedGroup(Dungeon.level.addWallVisuals());
 		add( levelWallVisuals );
 
 		wallBlocking = new WallBlockingTilemap();
@@ -346,7 +347,7 @@ public class GameScene extends PixelScene {
 		add( emitters );
 		add( effects );
 
-		gases = new Group();
+		gases = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add( gases );
 
 		for (Blob blob : Dungeon.level.blobs.values()) {
@@ -358,15 +359,15 @@ public class GameScene extends PixelScene {
 		fog = new FogOfWar( Dungeon.level.width(), Dungeon.level.height() );
 		add( fog );
 
-		spells = new Group();
+		spells = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add( spells );
 
 		add(overFogEffects);
 
-		checkedCells = new Group();
+		checkedCells = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add(checkedCells);
 
-		targetedCells = new Group();
+		targetedCells = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add(targetedCells);
 		for (TargetedCell cell : TargetedCell.cells.valueList()){
 			cell.reset(cell.pos, cell.time);
@@ -386,7 +387,7 @@ public class GameScene extends PixelScene {
 			addCustomWall(visual);
 		}
 		
-		statuses = new Group();
+		statuses = new com.watabou.noosa.AnimationClock.AnimatedGroup();
 		add( statuses );
 		
 		add( healthIndicators );
@@ -497,6 +498,18 @@ public class GameScene extends PixelScene {
 			blocker.camera = uiCamera;
 			add(blocker);
 		}
+
+        com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton animationSpeedButton=new com.shatteredpixel.shatteredpixeldungeon.ui.StyledButton(
+                com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"×"+SPDSettings.animationSpeed(),6){
+            @Override protected void onClick(){
+                int current=SPDSettings.animationSpeed();SPDSettings.animationSpeed(current==1?3:current==3?5:1);
+                text("×"+SPDSettings.animationSpeed());
+            }
+            @Override protected String hoverText(){return "이동 제외 애니메이션 배속 · 1배 / 3배 / 5배";}
+        };
+        animationSpeedButton.camera=uiCamera;
+        animationSpeedButton.setRect(uiCamera.width-insets.right-24,screentop+menu.height()+2,24,16);
+        add(animationSpeedButton);
 
 		boss = new BossHealthBar();
 		boss.camera = uiCamera;
@@ -898,12 +911,13 @@ public class GameScene extends PixelScene {
 			return;
 		}
 
+		com.watabou.noosa.AnimationClock.advance(Game.elapsed);
 		super.update();
 
 		if (notifyDelay > 0) notifyDelay -= Game.elapsed;
 
 		if (!Emitter.freezeEmitters) {
-			waterOfs -= 5 * Game.elapsed;
+			waterOfs -= 5 * Game.elapsed * com.watabou.noosa.AnimationClock.speed();
 			water.offsetTo( 0, waterOfs );
 			waterOfs = water.offsetY(); //re-assign to account for auto adjust
 		}

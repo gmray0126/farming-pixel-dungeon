@@ -141,7 +141,7 @@ public class WildMagic extends ArmorAbility {
 
 		hero.sprite.zap(cell);
 
-		float startTime = Game.timeTotal;
+		float startTime = com.watabou.noosa.AnimationClock.time();
 		if (cur.tryToZap(hero, cell)) {
 			if (!cur.cursed) {
 				cur.fx(aim, new Callback() {
@@ -149,8 +149,8 @@ public class WildMagic extends ArmorAbility {
 					public void call() {
 						cur.onZap(aim);
 						boolean alsoCursedZap = Random.Float() < WondrousResin.extraCurseEffectChance();
-						if (Game.timeTotal - startTime < 0.33f) {
-							hero.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {
+						if (com.watabou.noosa.AnimationClock.time() - startTime < 0.33f) {
+							hero.sprite.parent.add(new Delayer(0.33f - (com.watabou.noosa.AnimationClock.time() - startTime)) {
 								@Override
 								protected void onComplete() {
 									if (alsoCursedZap){
@@ -197,8 +197,8 @@ public class WildMagic extends ArmorAbility {
 						new Callback() {
 							@Override
 							public void call() {
-								if (Game.timeTotal - startTime < 0.33f) {
-									hero.sprite.parent.add(new Delayer(0.33f - (Game.timeTotal - startTime)) {
+								if (com.watabou.noosa.AnimationClock.time() - startTime < 0.33f) {
+									hero.sprite.parent.add(new Delayer(0.33f - (com.watabou.noosa.AnimationClock.time() - startTime)) {
 										@Override
 										protected void onComplete() {
 											afterZap(cur, wands, hero, cell);

@@ -122,6 +122,9 @@ public class Pushing extends Actor {
 		
 		@Override
 		public void update() {
+            com.watabou.noosa.AnimationClock.unscaled(this::updateMovement);
+        }
+        private void updateMovement(){
 			super.update();
 			
 			if ((delay += Game.elapsed) < DELAY) {

@@ -109,6 +109,9 @@ public class Swap extends Actor {
 
 		@Override
 		public void update() {
+            com.watabou.noosa.AnimationClock.unscaled(this::updateMovement);
+        }
+        private void updateMovement(){
 			super.update();
 
 			if ((passed += Game.elapsed) < delay) {

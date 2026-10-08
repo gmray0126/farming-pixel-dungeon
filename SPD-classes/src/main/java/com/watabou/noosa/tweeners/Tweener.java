@@ -32,6 +32,8 @@ abstract public class Tweener extends Gizmo {
 	public float elapsed;
 	
 	public Listener listener;
+	/** Character travel opts out of the combat animation clock. */
+	public boolean unscaled = false;
 	
 	public Tweener( Gizmo target, float interval ) {
 		super();
@@ -44,6 +46,10 @@ abstract public class Tweener extends Gizmo {
 	
 	@Override
 	public void update() {
+		if(unscaled)com.watabou.noosa.AnimationClock.unscaled(this::advance);
+		else advance();
+	}
+	private void advance() {
 		if (elapsed < 0){
 			onComplete();
 			kill();

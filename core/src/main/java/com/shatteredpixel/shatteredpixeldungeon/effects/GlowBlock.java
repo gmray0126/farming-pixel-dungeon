@@ -40,7 +40,7 @@ public class GlowBlock extends Gizmo {
 		super.update();
 
 		//wavers between 0.4f and 0.6f once per second
-		target.tint(1.33f, 1.33f, 0.83f, 0.5f + 0.1f*(float)Math.cos(Math.PI*2*Game.timeTotal));
+		target.tint(1.33f, 1.33f, 0.83f, 0.5f + 0.1f*(float)Math.cos(Math.PI*2*com.watabou.noosa.AnimationClock.time()));
 
 	}
 

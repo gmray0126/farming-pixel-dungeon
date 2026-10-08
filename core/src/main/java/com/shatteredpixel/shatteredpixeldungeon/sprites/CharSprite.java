@@ -142,6 +142,11 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 			super.play(anim);
 		}
 	}
+
+	@Override protected synchronized void updateAnimation(){
+		if(curAnim==run)com.watabou.noosa.AnimationClock.unscaled(super::updateAnimation);
+		else super.updateAnimation();
+	}
 	
 	//intended to be used for placing a character in the game world
 	public void link( Char ch ) {
@@ -222,6 +227,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		play( run );
 		
 		motion = new PosTweener( this, worldToCamera( to ), moveInterval );
+		motion.unscaled = true;
 		motion.listener = this;
 		parent.add( motion );
 
@@ -302,6 +308,7 @@ public class CharSprite extends MovieClip implements Tweener.Listener, MovieClip
 		jumpCallback = callback;
 
 		jumpTweener = new JumpTweener( this, worldToCamera( to ), height, duration );
+		jumpTweener.unscaled = true;
 		jumpTweener.listener = this;
 		parent.add( jumpTweener );
 

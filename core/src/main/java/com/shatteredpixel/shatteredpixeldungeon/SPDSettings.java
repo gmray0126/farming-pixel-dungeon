@@ -119,6 +119,15 @@ public class SPDSettings extends GameSettings {
 	}
 	
 	//Interface
+	public static void animationSpeed(int value){
+		int speed=value==3||value==5?value:1;
+		put("animation_speed",speed);
+		com.watabou.noosa.AnimationClock.speed(speed);
+	}
+	public static int animationSpeed(){
+		int speed=getInt("animation_speed",1);
+		return speed==3||speed==5?speed:1;
+	}
 
 	public static final String KEY_UI_SIZE 	    = "full_ui";
 	public static final String KEY_SCALE		= "scale";

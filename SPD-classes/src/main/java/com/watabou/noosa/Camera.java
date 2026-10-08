@@ -316,6 +316,6 @@ public class Camera extends Gizmo {
 	
 	public synchronized void shake( float magnitude, float duration ) {
 		shakeMagX = shakeMagY = magnitude;
-		shakeTime = shakeDuration = duration;
+		shakeTime = shakeDuration = duration / AnimationClock.speed();
 	}
 }
