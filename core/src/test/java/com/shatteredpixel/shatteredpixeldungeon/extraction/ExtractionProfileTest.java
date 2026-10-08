@@ -33,6 +33,7 @@ public class ExtractionProfileTest {
         assertEquals(3,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.ScrollHolder.class).items.get(0).quantity());
         assertTrue(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch.class).items.get(0) instanceof com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed);
         assertNotNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.MagicalHolster.class));
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);
         h=(Hero)saved.get("hero");Dungeon.hero=h;ExtractionProfile.ensureBags(h);ExtractionProfile.ensureBags(h);
         assertEquals(5,h.belongings.getBags().size());
