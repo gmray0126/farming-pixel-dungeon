@@ -16,8 +16,12 @@ public final class WeaponUpgradeLimit {
     public static int cap(Item item){
         if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring
             ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)return 15;
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket)return 3;
         if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)return ((com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)item).nativeLevelCap()>0?15:0;
-        int tier=tier(item);return tier>0?tier*3:Integer.MAX_VALUE;
+        int tier=tier(item);
+        if(tier>0)return Math.min(15,tier*3);
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem)return 15;
+        return Integer.MAX_VALUE;
     }
     public static int clamp(Item item,int level){return Math.min(level,cap(item));}
     public static boolean canIncrease(Item item){return item.trueLevel()<cap(item);}

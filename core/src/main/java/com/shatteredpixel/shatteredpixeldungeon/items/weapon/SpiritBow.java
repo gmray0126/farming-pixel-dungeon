@@ -145,10 +145,12 @@ public class SpiritBow extends Weapon {
 				Math.round(augment.damageFactor(max())),
 				STRReq());
 		
-		if (STRReq() > Dungeon.hero.STR()) {
+		int strength = Dungeon.hero == null
+                ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().startingStrength() : Dungeon.hero.STR();
+		if (STRReq() > strength) {
 			info += " " + Messages.get(Weapon.class, "too_heavy");
-		} else if (Dungeon.hero.STR() > STRReq()){
-			info += " " + Messages.get(Weapon.class, "excess_str", Dungeon.hero.STR() - STRReq());
+		} else if (strength > STRReq()){
+			info += " " + Messages.get(Weapon.class, "excess_str", strength - STRReq());
 		}
 		
 		switch (augment) {
@@ -179,7 +181,7 @@ public class SpiritBow extends Weapon {
 		
 		info += "\n\n" + Messages.get(MissileWeapon.class, "distance");
 		
-		return info;
+		return info + "\n\n강화 수치 상한 +15 · 강화 스크롤 사용 불가";
 	}
 	
 	@Override
@@ -189,17 +191,19 @@ public class SpiritBow extends Weapon {
 	
 	@Override
 	public int min(int lvl) {
-		int dmg = 1 + Dungeon.hero.combatLevel()/5
+		int heroLevel = Dungeon.hero == null ? 1 : Dungeon.hero.combatLevel();
+		int dmg = 1 + heroLevel/5
 				+ RingOfSharpshooting.levelDamageBonus(Dungeon.hero)
-				+ (curseInfusionBonus ? 1 + Dungeon.hero.combatLevel()/30 : 0);
+				+ (curseInfusionBonus ? 1 + heroLevel/30 : 0);
 		return Math.max(0, dmg);
 	}
 	
 	@Override
 	public int max(int lvl) {
-		int dmg = 6 + (int)(Dungeon.hero.combatLevel()/2.5f)
+		int heroLevel = Dungeon.hero == null ? 1 : Dungeon.hero.combatLevel();
+		int dmg = 6 + (int)(heroLevel/2.5f)
 				+ 2*RingOfSharpshooting.levelDamageBonus(Dungeon.hero)
-				+ (curseInfusionBonus ? 2 + Dungeon.hero.combatLevel()/15 : 0);
+				+ (curseInfusionBonus ? 2 + heroLevel/15 : 0);
 		return Math.max(0, dmg);
 	}
 
@@ -274,7 +278,7 @@ public class SpiritBow extends Weapon {
 	public int level() {
 		int level = Dungeon.hero == null ? 0 : Dungeon.hero.combatLevel()/5;
 		if (curseInfusionBonus) level += 1 + level/6;
-		return level;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(this, level);
 	}
 
 	@Override

@@ -22,6 +22,64 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void everyRingBlocksAt15WithoutChangingItsCurseAndRestoresCapped() {
+        for(Class<?> type:com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING.classes){
+            Item ring=(Item)com.watabou.utils.Reflection.newInstance(type);assertEquals(15,WeaponUpgradeLimit.cap(ring));
+            ring.level(14);assertTrue(WeaponUpgradeLimit.eligible(ring));ring.upgrade();assertEquals(15,ring.trueLevel());
+            ring.cursed=true;for(int i=0;i<100;i++)ring.upgrade();assertTrue(type.getName(),ring.cursed);assertEquals(15,ring.trueLevel());
+            assertFalse(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().getSelector(false).itemSelectable(ring));
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();ring.storeInBundle(saved);saved.put("level",100);
+            Item copy=(Item)com.watabou.utils.Reflection.newInstance(type);copy.restoreFromBundle(saved);assertEquals(15,copy.trueLevel());assertTrue(copy.cursed);
+        }
+    }
+    @Test public void everyThrownWeaponStopsAtItsTierCapAndCannotRepairOrChangeASetWhenBlocked() throws Exception {
+        Dungeon.hero=new Hero();
+        Field durability=com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon.class.getDeclaredField("durability");durability.setAccessible(true);
+        for(int tier=1;tier<=5;tier++)for(Class<?> type:com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.valueOf("MIS_T"+tier).classes){
+            com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon item=(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.MissileWeapon)com.watabou.utils.Reflection.newInstance(type);
+            int cap=tier*3;assertEquals(type.getName(),cap,WeaponUpgradeLimit.cap(item));
+            if(item.isUpgradable()){
+                item.level(cap-1);item.upgrade();assertEquals(cap,item.trueLevel());
+            }
+            item.level(100);assertEquals(cap,item.trueLevel());item.cursed=true;item.enchantHardened=true;item.quantity(1);durability.setFloat(item,7);
+            item.upgrade();item.upgrade(true);item.upgrade(100);
+            assertEquals(cap,item.trueLevel());assertTrue(item.cursed);assertTrue(item.enchantHardened);assertEquals(1,item.quantity());assertEquals(7,durability.getFloat(item),0);
+            assertFalse(new com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfUpgrade().getSelector(false).itemSelectable(item));
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();item.storeInBundle(saved);saved.put("level",100);
+            Item copy=(Item)com.watabou.utils.Reflection.newInstance(type);copy.restoreFromBundle(saved);assertEquals(cap,copy.trueLevel());
+        }
+    }
+    @Test public void spiritBowAndItsNodeVersionHaveFiniteCapsWithoutEnablingScrollUpgrades() {
+        for(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow bow:new com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow[]{new com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow(),new NodeSpiritBow()}){
+            assertEquals(15,WeaponUpgradeLimit.cap(bow));assertFalse(WeaponUpgradeLimit.eligible(bow));
+            bow.level(100);bow.cursed=true;bow.curseInfusionBonus=true;bow.upgrade(100);bow.upgrade(true);
+            assertEquals(15,bow.trueLevel());assertTrue(bow.cursed);assertTrue(bow.curseInfusionBonus);
+            Hero hero=new Hero();hero.lvl=1000;Dungeon.hero=hero;assertEquals(15,bow.level());assertEquals(15,bow.buffedLvl());
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();bow.storeInBundle(saved);saved.put("level",100);
+            com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow copy=(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)com.watabou.utils.Reflection.newInstance(bow.getClass());copy.restoreFromBundle(saved);
+            assertEquals(15,copy.trueLevel());assertEquals(15,copy.level());Dungeon.hero=null;assertTrue(copy.info().contains("상한 +15"));
+        }
+    }
+    @Test public void generatedArtifactsAndTrinketsClampDirectTransferAndLegacySavePaths() {
+        Dungeon.hero=new Hero();
+        java.util.List<Class<?>> types=new java.util.ArrayList<>(java.util.Arrays.asList(com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT.classes));
+        types.add(ExtractionContracts.CommissionSeal.class);
+        for(Class<?> type:types){
+            com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact item=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.watabou.utils.Reflection.newInstance(type);
+            int cap=item.nativeLevelCap()>0?15:0;assertEquals(type.getName(),cap,WeaponUpgradeLimit.cap(item));
+            item.level(100);item.upgrade(100);item.transferUpgrade(100);assertEquals(cap,item.trueLevel());assertFalse(WeaponUpgradeLimit.canIncrease(item));
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();item.storeInBundle(saved);saved.put("level",100);
+            Item copy=(Item)com.watabou.utils.Reflection.newInstance(type);copy.restoreFromBundle(saved);assertEquals(cap,copy.trueLevel());
+        }
+        for(Class<?> type:com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.TRINKET.classes){
+            Item item=(Item)com.watabou.utils.Reflection.newInstance(type);assertEquals(3,WeaponUpgradeLimit.cap(item));item.level(2);item.upgrade();assertEquals(3,item.trueLevel());item.upgrade(100);item.level(100);assertEquals(3,item.trueLevel());
+            java.util.ArrayList<Item> ingredients=new java.util.ArrayList<>();ingredients.add(item);
+            com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket.UpgradeTrinket recipe=new com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket.UpgradeTrinket();
+            assertFalse(recipe.testIngredients(ingredients));assertNull(recipe.brew(ingredients));assertEquals(1,item.quantity());
+            com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();item.storeInBundle(saved);saved.put("level",100);
+            Item copy=(Item)com.watabou.utils.Reflection.newInstance(type);copy.restoreFromBundle(saved);assertEquals(3,copy.trueLevel());
+        }
+    }
     @Test public void everyWandStopsAtFifteenAndLegacySavesAreClamped() {
         for (Class<?> type : com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.WAND.classes) {
             com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand wand =

@@ -120,6 +120,7 @@ public abstract class Trinket extends Item {
 
 		@Override
 		public Item brew(ArrayList<Item> ingredients) {
+			if (!testIngredients(ingredients)) return null;
 			Item result = ingredients.get(0).duplicate();
 			ingredients.get(0).quantity(0);
 			result.upgrade();

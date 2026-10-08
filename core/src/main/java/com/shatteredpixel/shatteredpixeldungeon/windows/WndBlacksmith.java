@@ -265,6 +265,8 @@ public class WndBlacksmith extends Window {
 						second = btnItem1.item();
 					}
 
+					if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(first)) return;
+
 					Sample.INSTANCE.play( Assets.Sounds.EVOKE );
 					ScrollOfUpgrade.upgrade( Dungeon.hero );
 					Item.evoke( Dungeon.hero );
@@ -330,7 +332,8 @@ public class WndBlacksmith extends Window {
 
 			@Override
 			public boolean itemSelectable(Item item) {
-				return item.isIdentified() && !item.cursed && item.isUpgradable();
+				return item.isIdentified() && !item.cursed
+                        && com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(item);
 			}
 
 			@Override
@@ -354,7 +357,8 @@ public class WndBlacksmith extends Window {
 						btnReforge.enable(false);
 
 					} else {
-						btnReforge.enable(true);
+						btnReforge.enable(com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(item1)
+                            && com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.eligible(item2));
 					}
 				}
 			}

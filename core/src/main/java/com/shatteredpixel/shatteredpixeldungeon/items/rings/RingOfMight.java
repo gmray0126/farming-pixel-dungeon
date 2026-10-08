@@ -58,6 +58,7 @@ public class RingOfMight extends Ring {
 
 	@Override
 	public Item upgrade() {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 		super.upgrade();
 		updateTargetHT();
 		return this;

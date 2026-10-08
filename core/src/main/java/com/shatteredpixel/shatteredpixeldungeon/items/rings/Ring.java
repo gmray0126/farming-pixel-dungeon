@@ -226,6 +226,7 @@ public class Ring extends KindofMisc {
 	
 	@Override
 	public Item upgrade() {
+		if (!com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.canIncrease(this)) return this;
 		super.upgrade();
 		
 		if (Random.Int(3) == 0) {
