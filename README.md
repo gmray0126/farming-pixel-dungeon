@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.28.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.28.0-farming)
+[v0.29.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.29.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.28.0-farming/Farming_Pixel_Dungeon_v0.28.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.28.0-farming/Farming_Pixel_Dungeon_PC_v0.28_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.29.0-farming/Farming_Pixel_Dungeon_v0.29.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.29.0-farming/Farming_Pixel_Dungeon_PC_v0.29_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -30,6 +30,8 @@ The mod's game source is on the [`extraction` branch](https://github.com/gmray01
 - **혼합 전투 트리:** 여섯 직업 계통 사이에 마검사·그림자술사·연금 사냥꾼·폭풍 유격수·성전사·혈기사의 90개 노드를 배치했습니다. 교대 공격, 표식 폭발, 약품 코팅, 거리 전환, 성력 소비, 피의 서약으로 전투 방식을 바꿉니다.
 - **로비 의뢰:** 사냥·기록 회수·무기 납품과 혼합 실전 훈련의 21개 의뢰를 제공합니다. 최대 3개를 받아 출격하고 탈출하면 진행도를 저장합니다. 최초 완료 장비와 하수도 연속 의뢰 유물도 얻을 수 있습니다.
 
+- **출격 보급:** 준비한 무기·갑옷이 없으면 해당 보급 검·천 갑옷을 중복 없이 지급합니다. 새 원정마다 돌멩이 3개와 미준비 시 빈 물통을 지급합니다. 식량은 층 자연 생성·몬스터 전리품·상점으로 얻습니다.
+
 ## English overview
 
 Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at the hub, defeat a chapter boss, extract, and use the rewards to prepare for your next run. Your stash and a branching growth tree carry progression between expeditions.
@@ -44,6 +46,8 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 
 - **Hybrid combat trees:** Ninety new nodes connect six neighbouring class themes: Spellblade, Shadowcaster, Alchemical Hunter, Storm Skirmisher, Crusader, and Blood Knight. Alternate attacks, detonate marks, coat ranged weapons, build faith, or trade health for damage.
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
+
+- **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
 
 ## 챕터 / Chapters
 
