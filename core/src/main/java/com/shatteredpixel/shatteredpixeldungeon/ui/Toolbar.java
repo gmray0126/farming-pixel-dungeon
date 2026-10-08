@@ -659,7 +659,23 @@ public class Toolbar extends Component {
 
 	private void layoutSkills() {
 		if (btnSkills != null) {
-			btnSkills.setRect(btnInventory.left(), btnInventory.top() - 18, btnInventory.width(), 16);
+			float hotbarLeft = width;
+			for (QuickslotTool slot : btnQuick) {
+				if (slot.visible) hotbarLeft = Math.min(hotbarLeft, slot.left());
+			}
+			if (btnSwap.visible) hotbarLeft = Math.min(hotbarLeft, btnSwap.left());
+
+			float skillsLeft = hotbarLeft - 26;
+			boolean fitsBeside = skillsLeft >= x;
+			for (Tool tool : new Tool[]{btnWait, btnSearch, btnInventory}) {
+				if (tool.left() < hotbarLeft && tool.right() > skillsLeft) fitsBeside = false;
+			}
+			if (fitsBeside) {
+				btnSkills.setRect(skillsLeft, y + 2, 24, 24);
+			} else {
+				// Narrow mobile layouts keep every quickslot, with skills above the hotbar's left end.
+				btnSkills.setRect(hotbarLeft, y - 18, 24, 16);
+			}
 			PixelScene.align(btnSkills);
 		}
 	}
