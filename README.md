@@ -64,15 +64,21 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 
 ## 화면 표시 / Display
 
-PC의 **설정 → 화면 설정 → 세로 모드 (PC)**에서 세로형 창과 모바일식 UI를 선택할 수 있습니다. 끄면 이전 창 크기로 돌아옵니다. 성장 지도 창 배경은 75% 투명하며, 긴 설명과 메시지는 창 안에서 줄바꿈되고 필요한 경우 스크롤됩니다.
+PC의 **설정 → 화면 설정 → 세로 모드 (PC)**에서 세로형 창과 모바일식 UI를 선택할 수 있습니다. 끄면 이전 창 크기로 돌아옵니다. 성장 지도 창 배경은 88% 투명하고 지도 뒤의 로비 배경을 가리던 막도 숨기며, 긴 설명과 메시지는 창 안에서 줄바꿈되고 필요한 경우 스크롤됩니다.
 
-Enable **세로 모드 (PC)** in the PC display settings for a portrait window and the mobile UI. Disabling it restores the previous window size. The growth-map window background is 75% transparent. Long descriptions and messages wrap within the window and scroll when needed.
+Enable **세로 모드 (PC)** in the PC display settings for a portrait window and the mobile UI. Disabling it restores the previous window size. The growth-map window background is 88% transparent, and the opaque hub shade is hidden while viewing the map. Long descriptions and messages wrap within the window and scroll when needed.
+
+## 내 원정 기록 / Expedition records
+
+로비 오른쪽 위 **기록** 버튼에서 원작의 개인 플레이 기록을 확인합니다. 새 사망 원정부터 사망 원인과 도달 층·점수를 저장하며, 기록을 누르면 당시 능력치와 장비를 볼 수 있습니다. 기록창을 닫으면 로비로 돌아옵니다. 이전 버전의 미저장 사망은 복원할 수 없습니다.
+
+Use **기록** at the top right of the hub to open the original personal records screen. New expedition deaths save their cause, floor, score, and character details. Select a record to inspect its stats and equipment; return to the hub when finished. Deaths not saved by earlier versions cannot be recovered.
 
 ## 로비 연금술과 보급 / Hub alchemy and supplies
 
-로비 준비 탭의 창고 옆 **연금** 버튼에서 재료를 최대 3개 넣고 기존 연금술 제작법으로 제작합니다. 에너지 1은 10 G로 구매하거나 창고 재료를 분해하여 얻습니다. 재료·에너지·완성품은 한 번에 저장되며 원정 중에는 이용할 수 없습니다. 장신구 촉매의 세 선택지는 저장됩니다.
+로비 상단 여섯 번째 **연금술** 탭의 **연금술 열기** 버튼에서 재료를 최대 3개 넣고 기존 연금술 제작법으로 제작합니다. 에너지 1은 10 G로 구매하거나 창고 재료를 분해하여 얻습니다. 재료·에너지·완성품은 한 번에 저장되며 원정 중에는 이용할 수 없습니다. 장신구 촉매의 세 선택지는 저장됩니다.
 
-Use **연금** beside the stash in the preparation tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 10 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
+Use **연금술 열기** in the sixth **연금술** hub tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 10 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
 
 식량은 층에서 자연 생성되며 몬스터 전리품과 상점에서도 얻을 수 있습니다. 출격 시 준비한 무기나 갑옷이 없으면 해당 보급 검·천 갑옷을 중복 없이 지급하고, 돌멩이 3개와 빈 물통(미준비 시)을 지급합니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
 

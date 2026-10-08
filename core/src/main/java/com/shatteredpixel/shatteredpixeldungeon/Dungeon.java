@@ -885,10 +885,13 @@ public class Dungeon {
 	}
 	
 	public static void fail( Object cause ) {
-		if (WndResurrect.instance == null) {
+		boolean expedition = hero != null && hero.extractionRaidID != 0;
+		if (expedition && hero.extractionDeathRecorded) return;
+		if (expedition || WndResurrect.instance == null) {
 			updateLevelExplored();
 			Statistics.gameWon = false;
-			Rankings.INSTANCE.submit( false, cause );
+			Rankings.INSTANCE.submit( false, cause == null ? Hero.class : cause );
+			if (expedition) hero.extractionDeathRecorded = true;
 		}
 	}
 	

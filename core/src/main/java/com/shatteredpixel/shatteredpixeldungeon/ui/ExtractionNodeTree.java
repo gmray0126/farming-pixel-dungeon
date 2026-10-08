@@ -56,7 +56,7 @@ public class ExtractionNodeTree extends Component {
         Point screen=camera().cameraToScreen(x,y+15);
         mapCamera=new Camera(screen.x,screen.y,(int)lens.width,(int)lens.height,baseZoom);
         Camera.add(mapCamera);world=new Group();world.camera=mapCamera;add(world);
-        ColorBlock background=new ColorBlock(GrowthAtlasLayout.SIZE,GrowthAtlasLayout.SIZE,0xFF101315);world.add(background);
+        ColorBlock background=new ColorBlock(GrowthAtlasLayout.SIZE,GrowthAtlasLayout.SIZE,0x20101315);world.add(background);
         buildAtlas();
         add(new Gestures());apply();
     }

@@ -202,6 +202,7 @@ public class Hero extends Char {
     public boolean hasWeaponAbilities(){return heroClass==HeroClass.DUELIST || hasSubclass(HeroSubClass.CHAMPION) || hasSubclass(HeroSubClass.MONK);}
 
 	public int extractionRaidID = 0;
+    public boolean extractionDeathRecorded; // Prevent mob callbacks recording the same death twice.
     public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.State extractionHybrid;
     public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.Run extractionContracts;
 	public com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.State extractionSkills;
@@ -2258,6 +2259,7 @@ public class Hero extends Char {
 			curAction=null;
 			Actor.fixTime();
 			super.die(cause);
+			Dungeon.fail(cause);
 			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(extractionRaidID,false);
 			Game.runOnRenderThread(() -> ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class));
 			return;

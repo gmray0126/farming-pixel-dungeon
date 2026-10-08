@@ -19,6 +19,7 @@ public class ExtractionHubScene extends PixelScene {
     private static int tab=0, stashPage=0, bagPage=0, shopCategory=0, shopPage=0;
     private static boolean shopSelling=false;
     private Group body;
+    private ColorBlock hubShade;
     private float left, top, width, bottom;
     private int stashRows;
     private float cellStep;
@@ -32,7 +33,7 @@ public class ExtractionHubScene extends PixelScene {
         Badges.loadGlobal();
         SPDSettings.intro(false);SPDSettings.version(ShatteredPixelDungeon.versionCode);
         add(new TitleBackground(Camera.main.width,Camera.main.height));
-        add(new ColorBlock(Camera.main.width,Camera.main.height,0xEA080F18));
+        hubShade=new ColorBlock(Camera.main.width,Camera.main.height,0xEA080F18);add(hubShade);
         RectF insets=getCommonInsets();
         width=Math.min(180,Camera.main.width-insets.left-insets.right-12);
         left=insets.left+(Camera.main.width-insets.left-insets.right-width)/2f;
@@ -45,29 +46,31 @@ public class ExtractionHubScene extends PixelScene {
     }
     public void showHubControls(boolean visible){
         if(body!=null)body.visible=body.active=visible;
+        if(hubShade!=null)hubShade.visible=visible;
     }
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);
         ExtractionProfile p=ExtractionProfile.get();
-        label("파밍 픽셀 던전",9,left,top,width-34,GOLD);
+        label("파밍 픽셀 던전",9,left,top,width-66,GOLD);
         Button secret=new Button(){@Override protected void onClick(){
             long now=System.currentTimeMillis();if(now-lastDebugTap>4000)debugTaps=0;lastDebugTap=now;
             if(++debugTaps>=7){debugTaps=0;try{p.setDebugEnabled(true);refresh();debugMenu();}catch(RuntimeException e){error(e);}}
-        }};secret.setRect(left,top,width-34,16);body.add(secret);
+        }};secret.setRect(left,top,width-66,16);body.add(secret);
+        button("기록",left+width-63,top,30,15,()->ShatteredPixelDungeon.switchNoFade(RankingsScene.class),false);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
         label(p.gold+" G · 남음 "+p.points+" P · 사용 "+p.spentPoints()+" P",6,left,top+20,p.debugEnabled?width-43:width,TEXT);
         if(p.debugEnabled)button("디버그",left+width-40,top+18,40,13,this::debugMenu,false);
         label(p.growthDisplay()+" · 출격 힘 "+p.startingStrength(),6,left,top+29,width,GREEN);
-        float tw=(width-8)/5f;
-        String[] titles={"준비","성장","원정","상점","의뢰"};
-        for(int i=0;i<5;i++){
+        float tw=(width-10)/6f;
+        String[] titles={"준비","성장","원정","상점","의뢰","연금술"};
+        for(int i=0;i<6;i++){
             final int n=i;
             HubButton b=button(titles[i],left+i*(tw+2),top+40,tw,19,()->{tab=n;refresh();if(n==1)add(new WndGrowthAtlas(this::refresh));},i==tab);
             if(i==tab)b.textColor(GOLD);
         }
         float y=top+65;
-        if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else if(tab==3)shop(y);else contracts(y);
+        if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else if(tab==3)shop(y);else if(tab==4)contracts(y);else alchemy(y);
         button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
         if(p.active)button("포기하기",left+width-48,bottom-22,48,22,this::abandon,false);
     }
@@ -89,9 +92,7 @@ public class ExtractionHubScene extends PixelScene {
             },false);
             return;
         }
-        label("보관 창고  "+p.stash.size(),7,left,y,width-57,GOLD);
-        button("물약",left+width-56,y-3,27,14,()->{p.buyPotion();refresh();},false);
-        button("연금",left+width-27,y-3,27,14,()->add(new WndHubAlchemy(this::refresh)),false);
+        label("보관 창고  "+p.stash.size(),7,left,y,width,GOLD);
         int count=4*stashRows, pages=Math.max(1,(p.stash.size()+count-1)/count);
         stashPage=Math.min(stashPage,pages-1);
         grid(p.stash,stashPage*count,stashRows,y+12,false);
@@ -115,6 +116,13 @@ public class ExtractionHubScene extends PixelScene {
             label("착용 바지  "+(p.preparedPants()==null?"없음":p.preparedPants().title()),6,left+5,after+48,width-10,GREEN);
             label("착용 신발  "+(p.preparedBoots()==null?"없음":p.preparedBoots().title()),6,left+5,after+62,width-10,GREEN);
         }
+    }
+    private void alchemy(float y){
+        ExtractionProfile p=ExtractionProfile.get();
+        label("로비 연금술",9,left,y,width,GOLD);
+        label("연금 에너지  "+p.alchemyEnergy+" E",7,left,y+19,width,GREEN);
+        label(p.active?"원정 중에는 연금술을 이용할 수 없습니다.\n탈출하거나 원정을 포기한 뒤 이용하세요.":"창고 재료로 제작하고 불필요한 재료를 분해합니다.\n에너지 1 E 구매: 10 G",7,left,y+36,width,TEXT);
+        if(!p.active)button("연금술 열기",left,y+76,width,27,()->add(new WndHubAlchemy(this::refresh)),true);
     }
     private void debugMenu(){new com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDebugMenu(this::add,this::refresh,false).open();}
     private void grid(ArrayList<Item> items,int offset,int rows,float y,boolean bag){

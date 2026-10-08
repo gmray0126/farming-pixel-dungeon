@@ -524,6 +524,39 @@ public class ExtractionProfileTest {
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");
         assertEquals(armor.getClass(),restored.belongings.armor.getClass());assertEquals(3,restored.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
     }
+    private void killForRecord(Hero h,Object cause){
+        com.badlogic.gdx.Application previous=com.badlogic.gdx.Gdx.app;
+        h.sprite=new EffectSprite();h.HP=0;
+        com.badlogic.gdx.Gdx.app=(com.badlogic.gdx.Application)java.lang.reflect.Proxy.newProxyInstance(
+            getClass().getClassLoader(),new Class[]{com.badlogic.gdx.Application.class},(proxy,method,args)->{
+                if(method.getName().equals("postRunnable"))return null; // The headless test has no scene to switch to.
+                return method.invoke(previous,args);
+            });
+        try{h.die(cause);}finally{com.badlogic.gdx.Gdx.app=previous;h.sprite=null;}
+    }
+    @Test public void expeditionDeathStoresNativeCauseAndEquipmentExactlyOnce() throws Exception {
+        com.shatteredpixel.shatteredpixeldungeon.Rankings ranks=com.shatteredpixel.shatteredpixeldungeon.Rankings.INSTANCE;
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();
+        Hero h=Dungeon.hero;h.pos=Dungeon.level.entrance();profile.credit(profile.raidID,25);
+        killForRecord(h,new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());
+        assertFalse(profile.active);assertEquals(25,profile.xp);assertEquals(1,ranks.records.size());
+        Dungeon.fail(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat.class);assertEquals(1,ranks.records.size());
+        ranks.records=null;ranks.load();assertEquals(1,ranks.records.size());
+        com.shatteredpixel.shatteredpixeldungeon.Rankings.Record rec=ranks.records.get(0);
+        assertEquals(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat.class,rec.cause);assertFalse(rec.win);assertEquals(1,rec.depth);
+        Hero recorded=(Hero)rec.gameData.get("hero");assertTrue(recorded.belongings.weapon instanceof BasicExpeditionSword);assertTrue(recorded.belongings.armor instanceof BasicExpeditionArmor);
+    }
+    @Test public void viewingADeathRecordDoesNotReplaceTheSavedActiveExpedition() throws Exception {
+        com.shatteredpixel.shatteredpixeldungeon.Rankings ranks=com.shatteredpixel.shatteredpixeldungeon.Rankings.INSTANCE;
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();
+        Dungeon.hero.pos=Dungeon.level.entrance();killForRecord(Dungeon.hero,new com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger());
+        assertEquals(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Hunger.class,ranks.records.get(0).cause);
+        profile.begin();Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();Dungeon.hero.pos=Dungeon.level.entrance();Dungeon.hero.HP=13;
+        int id=profile.raidID;Dungeon.saveGame(1);Dungeon.saveLevel(1);
+        ranks.loadGameData(ranks.records.get(0));assertTrue(profile.active);assertEquals(id,profile.raidID);
+        Dungeon.loadGame(1);Dungeon.level=Dungeon.loadLevel(1);
+        assertEquals(id,Dungeon.hero.extractionRaidID);assertEquals(13,Dungeon.hero.HP);assertNotNull(Dungeon.hero.belongings.armor);
+    }
     @Test public void foodSpawnsOnExpeditionFloorsAgain(){
         profile.begin();Dungeon.challenges=0;Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
         Dungeon.level=Dungeon.newLevel();
@@ -604,6 +637,8 @@ public class ExtractionProfileTest {
         GamesInProgress.curSlot = 1;
         forgetProfile();
         profile = ExtractionProfile.get();
+        com.shatteredpixel.shatteredpixeldungeon.Rankings ranks=com.shatteredpixel.shatteredpixeldungeon.Rankings.INSTANCE;
+        ranks.records=null;ranks.totalNumber=ranks.wonNumber=ranks.localTotal=ranks.localWon=0;ranks.latestDaily=null;ranks.dailyScoreHistory.clear();
     }
     @Test public void prerequisitesAndGrowthSurviveReload() throws Exception {
         try { profile.learn(1); fail("A child node needs its parent"); }

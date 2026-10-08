@@ -160,7 +160,7 @@ try {
     $profile.active=$false; $profile.prepared=@(); $profile.escrow=@()
     Write-Bundle $profilePath $profile
     $p=Start-Game
-    Click-Client $p 585 110
+    Click-Client $p 554 110
     Start-Sleep -Seconds 1
     Click-Client $p 654 200
     Start-Sleep -Seconds 1
@@ -186,10 +186,17 @@ try {
     Capture $p '05-portrait-hub'
     $zoom=[Math]::Min(3,[Math]::Max(2,[Math]::Floor([Math]::Min($rect.Right/144.0,$rect.Bottom/250.0))))
     $virtualWidth=$rect.Right/$zoom; $hubWidth=[Math]::Min(180,$virtualWidth-12); $left=($virtualWidth-$hubWidth)/2
-    $tabWidth=($hubWidth-8)/5
+    $tabWidth=($hubWidth-10)/6
     Click-Client $p ([int](($left+$tabWidth+2+$tabWidth/2)*$zoom)) ([int](55*$zoom))
     Start-Sleep -Seconds 1
     Capture $p '06-portrait-growth-map'
+    [DesktopInput]::keybd_event(27,0,0,[UIntPtr]::Zero)
+    [DesktopInput]::keybd_event(27,0,2,[UIntPtr]::Zero)
+    Start-Sleep -Milliseconds 300
+    Click-Client $p ([int](($left+5*($tabWidth+2)+$tabWidth/2)*$zoom)) ([int](55*$zoom))
+    Click-Client $p ([int](($left+$hubWidth/2)*$zoom)) ([int](159*$zoom))
+    Start-Sleep -Milliseconds 500
+    Capture $p '07-portrait-alchemy'
     Close-Game $p
     @{portrait_window=$true;transparent_growth_map=$true;clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {

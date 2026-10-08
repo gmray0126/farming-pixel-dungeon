@@ -18,8 +18,8 @@ public class WndGrowthAtlas extends Window {
     public WndGrowthAtlas(){this(null);}
     public WndGrowthAtlas(Runnable closed){
         this.closed=closed;
-        chrome.alpha(0.25f);
-        shadow.alpha(0.12f);
+        chrome.alpha(0.12f);
+        shadow.visible=false;
         RectF insets=Game.platform.getSafeInsets(com.watabou.utils.PlatformSupport.INSET_BLK);
         atlasWidth=Math.max(100,(int)((Game.width-insets.left-insets.right)/PixelScene.defaultZoom)-16);
         atlasHeight=Math.max(170,(int)((Game.height-insets.top-insets.bottom)/PixelScene.defaultZoom)-20);

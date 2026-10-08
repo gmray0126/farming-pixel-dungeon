@@ -144,7 +144,9 @@ public class RankingsScene extends PixelScene {
 			
 		}
 
-		ExitButton btnExit = new ExitButton();
+		ExitButton btnExit = new ExitButton(){
+			@Override protected void onClick(){RankingsScene.this.onBackPressed();}
+		};
 		btnExit.setPos( Camera.main.width - btnExit.width() - insets.right, insets.top );
 		add( btnExit );
 
@@ -187,7 +189,7 @@ public class RankingsScene extends PixelScene {
 
 	@Override
 	protected void onBackPressed() {
-		ShatteredPixelDungeon.switchNoFade(TitleScene.class);
+		ShatteredPixelDungeon.switchNoFade(ExtractionHubScene.class);
 	}
 	
 	public static class Record extends Button {
