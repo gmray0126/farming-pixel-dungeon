@@ -1,0 +1,83 @@
+name: Publish Farming Pixel Dungeon v0.31
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v031.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v031
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37713697564
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37713697530
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.31.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.31_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.31 / Farming Pixel Dungeon v0.31
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          장비를 준비해 5층 원정을 떠나고 보스를 처치한 뒤 탈출해 장비와 성장 노드를 쌓는 게임입니다.
+          
+          ## 한국어 변경 사항
+          - **검은 성장 지도:** 움직이는 로비 배경이 비치던 표시를 없애고 고정된 검은 배경으로 복구했습니다. 지도를 멀리 축소해도 배경은 검게 유지됩니다.
+          - **지도 표시 영역 확대:** 큰 지도 창은 사용 가능한 화면 높이를 모두 사용합니다. 상단 정보 줄이나 하단 안내 때문에 지도 표시 영역이 줄어들지 않습니다.
+          - **상단 정보는 지도 위에 표시:** 노드를 위로 옮겨도 상단 정보 영역의 경계에서 잘리지 않습니다. 지도 위에 글자와 작은 조작 버튼만 겹쳐 놓으며, 노드는 정보 줄 뒤에서도 계속 표시됩니다.
+          - 상단 버튼의 클릭 동작과 지도 이동·확대·노드 선택은 함께 유지됩니다. 기존 성장 노드와 포인트에는 변화가 없습니다.
+          
+          ## English changes
+          Farming Pixel Dungeon is an equipment-farming mod built around five-floor expeditions, extraction, and permanent growth nodes.
+          
+          - **Black growth-map background:** Replaced the animated lobby backdrop with a stable black background. It remains black even when zooming out beyond the map's world bounds.
+          - **Larger viewport:** The expanded map uses the available window height, including the space beneath the header and footer.
+          - **Header overlays the map:** Nodes moved upward remain visible behind the header instead of being clipped at its lower edge. Only text and small controls overlay the map.
+          - Header buttons retain input priority, while map dragging, zooming, and node selection remain available. Growth nodes and points are unchanged.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          140 core tests passed. Android and Windows builds succeeded. The native Windows map was visually checked with a black backing and nodes rendered beneath the overlaid header. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [모딩 소스 / Mod source](https://github.com/gmray0126/farming-pixel-dungeon/tree/30c30e2d84b9d253151c1716576e48caf4048f96)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.31.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target 30c30e2d84b9d253151c1716576e48caf4048f96 --title '파밍픽셀던전 v0.31 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
