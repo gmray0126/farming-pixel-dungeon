@@ -22,6 +22,37 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void starterBowShowsEnchantmentInItsNameAfterSaving() {
+        NodeSpiritBow bow=new NodeSpiritBow();
+        String plain=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow().name();
+        assertEquals(plain,bow.name());
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Kinetic enchant=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.enchantments.Kinetic();
+        bow.enchant(enchant);assertEquals(enchant.name(plain),bow.name());
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("bow",bow);
+        NodeSpiritBow copy=(NodeSpiritBow)saved.get("bow");
+        assertEquals(enchant.getClass(),copy.enchantment.getClass());assertEquals(bow.name(),copy.name());
+    }
+    @Test public void stylusSelectionInscribesBothClothingSlotsAndConsumesOnlySuccessfulUses() throws Exception {
+        profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Hero h=Dungeon.hero;
+        com.shatteredpixel.shatteredpixeldungeon.items.Stylus stylus=new com.shatteredpixel.shatteredpixeldungeon.items.Stylus();stylus.quantity(2);assertTrue(stylus.collect(h.belongings.backpack));
+        Field selection=com.shatteredpixel.shatteredpixeldungeon.items.Stylus.class.getDeclaredField("itemSelector");selection.setAccessible(true);
+        com.shatteredpixel.shatteredpixeldungeon.windows.WndBag.ItemSelector selector=(com.shatteredpixel.shatteredpixeldungeon.windows.WndBag.ItemSelector)selection.get(stylus);
+        Field user=Item.class.getDeclaredField("curUser");user.setAccessible(true);Object previous=user.get(null);user.set(null,h);
+        try {
+            ExpeditionClothing unknown=ExpeditionClothing.create(false,1);selector.onSelect(unknown);assertNull(unknown.glyph);assertEquals(2,stylus.quantity());
+            ExpeditionClothing cursed=(ExpeditionClothing)ExpeditionClothing.create(true,1).identify(false);cursed.cursed=true;selector.onSelect(cursed);assertNull(cursed.glyph);assertEquals(2,stylus.quantity());
+            assertFalse(selector.itemSelectable(new Food()));
+            for(boolean boots:new boolean[]{false,true}){
+                ExpeditionClothing item=(ExpeditionClothing)ExpeditionClothing.create(boots,3).identify(false);
+                if(boots)h.belongings.boots=item;else h.belongings.pants=item;
+                assertTrue(selector.itemSelectable(item));selector.onSelect(item);assertNotNull(item.glyph);assertFalse(item.glyph.curse());
+                com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("clothing",item);
+                ExpeditionClothing restored=(ExpeditionClothing)saved.get("clothing");assertEquals(item.glyph.getClass(),restored.glyph.getClass());assertEquals(item.name(),restored.name());
+            }
+            assertNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Stylus.class));
+        } finally {user.set(null,previous);}
+    }
     @Test public void allBagsRoutePreparedSuppliesAndRemainUniqueAfterSave() throws Exception {
         Item potion=new SupplyHealingPotion().quantity(2);
         Item scroll=new ExtractionShop.SupplyUpgrade().quantity(3);

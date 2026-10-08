@@ -26,6 +26,7 @@ import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.effects.Enchanting;
 import com.shatteredpixel.shatteredpixeldungeon.effects.particles.PurpleParticle;
+import com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.journal.Catalog;
@@ -84,12 +85,14 @@ public class Stylus extends Item {
 		return true;
 	}
 	
-	private void inscribe( Armor armor ) {
+	private void inscribe( Item armor ) {
+		boolean curseGlyph = armor instanceof Armor ? ((Armor)armor).hasCurseGlyph()
+				: ((ExpeditionClothing)armor).hasCurseGlyph();
 
 		if (!armor.cursedKnown){
 			GLog.w( Messages.get(this, "identify"));
 			return;
-		} else if (armor.cursed || armor.hasCurseGlyph()){
+		} else if (armor.cursed || curseGlyph){
 			GLog.w( Messages.get(this, "cursed"));
 			return;
 		}
@@ -99,12 +102,15 @@ public class Stylus extends Item {
 
 		GLog.w( Messages.get(this, "inscribed"));
 
-		armor.inscribe();
+		if (armor instanceof Armor) ((Armor)armor).inscribe();
+		else ((ExpeditionClothing)armor).inscribe();
 		
-		curUser.sprite.operate(curUser.pos);
-		curUser.sprite.centerEmitter().start(PurpleParticle.BURST, 0.05f, 10);
-		Enchanting.show(curUser, armor);
-		Sample.INSTANCE.play(Assets.Sounds.BURNING);
+		if (curUser.sprite != null) {
+			curUser.sprite.operate(curUser.pos);
+			curUser.sprite.centerEmitter().start(PurpleParticle.BURST, 0.05f, 10);
+			Enchanting.show(curUser, armor);
+			Sample.INSTANCE.play(Assets.Sounds.BURNING);
+		}
 		
 		curUser.spend(TIME_TO_INSCRIBE);
 		curUser.busy();
@@ -129,13 +135,13 @@ public class Stylus extends Item {
 
 		@Override
 		public boolean itemSelectable(Item item) {
-			return item instanceof Armor;
+			return item instanceof Armor || item instanceof ExpeditionClothing;
 		}
 
 		@Override
 		public void onSelect( Item item ) {
 			if (item != null) {
-				Stylus.this.inscribe( (Armor)item );
+				Stylus.this.inscribe( item );
 			}
 		}
 	};
