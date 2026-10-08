@@ -19,7 +19,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v5
         with:
-          ref: cf787917045f6445db8248ed85ceedd9ffb50b49
+          ref: a271da5d844d4f1b74cbb771834d94bf7ef79bc9
 
       - name: Set up Java 21
         uses: actions/setup-java@v5
@@ -126,10 +126,10 @@ jobs:
           ## Credits / 제작자와 원작
           **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
           
-          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [모딩 소스 / Mod source](https://github.com/gmray0126/farming-pixel-dungeon/tree/cf787917045f6445db8248ed85ceedd9ffb50b49)
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [모딩 소스 / Mod source](https://github.com/gmray0126/farming-pixel-dungeon/tree/a271da5d844d4f1b74cbb771834d94bf7ef79bc9)
           NOTES
       - name: Publish Android and Windows downloads
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v0.33.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target cf787917045f6445db8248ed85ceedd9ffb50b49 --title '파밍픽셀던전 v0.33 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
+          gh release create v0.33.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target a271da5d844d4f1b74cbb771834d94bf7ef79bc9 --title '파밍픽셀던전 v0.33 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
