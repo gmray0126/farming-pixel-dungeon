@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.29.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.29.0-farming)
+[v0.30.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.30.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.29.0-farming/Farming_Pixel_Dungeon_v0.29.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.29.0-farming/Farming_Pixel_Dungeon_PC_v0.29_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.30.0-farming/Farming_Pixel_Dungeon_v0.30.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.30.0-farming/Farming_Pixel_Dungeon_PC_v0.30_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -71,6 +71,18 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 - **Windows:** ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Java 런타임이 포함되어 있습니다. Extract the entire ZIP and run that executable; Java is bundled.
 - **Builds:** [Android build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/android-apk.yml) · [Windows build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/desktop-pc.yml). Successful runs provide downloadable artifacts; GitHub may require sign-in.
 - **Source builds:** [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction) · [Android guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-android.md) · [Desktop guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-desktop.md).
+
+## 내 원정 기록과 로비 / Records and hub
+
+로비 오른쪽 위 **기록**에서 새 사망 원정의 원인·층·점수와 당시 캐릭터·장비를 확인합니다. 원작의 개인 기록창을 사용하며 기록에서 돌아오면 로비로 이동합니다. 기록 조회는 진행 중인 원정의 저장 파일을 바꾸지 않습니다. 이전 버전에서 미저장된 사망은 복원되지 않습니다.
+
+상단 탭은 **준비·성장·원정·상점·의뢰·연금술** 여섯 개입니다. 작은 물약 구매 버튼은 제거했으며, 연금술 탭의 큰 **연금술 열기** 버튼을 사용합니다.
+
+The hub's top-right **기록** button opens the original personal records screen. New deaths save their cause, floor, score, character, and equipment. Viewing records leaves the active expedition save intact. Deaths not saved by earlier releases cannot be recovered.
+
+The hub has six tabs: Preparation, Growth, Expedition, Shop, Contracts, and Alchemy. The small quick-potion-purchase button is removed; use the full-width alchemy entry button in the Alchemy tab.
+
+성장 창은 88% 투명하며 지도 뒤의 로비 가림막을 숨겨 움직이는 배경이 실제로 비칩니다. The growth window is 88% transparent and hides the opaque hub shade, revealing the animated backdrop.
 
 ## 제작자와 원작 / Credits
 
