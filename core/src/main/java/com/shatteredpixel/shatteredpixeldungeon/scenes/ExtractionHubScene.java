@@ -43,9 +43,6 @@ public class ExtractionHubScene extends PixelScene {
         if(!p.active&&GamesInProgress.check(1)!=null)Dungeon.deleteGame(1,true);
         refresh();fadeIn();
     }
-    public void showHubControls(boolean visible){
-        if(body!=null)body.visible=body.active=visible;
-    }
     private void refresh(){
         if(body!=null){erase(body);body.destroy();}
         body=new Group();add(body);
@@ -111,7 +108,7 @@ public class ExtractionHubScene extends PixelScene {
             panel(left,after+16,width,61);
             Item weapon=p.preparedWeapon(), armor=p.preparedArmor();
             label("착용 무기  "+(weapon==null?"보급 낡은 검 (자동 지급)":weapon.title()),6,left+5,after+20,width-10,GOLD);
-            label("착용 갑옷  "+(armor==null?"없음":armor.title()),6,left+5,after+34,width-10,GREEN);
+            label("착용 갑옷  "+(armor==null?"보급 천 갑옷 (자동 지급)":armor.title()),6,left+5,after+34,width-10,GREEN);
             label("착용 바지  "+(p.preparedPants()==null?"없음":p.preparedPants().title()),6,left+5,after+48,width-10,GREEN);
             label("착용 신발  "+(p.preparedBoots()==null?"없음":p.preparedBoots().title()),6,left+5,after+62,width-10,GREEN);
         }

@@ -160,10 +160,10 @@ public class ExtractionHybridTest {
         h.extractionHybrid.bloodOath=false;for(int i=0;i<5;i++)ExtractionHybridCombat.bloodTick(h);assertEquals(19,h.HP);
         h.extractionHybrid.bloodOath=true;h.HP=2;for(int i=0;i<5;i++)ExtractionHybridCombat.bloodTick(h);assertEquals(1,h.HP);assertFalse(h.extractionHybrid.bloodOath);
     }
-    @Test public void purchasedFoodRemainsDroppableAndNaturalMobFoodIsBlocked(){
-        com.shatteredpixel.shatteredpixeldungeon.items.food.Food food=new com.shatteredpixel.shatteredpixeldungeon.items.food.Food();assertTrue(ExtractionFood.blockNatural(food));
-        assertNull(new Piranha().createLoot());assertNull(new Monk().createLoot());
-        p.buy(1);Item bought=p.stash.get(p.stash.size()-1);assertTrue(bought.extractionPurchasedFood);assertFalse(ExtractionFood.blockNatural(bought));
+    @Test public void naturalMobFoodReturnsAndPurchasedFoodKeepsItsSaveMarker(){
+        assertTrue(new Piranha().createLoot() instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food);
+        assertTrue(new Monk().createLoot() instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food);
+        p.buy(1);Item bought=p.stash.get(p.stash.size()-1);assertTrue(bought.extractionPurchasedFood);
         Bundle b=new Bundle();b.put("food",bought);assertTrue(((Item)b.get("food")).extractionPurchasedFood);
     }
     private java.util.ArrayList<Item> picks(Item...items){return new java.util.ArrayList<>(java.util.Arrays.asList(items));}
@@ -206,14 +206,5 @@ public class ExtractionHybridTest {
     @Test public void runningExpeditionCannotUseHubAlchemy(){
         p.begin();try{ExtractionAlchemy.buyEnergy(p,1);fail("Running raid");}catch(IllegalStateException expected){}
         try{ExtractionAlchemy.recipes(p,picks());fail("Running raid");}catch(IllegalStateException expected){}
-    }
-    @Test public void shopDescriptionsWorkAtHubWithoutAnExpeditionHero(){
-        Dungeon.hero=null;
-        com.shatteredpixel.shatteredpixeldungeon.messages.Messages.setup(com.shatteredpixel.shatteredpixeldungeon.messages.Languages.KOREAN);
-        for(ExtractionShop.Offer offer:ExtractionShop.OFFERS){
-            Item item=offer.item();assertNotNull(item.info());assertFalse(item.info().isEmpty());
-        }
-        Item staff=new MagesStaff(new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile()).identify(false);
-        assertTrue(staff.info().contains("마탄"));
     }
 }

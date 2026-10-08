@@ -1174,7 +1174,7 @@ public abstract class Mob extends Char {
 			item = (Item)loot;
 
 		}
-		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionFood.blockNatural(item)?null:item;
+		return item;
 	}
 
 	//how many mobs this one should count as when determining spawning totals

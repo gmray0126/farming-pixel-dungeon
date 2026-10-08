@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.28.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.28.0-farming)
+[v0.27.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.27.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.28.0-farming/Farming_Pixel_Dungeon_v0.28.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.28.0-farming/Farming_Pixel_Dungeon_PC_v0.28_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.27.0-farming/Farming_Pixel_Dungeon_v0.27.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.27.0-farming/Farming_Pixel_Dungeon_PC_v0.27_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -62,21 +62,15 @@ The currently provided builds target **Android and 64-bit Windows**. This mod is
 - **Builds:** [Android build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/android-apk.yml) · [Windows build workflow](https://github.com/gmray0126/farming-pixel-dungeon/actions/workflows/desktop-pc.yml). Successful runs provide downloadable artifacts; GitHub may require sign-in.
 - **Source builds:** [`extraction` branch](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction) · [Android guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-android.md) · [Desktop guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/docs/getting-started-desktop.md).
 
-## 화면 표시 / Display
-
-PC의 **설정 → 화면 설정 → 세로 모드 (PC)**에서 세로형 창과 모바일식 UI를 선택할 수 있습니다. 끄면 이전 창 크기로 돌아옵니다. 성장 지도 창 배경은 75% 투명하며, 긴 설명과 메시지는 창 안에서 줄바꿈되고 필요한 경우 스크롤됩니다.
-
-Enable **세로 모드 (PC)** in the PC display settings for a portrait window and the mobile UI. Disabling it restores the previous window size. The growth-map window background is 75% transparent. Long descriptions and messages wrap within the window and scroll when needed.
-
 ## 로비 연금술과 보급 / Hub alchemy and supplies
 
 로비 준비 탭의 창고 옆 **연금** 버튼에서 재료를 최대 3개 넣고 기존 연금술 제작법으로 제작합니다. 에너지 1은 10 G로 구매하거나 창고 재료를 분해하여 얻습니다. 재료·에너지·완성품은 한 번에 저장되며 원정 중에는 이용할 수 없습니다. 장신구 촉매의 세 선택지는 저장됩니다.
 
 Use **연금** beside the stash in the preparation tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 10 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
 
-원정의 음식은 구매로 마련합니다. 자연 음식 생성과 몬스터 음식 전리품은 차단하며 구매한 음식은 버리거나 다시 주울 수 있습니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
+식량은 층에서 자연 생성되며 몬스터 전리품과 상점에서도 얻을 수 있습니다. 출격 시 준비한 무기나 갑옷이 없으면 해당 보급 검·천 갑옷을 중복 없이 지급하고, 돌멩이 3개와 빈 물통(미준비 시)을 지급합니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
 
-Purchase food before expeditions. Natural food drops are suppressed, while purchased food can still be dropped and picked up. Blood Oath additionally drains one HP every five turns while active and turns off automatically at one HP.
+Food spawns naturally on floors and is available from monster loot and the hub shop. Expeditions provide a fallback sword and cloth armor only when the corresponding gear is missing, plus three throwing stones and a waterskin when needed. Blood Oath additionally drains one HP every five turns while active and turns off automatically at one HP.
 
 ## 혼합 트리와 의뢰 / Hybrid trees and contracts
 

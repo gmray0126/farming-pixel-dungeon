@@ -185,6 +185,12 @@ public final class ExtractionProfile {
             h.belongings.weapon=(KindOfWeapon)new BasicExpeditionSword().identify(false);
             h.belongings.weapon.activate(h);
         }
+        if(h.belongings.armor==null){
+            h.belongings.armor=(Armor)new BasicExpeditionArmor().identify(false);
+            h.belongings.armor.activate(h);
+        }
+        if(!new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone().identify(false).quantity(3).collect(h.belongings.backpack))
+            throw new IllegalStateException("기본 돌멩이를 가방에 넣지 못했습니다.");
         if(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class)==null
                 && !new com.shatteredpixel.shatteredpixeldungeon.items.Waterskin().collect(h.belongings.backpack))
             throw new IllegalStateException("기본 물통을 가방에 넣지 못했습니다.");
@@ -284,6 +290,7 @@ public final class ExtractionProfile {
                 ExtractionShop.Redemption redeemed=ExtractionShop.redeemConsumables(loot);
                 // Unmodified free swords are reissued next run instead of filling the stash.
                 loot.removeIf(i -> i instanceof BasicExpeditionSword && i.level()==0 && ((BasicExpeditionSword)i).enchantment==null);
+                loot.removeIf(i -> i instanceof BasicExpeditionArmor && i.level()==0 && ((BasicExpeditionArmor)i).glyph==null && ((BasicExpeditionArmor)i).augment==Armor.Augment.NONE);
                 loot.removeIf(i -> i instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin
                         && ((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)i).isEmpty());
                 loot.removeIf(i -> i instanceof NodeSpiritBow && ((NodeSpiritBow)i).enchantment==null && ((NodeSpiritBow)i).augment==com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Augment.NONE);

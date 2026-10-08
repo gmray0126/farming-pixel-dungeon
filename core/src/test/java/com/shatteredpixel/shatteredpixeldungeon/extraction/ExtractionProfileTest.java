@@ -497,18 +497,37 @@ public class ExtractionProfileTest {
         for(Item item:profile.stash)assertFalse(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor);
         profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
         assertTrue(Dungeon.hero.belongings.weapon instanceof BasicExpeditionSword);
-        assertNull(Dungeon.hero.belongings.armor);
+        assertTrue(Dungeon.hero.belongings.armor instanceof BasicExpeditionArmor);
+        assertEquals(3,Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
+        assertEquals(0,ExtractionShop.salePrice(Dungeon.hero.belongings.armor));
         assertEquals(0,ExtractionShop.salePrice(Dungeon.hero.belongings.weapon));
         com.watabou.utils.Bundle copy=new com.watabou.utils.Bundle();copy.put("sword",Dungeon.hero.belongings.weapon);
         assertTrue(copy.get("sword") instanceof BasicExpeditionSword);
         profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();
         profile.begin();Dungeon.hero=new Hero();profile.initialize(Dungeon.hero);
         assertTrue(Dungeon.hero.belongings.weapon instanceof BasicExpeditionSword);
-        profile.settle(profile.raidID,true);assertEquals(4,profile.stash.size());
+        profile.settle(profile.raidID,true);assertEquals(5,profile.stash.size());
         Item chosen=profile.stash.get(0);profile.prepare(chosen,true);profile.begin();
         Hero next=new Hero();profile.initialize(next);assertEquals(chosen.getClass(),next.belongings.weapon.getClass());
-        assertEquals(1,next.belongings.backpack.items.size());
+        assertEquals(2,next.belongings.backpack.items.size());
         assertNotNull(next.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class));
+    }
+    @Test public void preparedSwordAndArmorDoNotGetDuplicateFallbackGearAndStonesSurviveSave(){
+        Item sword=profile.stash.get(0);
+        Item armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.LeatherArmor().identify(false).upgrade();
+        profile.stash.add(armor);profile.prepare(sword,true);profile.prepare(armor,true);profile.begin();
+        Hero h=new Hero();Dungeon.hero=h;h.extractionRaidID=profile.raidID;profile.initialize(h);
+        assertEquals(sword.getClass(),h.belongings.weapon.getClass());assertEquals(armor.getClass(),h.belongings.armor.getClass());
+        int armors=0;for(Item item:h.belongings){assertFalse(item instanceof BasicExpeditionSword);assertFalse(item instanceof BasicExpeditionArmor);if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)armors++;}
+        assertEquals(1,armors);assertEquals(3,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");
+        assertEquals(armor.getClass(),restored.belongings.armor.getClass());assertEquals(3,restored.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
+    }
+    @Test public void foodSpawnsOnExpeditionFloorsAgain(){
+        profile.begin();Dungeon.challenges=0;Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
+        Dungeon.level=Dungeon.newLevel();
+        int food=0;for(com.shatteredpixel.shatteredpixeldungeon.items.Heap heap:Dungeon.level.heaps.values())for(Item item:heap.items)if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food)food++;
+        assertTrue("Natural food should be present on floor one",food>0);
     }
     @Test public void potionKnowledgeIsSelectiveAndSurvivesNewColorsAndNativeSave() throws Exception {
         profile.learn(ExtractionGrowth.index("pack"));profile.learn(ExtractionGrowth.index("know_healing"));
@@ -559,7 +578,7 @@ public class ExtractionProfileTest {
         profile.settle(profile.raidID,false);
         for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
         profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
-        assertEquals(13,Dungeon.hero.belongings.backpack.items.size());
+        assertEquals(14,Dungeon.hero.belongings.backpack.items.size());
         assertTrue(Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class).isEmpty());
     }
     @Before public void setUp() throws Exception {
@@ -700,7 +719,7 @@ public class ExtractionProfileTest {
         Dungeon.hero.heroClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
         profile.initialize(Dungeon.hero);
         assertEquals(1, Dungeon.hero.belongings.weapon.level());
-        assertEquals(2, Dungeon.hero.belongings.backpack.items.size());
+        assertEquals(3, Dungeon.hero.belongings.backpack.items.size());
     }
     @Test public void returnAllPreservesEveryPreparedItemAfterReload() throws Exception {
         for (Item item : new java.util.ArrayList<>(profile.stash)) profile.prepare(item, true);
@@ -826,7 +845,7 @@ public class ExtractionProfileTest {
         profile.points=100;learnPath("porter");int cap=profile.capacity(),stored=profile.stash.size();assertTrue(cap>12);
         for(int i=0;i<cap;i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
         profile.resetNodes();assertEquals(12,profile.prepared.size());assertEquals(stored+cap-12,profile.stash.size());
-        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(13,h.belongings.backpack.items.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(14,h.belongings.backpack.items.size());
     }
     @Test public void firstArcherNodeGivesTheNativeBowEveryRaidAndResetLocksItAgain(){
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
@@ -840,7 +859,7 @@ public class ExtractionProfileTest {
     }
     @Test public void freeBowFitsAFullLoadoutAndPreparedBowNeverReplacesTheSword(){
         learnPath("ranged_0");for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
-        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(14,h.belongings.backpack.items.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(15,h.belongings.backpack.items.size());
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");assertNotNull(restored.belongings.getItem(NodeSpiritBow.class));
         Dungeon.gold=0;profile.settle(profile.raidID,true);for(Item item:profile.stash)assertFalse(item instanceof NodeSpiritBow);
