@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.39.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.39.0-farming)
+[v0.40.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.40.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.39.0-farming/Farming_Pixel_Dungeon_v0.39.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.39.0-farming/Farming_Pixel_Dungeon_PC_v0.39.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.40.0-farming/Farming_Pixel_Dungeon_v0.40.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.40.0-farming/Farming_Pixel_Dungeon_PC_v0.40.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -24,7 +24,7 @@ The mod's game source is on the [`extraction` branch](https://github.com/gmray01
 - **직업 대신 성장 노드:** 무기 계열과 기존 직업·2차 직업의 특성 및 유틸리티를 노드로 선택합니다. 힘도 노드로 성장하며, 힘의 물약 효과는 해당 원정에서만 유지됩니다. 영혼의 활은 궁수 계열의 첫 노드를 통해 얻습니다.
 - **레벨과 프리셋:** 성장 레벨은 최대 100이며 레벨마다 3포인트를 얻습니다. 레벨 자체는 능력치를 올리지 않습니다. 노드 초기화와 3개의 프리셋으로 구성을 바꿀 수 있습니다.
 - **장비 파밍:** 무기·갑옷·바지·신발은 T1~T5로 구성됩니다. 갑옷의 방어 성능을 세 부위에 나누고, 문양은 세 부위 모두에 적용할 수 있습니다. 신발에는 이동 속도 효과도 있습니다. 힘이 부족해도 장착할 수 있지만 성능에 불이익을 받습니다.
-- **유물과 상점:** 신규 유물에는 회복과 물약 효율, 탐욕과 받는 피해, 시간 가속과 둔화처럼 이점과 대가가 함께 있습니다. 상점에서는 물품을 사고팔고 T1~T5 장비를 구매할 수 있습니다. 반지와 유물의 강화 상한은 +15이며 T5 무기도 +15까지 강화할 수 있습니다.
+- **유물과 상점:** 신규 유물에는 회복과 물약 효율, 탐욕과 받는 피해, 시간 가속과 둔화처럼 이점과 대가가 함께 있습니다. 상점에서는 물품을 사고팔고 T1~T5 장비를 구매할 수 있습니다. 반지·마법 지팡이·성장형 유물은 최대 +15이며, 티어 장비는 티어 × 3(최대 +15)까지 강화할 수 있습니다. 영혼의 활은 일반 강화 스크롤을 사용할 수 없습니다.
 - **단계별 난이도:** 하수도에서 장비와 성장 포인트를 준비하고 더 강한 적이 있는 다음 챕터에 도전합니다. 챕터별 장비 드롭 상한이 적용됩니다.
 
 - **혼합 전투 트리:** 여섯 직업 계통 사이에 마검사·그림자술사·연금 사냥꾼·폭풍 유격수·성전사·혈기사의 90개 노드를 배치했습니다. 교대 공격, 표식 폭발, 약품 코팅, 거리 전환, 성력 소비, 피의 서약으로 전투 방식을 바꿉니다.
@@ -41,7 +41,7 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **A classless growth tree:** Choose weapon paths, utility skills, and traits adapted from the original classes and subclasses. Permanent strength comes from nodes; strength potions last for the current expedition. The first archer node unlocks the Spirit Bow.
 - **Levels and presets:** The growth level cap is 100, with three points awarded per level. Levels do not directly increase stats. Reset your nodes or switch between three saved presets to change your build.
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
-- **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings and artifacts have a +15 enhancement ceiling; T5 weapons can also reach +15.
+- **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
 
 - **Hybrid combat trees:** Ninety new nodes connect six neighbouring class themes: Spellblade, Shadowcaster, Alchemical Hunter, Storm Skirmisher, Crusader, and Blood Knight. Alternate attacks, detonate marks, coat ranged weapons, build faith, or trade health for damage.
