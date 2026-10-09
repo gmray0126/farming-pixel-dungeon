@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.40.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.40.0-farming)
+[v0.41.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.41.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.40.0-farming/Farming_Pixel_Dungeon_v0.40.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.40.0-farming/Farming_Pixel_Dungeon_PC_v0.40.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.41.0-farming/Farming_Pixel_Dungeon_v0.41.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.41.0-farming/Farming_Pixel_Dungeon_PC_v0.41.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,16 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.41.0 성장과 하드 / Growth and Hard mode
+
+성장 노드는 표시된 모든 선행 조건을 요구합니다. 힘은 모두 +1인 10개 노드를 여러 계통 깊숙이 나누어 배치했습니다. 기존 배분은 한 번 초기화하여 포인트를 돌려주며, 진행 중인 원정은 종료한 뒤 환급합니다. 경험치와 보관 장비는 유지됩니다.
+
+원정 탭에서 일반/하드를 선택합니다. 하드는 해당 챕터 일반 대비 적 체력 2.5배·공격 피해 2배에 추가 몬스터·정예·방어 관통을 적용합니다. 하드에서만 새 레어 장비가 나오며 보스는 해당 챕터 최대 티어 레어 무기 1개를 보장합니다. 레어는 해당 장비의 공격 피해 또는 물리 방어를 20% 높이고 강화 상한과 힘 요구치는 바꾸지 않습니다.
+
+Growth nodes require every listed prerequisite. Ten +1 strength nodes are spread across deep paths. Existing allocations receive a one-time reset and point refund, deferred until the active expedition ends. Experience and stored gear remain.
+
+Select Normal or Hard in the expedition tab. Hard adds 2.5× enemy health and 2× damage, more monsters, elites, and armor penetration. New Rare equipment drops only in Hard; each chapter boss guarantees one Rare weapon at its chapter tier ceiling. Rare quality adds 20% attack damage or physical defense without changing strength requirements or upgrade limits.
 
 ## 챕터 / Chapters
 
