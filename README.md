@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.44.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.44.0-farming)
+[v0.45.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.45.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.44.0-farming/Farming_Pixel_Dungeon_v0.44.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.44.0-farming/Farming_Pixel_Dungeon_PC_v0.44.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.45.0-farming/Farming_Pixel_Dungeon_v0.45.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.45.0-farming/Farming_Pixel_Dungeon_PC_v0.45.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.45.0 지팡이 강화 / Staff upgrades
+
+마탄의 지팡이를 포함한 마법사의 지팡이는 T1 근접무기 제한 대신 최대 +15까지 강화합니다. 융합된 마법 막대도 최대 +15로 동기화하며 상세창에 상한을 표시합니다.
+
+Mage's Staff, including its Magic Missile form, upgrades to +15 rather than the tier-one melee cap. Bound wands synchronize up to +15, with the cap shown in details.
 
 ## v0.44.0 프리셋 저장 수정 / Preset save fix
 
