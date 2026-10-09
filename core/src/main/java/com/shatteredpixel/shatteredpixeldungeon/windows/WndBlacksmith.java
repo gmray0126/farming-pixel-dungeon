@@ -286,6 +286,7 @@ public class WndBlacksmith extends Window {
 								.levelThresholds.put(((MissileWeapon) second).setID, Integer.MAX_VALUE);
 					}
 
+					first.extractionRare|=second.extractionRare;
 					//preserves enchant/glyphs if present
 					if (first instanceof Weapon && ((Weapon) first).hasGoodEnchant()){
 						((Weapon) first).upgrade(true);

@@ -565,7 +565,7 @@ public abstract class Wand extends Item {
 			cursed = true;
 		}
 
-		return this;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.rollNew(this);
 	}
 
 	@Override

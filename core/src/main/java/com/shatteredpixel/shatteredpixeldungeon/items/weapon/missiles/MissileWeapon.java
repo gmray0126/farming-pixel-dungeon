@@ -187,7 +187,7 @@ abstract public class MissileWeapon extends Weapon {
 	}
 
 	public boolean isSimilar( Item item ) {
-		return trueLevel() == item.trueLevel() && getClass() == item.getClass() && setID == (((MissileWeapon) item).setID);
+		return extractionRare==item.extractionRare && trueLevel() == item.trueLevel() && getClass() == item.getClass() && setID == (((MissileWeapon) item).setID);
 	}
 	
 	@Override
@@ -393,7 +393,7 @@ abstract public class MissileWeapon extends Weapon {
 
 		Random.popGenerator();
 
-		return this;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.rollNew(this);
 	}
 
 	public String status() {

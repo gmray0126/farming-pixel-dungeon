@@ -38,15 +38,19 @@ public class ExtractionHybridTest {
     }
     private Mob enemy(){Mob m=new Rat();m.HP=m.HT=100;return m;}
     private void learn(String tree,int... nodes){for(int n:nodes)p.nodes.add(tree+"_"+n);}
-    @Test public void sixTreesHaveDistinctStableNodesAndEitherNeighbourEntry(){
-        assertEquals(622,ExtractionGrowth.NODES.length);
+    @Test public void sixTreesRequireBothClassNeighboursAndAllThreeConvergingPaths(){
+        assertEquals(625,ExtractionGrowth.NODES.length);
         for(int b=25;b<31;b++){
             assertEquals(15,ExtractionGrowth.BRANCH_NODES[b].length);
             ExtractionGrowth.Node root=ExtractionGrowth.NODES[ExtractionGrowth.BRANCH_NODES[b][0]];
-            assertTrue(root.alternatives.length>=2);
-            java.util.Set<String> one=new java.util.HashSet<>();one.add(ExtractionGrowth.NODES[root.alternatives[0]].id);
-            assertTrue(ExtractionGrowth.unlocked(root,one));
-            one.clear();assertFalse(ExtractionGrowth.unlocked(root,one));
+            assertEquals(0,root.alternatives.length);assertEquals(2,root.parents.length);
+            java.util.Set<String> learned=new java.util.HashSet<>();
+            learned.add(ExtractionGrowth.NODES[root.parents[0]].id);assertFalse(ExtractionGrowth.unlocked(root,learned));
+            learned.add(ExtractionGrowth.NODES[root.parents[1]].id);assertTrue(ExtractionGrowth.unlocked(root,learned));
+            ExtractionGrowth.Node merge=ExtractionGrowth.NODES[ExtractionGrowth.index(ExtractionHybridTrees.PREFIXES[b-25]+"_13")];
+            assertEquals(3,merge.parents.length);learned.clear();
+            for(int i=0;i<3;i++){assertFalse(ExtractionGrowth.unlocked(merge,learned));learned.add(ExtractionGrowth.NODES[merge.parents[i]].id);}
+            assertTrue(ExtractionGrowth.unlocked(merge,learned));
         }
     }
     @Test public void spellbladeAlternatesAndConsumesEmpowermentOnlyOncePerCast(){

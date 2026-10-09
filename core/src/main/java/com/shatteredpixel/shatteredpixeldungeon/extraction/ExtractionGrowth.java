@@ -38,7 +38,7 @@ public final class ExtractionGrowth {
     }
     public static final class Node {
         public final String id, name; public final int branch, row, col, cost;
-        private final String[] required;
+        private String[] required;
         public int[] parents;
         public int[] alternatives=new int[0];
         public com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent talent;
@@ -58,7 +58,7 @@ public final class ExtractionGrowth {
                 text.append(e.getKey().label).append(" +").append(Math.round(e.getValue()));
                 if(e.getKey().percent)text.append('%');
             }
-            if(branch>=3&&branch<12)text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
+            if(branch>=3&&branch<12&&!effects.containsKey(Stat.STRENGTH))text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
             if(branch>=12)text.append("\n\n무기 종류와 관계없이 적용됩니다. 보호막은 누적되지 않으며, 새 층 효과는 원정 중 해당 층의 첫 방문에만 발동합니다.");
             if(id.equals("ranged_0"))text.append("\n\n영혼의 활 해금: 매 출격 때 활을 가방에 기본 지급합니다. 상점 구매가 필요하지 않으며 사망 후에도 다시 지급됩니다. 초기화하면 지급과 사용이 잠깁니다.");
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
@@ -66,7 +66,7 @@ public final class ExtractionGrowth {
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
             if(effects.containsKey(Stat.STRENGTH))text.append("\n\n영구 힘 보너스입니다. 사망·탈출 후에도 유지되며 매 새 출격에 적용됩니다. 힘 물약으로 얻은 힘은 해당 원정에서만 유지됩니다.");
             if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
-            if(parents.length>1)text.append("\n\n양쪽 갈래의 선행 노드를 모두 습득해야 합니다.");
+            if(parents.length>1)text.append("\n\n표시된 선행 노드를 모두 습득해야 합니다.");
             return text.toString();
         }
         public String summary() {
@@ -110,7 +110,7 @@ public final class ExtractionGrowth {
         add(list, "iron", "철벽", 1, 2, 0, 2, new String[]{"guard"}, Stat.DEFENSE, 1f);
         add(list, "pack", "짐 정리", 2, 0, 1, 1, new String[]{}, Stat.CAPACITY, 2f);
         add(list, "porter", "원정 준비", 2, 1, 0, 1, new String[]{"pack"}, Stat.CAPACITY, 2f);
-        add(list, "strength", "완력", 2, 2, 0, 2, new String[]{"porter"}, Stat.STRENGTH, 2f);
+        add(list, "strength", "완력", 3, 6, 0, 2, new String[]{"sword_7"}, Stat.STRENGTH, 1f);
         add(list, "combat_left_end", "강타", 0, 3, 0, 3, new String[]{"master"}, Stat.DAMAGE, 2f);
         add(list, "combat_right_1", "정밀 조준", 0, 1, 2, 1, new String[]{"power"}, Stat.ACCURACY, 10f);
         add(list, "combat_right_2", "집중", 0, 2, 2, 2, new String[]{"combat_right_1"}, Stat.ACCURACY, 10f);
@@ -268,12 +268,20 @@ public final class ExtractionGrowth {
             add(list,ExtractionPotionKnowledge.IDS[i],ExtractionPotionKnowledge.NAMES[i]+" 지식",18,i,1,1,new String[]{"pack"},ExtractionPotionKnowledge.STATS[i],1f);
         // Common strength milestones: any common specialization can unlock them.
         // Append stable IDs so old saves and existing node indices remain compatible.
-        add(list,"strength_early","기초 근력",0,6,0,2,new String[]{"edge"},Stat.STRENGTH,1f);
-        add(list,"strength_mid","신체 단련",1,6,2,3,new String[]{"survival_left_end"},Stat.STRENGTH,1f);
-        add(list,"strength_advanced","중량 적응",2,6,0,4,new String[]{"explore_merge"},Stat.STRENGTH,1f);
-        add(list,"strength_master","완력 완성",0,6,2,5,new String[]{"combat_cap"},Stat.STRENGTH,3f);
+        add(list,"strength_early","양손 근력",4,6,0,2,new String[]{"greatsword_7"},Stat.STRENGTH,1f);
+        add(list,"strength_mid","묵직한 근력",8,6,0,3,new String[]{"blunt_7"},Stat.STRENGTH,1f);
+        add(list,"strength_advanced","장병기 근력",6,6,0,4,new String[]{"spear_7"},Stat.STRENGTH,1f);
+        add(list,"strength_master","마도 단련",11,6,0,5,new String[]{"magic_7"},Stat.STRENGTH,1f);
         ExtractionClassUtilities.append(list);
         ExtractionHybridTrees.append(list);
+        add(list,"strength_archer","사격 단련",10,6,0,3,new String[]{"ranged_7"},Stat.STRENGTH,1f);
+        add(list,"strength_dagger","쌍수 단련",5,6,0,3,new String[]{"dagger_7"},Stat.STRENGTH,1f);
+        add(list,"strength_fist","격투 단련",9,6,0,3,new String[]{"fist_7"},Stat.STRENGTH,1f);
+        for(int b=0;b<ExtractionHybridTrees.PREFIXES.length;b++)for(Node n:list){
+            String prefix=ExtractionHybridTrees.PREFIXES[b];
+            if(n.id.equals(prefix+"_0"))n.required=new String[]{ExtractionClassUtilities.ROOTS[b],ExtractionClassUtilities.ROOTS[(b+1)%6]};
+            if(n.id.equals(prefix+"_13"))n.required=new String[]{prefix+"_4",prefix+"_8",prefix+"_12"};
+        }
         NODES=list.toArray(new Node[0]);
         IDS=new String[NODES.length];NAMES=new String[NODES.length];DESCS=new String[NODES.length];
         COSTS=new int[NODES.length];PARENTS=new int[NODES.length];
@@ -292,32 +300,6 @@ public final class ExtractionGrowth {
             for(int j=0;j<n.parents.length;j++)n.parents[j]=index.get(n.required[j]);
             PARENTS[i]=n.parents.length==0?-1:n.parents[0];
         }
-        String[] order={"sword","greatsword","axe","blunt","spear","ranged","dagger","fist","magic"};
-        for(int i=0;i<order.length;i++){
-            String a=order[i]+"_2",b=order[(i+1)%order.length]+"_5";
-            alternative(a,b);alternative(b,a);
-        }
-        alternative("blunt_0","guard");
-        alternative("ranged_0","pack");
-        alternative("fist_0","strength");
-        String[] utility={"scout","medic","food","stealth","momentum","ward"};
-        for(int i=0;i<utility.length;i++){
-            String a=utility[i]+"_2",b=utility[(i+1)%utility.length]+"_5";
-            alternative(a,b);alternative(b,a);
-        }
-        alternative("scout_0","ranged_4");alternative("medic_0","magic_4");
-        alternative("food_0","strength");alternative("stealth_0","dagger_4");
-        alternative("momentum_0","fist_4");alternative("ward_0","blunt_4");
-        alternative("strength_early","guard");alternative("strength_early","porter");
-        alternative("strength_mid","combat_left_end");alternative("strength_mid","explore_left_end");
-        alternative("strength_advanced","combat_merge");alternative("strength_advanced","survival_merge");
-        alternative("strength_master","survival_cap");alternative("strength_master","explore_cap");
-        String[][] bridges={{"magic_0","skill_endure","skill_beacon"},{"dagger_0","skill_beacon","skill_stealth"},{"stealth_0","skill_stealth","skill_hawk"},{"spear_0","skill_hawk","skill_feint"},{"skill_feint","skill_prayer"},{"skill_prayer","skill_endure"}};
-        for(int b=0;b<ExtractionHybridTrees.PREFIXES.length;b++){
-            String prefix=ExtractionHybridTrees.PREFIXES[b];
-            for(String source:bridges[b])alternative(prefix+"_0",source);
-            alternative(prefix+"_13",prefix+"_8");alternative(prefix+"_13",prefix+"_12");
-        }
         for(int i=0;i<NODES.length;i++)DESCS[i]=NODES[i].description();
     }
     private static void alternative(String target,String source){
@@ -333,11 +315,8 @@ public final class ExtractionGrowth {
         throw new IllegalArgumentException(id);
     }
     public static boolean unlocked(Node node,Set<String> learned){
-        boolean primary=true;
-        for(int p:node.parents)if(!learned.contains(NODES[p].id))primary=false;
-        if(primary)return true;
-        for(int p:node.alternatives)if(learned.contains(NODES[p].id))return true;
-        return false;
+        for(int p:node.parents)if(!learned.contains(NODES[p].id))return false;
+        return true;
     }
     public static int family(KindOfWeapon weapon){
         if(weapon==null||weapon instanceof Gloves||weapon instanceof Gauntlet)return FIST;

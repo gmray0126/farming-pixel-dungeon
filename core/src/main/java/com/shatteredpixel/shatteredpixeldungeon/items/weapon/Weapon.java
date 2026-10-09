@@ -451,7 +451,7 @@ abstract public class Weapon extends KindOfWeapon {
 
 		Random.popGenerator();
 
-		return this;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.rollNew(this);
 	}
 	
 	public Weapon enchant( Enchantment ench ) {

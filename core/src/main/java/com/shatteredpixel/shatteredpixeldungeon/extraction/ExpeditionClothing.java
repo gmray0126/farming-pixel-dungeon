@@ -53,7 +53,7 @@ public abstract class ExpeditionClothing extends EquipableItem {
         float effect=Random.Float();
         if(effect<.25f){inscribe(Glyph.randomCurse());cursed=true;}
         else if(effect>.85f)inscribe();
-        return this;
+        return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.rollNew(this);
     }
     @Override public Item upgrade(){
         if(!WeaponUpgradeLimit.canIncrease(this))return this;
@@ -81,7 +81,7 @@ public abstract class ExpeditionClothing extends EquipableItem {
     public float share(){return boots()?.2f:.3f;}
     public float defenseRoll(Hero hero){
         com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor base=new com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor(tier);
-        return Math.max(0,Random.NormalIntRange(base.DRMin(buffedLvl()),base.DRMax(buffedLvl()))-2*missingStrength(hero))*share();
+        return Math.max(0,Random.NormalIntRange(base.DRMin(buffedLvl()),base.DRMax(buffedLvl()))-2*missingStrength(hero))*share()*ExtractionRarity.multiplier(this);
     }
     public float evasionFactor(Hero hero){return (float)Math.pow(1.5,-missingStrength(hero)*share());}
     public float movementFactor(Hero hero){return speedBonus()*(float)Math.pow(1.2,-missingStrength(hero)*share());}
@@ -117,7 +117,7 @@ public abstract class ExpeditionClothing extends EquipableItem {
         float defense=0;
         if(hero.belongings.armor()!=null){
             com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor armor=hero.belongings.armor();
-            defense=Math.max(0,Random.NormalIntRange(armor.DRMin(),armor.DRMax())-2*Math.max(0,armor.STRReq()-hero.STR()))*.5f;
+            defense=Math.max(0,Random.NormalIntRange(armor.DRMin(),armor.DRMax())-2*Math.max(0,armor.STRReq()-hero.STR()))*.5f*ExtractionRarity.multiplier(armor);
         }
         if(hero.belongings.pants()!=null)defense+=hero.belongings.pants().defenseRoll(hero);
         if(hero.belongings.boots()!=null)defense+=hero.belongings.boots().defenseRoll(hero);

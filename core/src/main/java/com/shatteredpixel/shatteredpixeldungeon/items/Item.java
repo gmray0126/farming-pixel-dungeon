@@ -486,7 +486,7 @@ public class Item implements Bundlable {
 
 	public String title() {
 
-		String name = name();
+		String name = (extractionRare ? "레어 " : "") + name();
 
 		if (visiblyUpgraded() != 0)
 			name = Messages.format( TXT_TO_STRING_LVL, name, visiblyUpgraded()  );
@@ -522,17 +522,17 @@ public class Item implements Bundlable {
 			Notes.CustomRecord note = Notes.findCustomRecord(customNoteID);
 			if (note != null) {
 				//we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in the item window
-				return Messages.get(this, "custom_note", note.title().replace('_', 'ˍ')) + "\n\n" + desc();
+				return Messages.get(this, "custom_note", note.title().replace('_', 'ˍ')) + "\n\n" + desc() + com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.description(this);
 			} else {
 				note = Notes.findCustomRecord(getClass());
 				if (note != null) {
 					//we swap underscore(0x5F) with low macron(0x2CD) here to avoid highlighting in the item window
-					return Messages.get(this, "custom_note_type", note.title().replace('_', 'ˍ')) + "\n\n" + desc();
+					return Messages.get(this, "custom_note_type", note.title().replace('_', 'ˍ')) + "\n\n" + desc() + com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.description(this);
 				}
 			}
 		}
 
-		return desc();
+		return desc() + com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.description(this);
 	}
 	
 	public String desc() {
@@ -579,6 +579,8 @@ public class Item implements Bundlable {
 		GameScene.updateItemDisplays = true;
 	}
 	
+    public boolean extractionRare=false, extractionQualityRolled=false;
+
 	private static final String QUANTITY		= "quantity";
 	private static final String LEVEL			= "level";
 	private static final String LEVEL_KNOWN		= "levelKnown";
@@ -591,6 +593,7 @@ public class Item implements Bundlable {
 	@Override
 	public void storeInBundle( Bundle bundle ) {
 		bundle.put( QUANTITY, quantity );
+        bundle.put("extraction_rare",extractionRare);bundle.put("extraction_quality_rolled",extractionQualityRolled);
         if(this instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food)bundle.put("extraction_purchased_food",extractionPurchasedFood);
 		bundle.put( LEVEL, level );
 		bundle.put( LEVEL_KNOWN, levelKnown );
@@ -606,6 +609,7 @@ public class Item implements Bundlable {
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		quantity	= bundle.getInt( QUANTITY );
+        extractionRare=bundle.getBoolean("extraction_rare");extractionQualityRolled=bundle.getBoolean("extraction_quality_rolled");
         extractionPurchasedFood=this instanceof com.shatteredpixel.shatteredpixeldungeon.items.food.Food&&(!bundle.contains("extraction_purchased_food")||bundle.getBoolean("extraction_purchased_food"));
 		levelKnown	= bundle.getBoolean( LEVEL_KNOWN );
 		cursedKnown	= bundle.getBoolean( CURSED_KNOWN );

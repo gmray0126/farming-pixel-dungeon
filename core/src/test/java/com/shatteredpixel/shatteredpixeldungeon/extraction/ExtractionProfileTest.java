@@ -22,6 +22,60 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void everyRequiredParentIsMandatoryAndAllNodesRemainReachable(){
+        java.util.Set<String> reached=new java.util.HashSet<>();boolean changed;
+        do{changed=false;for(ExtractionGrowth.Node n:ExtractionGrowth.NODES)if(!reached.contains(n.id)&&ExtractionGrowth.unlocked(n,reached)){reached.add(n.id);changed=true;}}while(changed);
+        assertEquals(ExtractionGrowth.NODES.length,reached.size());
+        for(ExtractionGrowth.Node n:ExtractionGrowth.NODES){
+            assertEquals(0,n.alternatives.length);
+            java.util.Set<String> parents=new java.util.HashSet<>();for(int parent:n.parents)parents.add(ExtractionGrowth.IDS[parent]);
+            assertTrue(ExtractionGrowth.unlocked(n,parents));
+            for(int parent:n.parents){String id=ExtractionGrowth.IDS[parent];parents.remove(id);assertFalse(n.id+" requires "+id,ExtractionGrowth.unlocked(n,parents));parents.add(id);}
+        }
+    }
+    @Test public void growthRuleMigrationRefundsOnceAndWaitsForAnOngoingRaid() throws Exception {
+        profile.nodes.add("pack");profile.nodes.add("porter");profile.nodes.add("strength");profile.points=10;profile.xp=100;
+        int budget=profile.points+profile.spentPoints();Field rules=ExtractionProfile.class.getDeclaredField("growthRules");rules.setAccessible(true);rules.setInt(profile,1);
+        profile.change(()->{});forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.nodes.isEmpty());assertEquals(budget,profile.points);assertEquals(100,profile.xp);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(budget,profile.points);
+        profile.nodes.add("pack");profile.points--;profile.begin();rules.setInt(profile,1);profile.change(()->{});
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.nodes.contains("pack"));assertTrue(profile.active);
+        Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.settle(profile.raidID,false);
+        assertTrue(profile.nodes.isEmpty());assertEquals(budget,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(budget,profile.points);
+    }
+    @Test public void hardModeSnapshotsItsChoiceAndScalesArmorPressureWithoutChangingLegacyRaids() throws Exception {
+        profile.selectHard(true);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        assertTrue(ExtractionDifficulty.hard());assertEquals(5,profile.raidRules);assertEquals(1.25f*2.5f,ExtractionDifficulty.raidHealthMultiplier(),.001f);assertEquals(1.1f*2,ExtractionDifficulty.raidDamageMultiplier(),.001f);
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat rat=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat();rat.EXP=0;int health=rat.HT;
+        ExtractionDifficulty.prepare(rat);assertEquals(Math.round(health*1.25f*2.5f),rat.HT);ExtractionDifficulty.prepare(rat);assertEquals(Math.round(health*1.25f*2.5f),rat.HT);
+        assertEquals(6,ExtractionDifficulty.armorAfterHardHit(rat,Dungeon.hero,10,10));assertEquals(2,ExtractionDifficulty.armorAfterHardHit(rat,Dungeon.hero,10,100));assertEquals(0,ExtractionDifficulty.armorAfterHardHit(rat,Dungeon.hero,0,100));
+        try{profile.selectHard(false);fail("Running difficulty is immutable");}catch(IllegalStateException expected){}
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.raidHard);assertTrue(ExtractionDifficulty.hard());
+        profile.raidRules=4;assertFalse(ExtractionDifficulty.hard());assertEquals(1.25f,ExtractionDifficulty.raidHealthMultiplier(),.001f);assertEquals(0,ExtractionDifficulty.armorAfterHardHit(rat,Dungeon.hero,10,100));
+        profile.settle(profile.raidID,false);profile.selectHard(false);profile.begin();assertFalse(profile.raidHard);
+    }
+    @Test public void rareQualityRequiresHardPreservesCapsAndSurvivesTransmutationAndExtraction() throws Exception {
+        profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
+        Item normal=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword();ExtractionRarity.promoteLoot(normal,0,1);assertFalse(normal.extractionRare);
+        profile.settle(profile.raidID,false);profile.selectHard(true);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
+        Item rare=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword().level(15);ExtractionRarity.promoteLoot(rare,0,1);assertTrue(rare.extractionRare);assertTrue(rare.title().startsWith("레어 "));
+        assertEquals(12,ExtractionRarity.damage(rare,10));assertEquals(15,WeaponUpgradeLimit.cap(rare));rare.upgrade(100);assertEquals(15,rare.trueLevel());
+        Item copy=rare.duplicate();assertTrue(copy.extractionRare);assertEquals(15,copy.trueLevel());
+        Item transformed=com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation.changeItem(rare);assertTrue(transformed.extractionRare);assertEquals(15,transformed.trueLevel());assertEquals(5,WeaponUpgradeLimit.tier(transformed));
+        assertTrue(rare.collect(Dungeon.hero.belongings.backpack));profile.settle(profile.raidID,true);
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.stash.stream().anyMatch(i->i.extractionRare&&i.trueLevel()==15));
+        profile.selectHard(false);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        Item generated=com.shatteredpixel.shatteredpixeldungeon.items.Generator.randomWeapon();assertFalse(generated.extractionRare);
+        assertFalse(ExtractionRarity.supported(new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfMight()));
+    }
+    @Test public void hardBossGuaranteesRareGearAtTheCurrentChapterTierCeiling(){
+        profile.selectHard(true);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
+        com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel level=new com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel();level.setSize(8,8);java.util.Arrays.fill(level.map,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.EMPTY);level.buildFlagMaps();Dungeon.level=level;Dungeon.depth=5;
+        com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo boss=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo();boss.pos=10;ExtractionDifficulty.bossLoot(boss);
+        boolean found=false;for(com.shatteredpixel.shatteredpixeldungeon.items.Heap heap:level.heaps.valueList())for(Item item:heap.items)if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon){assertTrue(item.extractionRare);assertEquals(2,WeaponUpgradeLimit.tier(item));found=true;}
+        assertTrue(found);
+    }
     @Test public void everyRingBlocksAt15WithoutChangingItsCurseAndRestoresCapped() {
         for(Class<?> type:com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING.classes){
             Item ring=(Item)com.watabou.utils.Reflection.newInstance(type);assertEquals(15,WeaponUpgradeLimit.cap(ring));
@@ -423,7 +477,7 @@ public class ExtractionProfileTest {
         assertEquals(1,profile.unlockedDifficulty[0]);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.selectRaid(2);profile.begin();int id=profile.raidID;
         try{profile.selectRaid(1);fail("Active selection must be frozen");}catch(IllegalStateException expected){}
-        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(4,profile.raidRules);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);assertEquals(5,profile.raidRules);
         profile.settle(id,false);assertEquals(1,profile.unlockedDifficulty[1]);
         profile.selectRaid(1);profile.selectedDifficulty=10;profile.begin();assertEquals(1,profile.raidDifficulty);profile.settle(profile.raidID,true);assertEquals(1,profile.unlockedDifficulty[0]);
         assertFalse(profile.result.contains("난이도"));
@@ -459,7 +513,7 @@ public class ExtractionProfileTest {
         java.lang.reflect.Method restore=ExtractionProfile.class.getDeclaredMethod("restore",com.watabou.utils.Bundle.class);restore.setAccessible(true);restore.invoke(profile,saved);
         profile.begin();assertEquals(10,profile.raidDifficulty);assertEquals(1,profile.raidRules);
         Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;assertEquals(5,ExtractionDifficulty.raidMaxTier());
-        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(4,profile.raidRules);
+        profile.abandon();profile.begin();assertEquals(1,profile.raidDifficulty);assertEquals(5,profile.raidRules);
     }
     @Test public void lootCeilingsScalingAndShopRestrictionsDoNotFollowPlayerPower(){
         assertEquals(2,ExtractionDifficulty.maxTier(1,1));assertEquals(3,ExtractionDifficulty.maxTier(1,4));
@@ -1013,10 +1067,12 @@ public class ExtractionProfileTest {
         if(!profile.nodes.contains(id))profile.learn(index);
     }
     @Test public void distributedStrengthNodesReachT5RequirementsWithoutRingAndPotionsStayRaidOnly() throws Exception {
-        profile.points=1000;learnPath("explore_cap");assertEquals(14,profile.startingStrength());
-        for(String id:new String[]{"strength_early","strength_mid","strength_advanced","strength_master"}){
-            int index=ExtractionGrowth.index(id);assertTrue(profile.unlocked(index));profile.learn(index);
+        profile.points=300;
+        int strengthNodes=0;
+        for(ExtractionGrowth.Node node:ExtractionGrowth.NODES)if(node.effects.containsKey(ExtractionGrowth.Stat.STRENGTH)){
+            assertEquals(1,node.effects.get(ExtractionGrowth.Stat.STRENGTH),0);strengthNodes++;learnPath(node.id);
         }
+        assertEquals(10,strengthNodes);assertTrue(profile.spentPoints()>=150);assertTrue(profile.spentPoints()<=300);
         assertEquals(20,profile.startingStrength());profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
         Hero hero=Dungeon.hero;assertEquals(20,hero.STR);assertTrue(hero.STR>=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greataxe().STRReq(0));assertNull(hero.belongings.ring);
         hero.sprite=new EffectSprite();hero.sprite.visible=false;new com.shatteredpixel.shatteredpixeldungeon.items.potions.PotionOfStrength().apply(hero);assertEquals(21,hero.STR);
@@ -1132,7 +1188,7 @@ public class ExtractionProfileTest {
         assertEquals(1,bows);assertTrue(h.belongings.weapon instanceof BasicExpeditionSword);
     }
     @Test public void graphPreserves178ExistingNodesAndAddsClassSkillsAndSubclasses() {
-        assertEquals(622, ExtractionGrowth.NODES.length);
+        assertEquals(625, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
@@ -1250,7 +1306,7 @@ public class ExtractionProfileTest {
         assertTrue(profile.active);assertEquals(2,profile.raidRules);assertEquals(2,profile.raidChapter);assertEquals(6,profile.raidDifficulty);
         assertEquals(78,profile.xp);assertEquals(12,profile.points);assertTrue(profile.nodes.contains("ranged_0"));
         Dungeon.hero=new Hero();Dungeon.gold=0;profile.settle(profile.raidID,true);
-        assertEquals(1,profile.unlockedDifficulty[2]);profile.selectRaid(3);profile.begin();assertEquals(4,profile.raidRules);
+        assertEquals(1,profile.unlockedDifficulty[2]);profile.selectRaid(3);profile.begin();assertEquals(5,profile.raidRules);
     }
     @Test public void laterChaptersGenerateAllOriginalFloorsAndResumeWithCappedLoot() throws Exception {
         profile.debugEnabled=true;profile.debugUnlockChapters();
@@ -1356,7 +1412,7 @@ public class ExtractionProfileTest {
         for(ExtractionGrowth.Node node:ExtractionGrowth.NODES)profile.nodes.add(node.id);profile.xp=100000;profile.points=1000;
         com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);saved.put("active",true);saved.put("raid",7);
         FileUtils.bundleToFile(ExtractionProfile.FILE,saved);forgetProfile();profile=ExtractionProfile.get();
-        assertTrue(profile.active);assertEquals(622,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
+        assertTrue(profile.active);assertEquals(625,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
         profile.abandon();assertTrue(profile.nodes.isEmpty());assertEquals(300,profile.points);assertEquals(2475,profile.xp);
         forgetProfile();profile=ExtractionProfile.get();assertEquals(300,profile.points);assertTrue(profile.result.contains("300 P"));
     }

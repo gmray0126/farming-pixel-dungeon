@@ -155,6 +155,11 @@ public class ScrollOfTransmutation extends InventoryScroll {
 	}
 
 	public static Item changeItem( Item item ){
+        Item result=changeItemType(item);
+        if(result!=null){result.extractionRare=item.extractionRare;result.extractionQualityRolled=true;}
+        return result;
+    }
+    private static Item changeItemType( Item item ){
 		if (item instanceof MagesStaff) {
 			return changeStaff((MagesStaff) item);
 		}else if (item instanceof TippedDart){
@@ -337,7 +342,7 @@ public class ScrollOfTransmutation extends InventoryScroll {
 		Wand n;
 		do {
 			n = (Wand)Generator.randomUsingDefaults( Generator.Category.WAND );
-		} while ( Challenges.isItemBlocked(n) || n.getClass() == w.getClass());
+		} while ( Challenges.isItemBlocked(n) || n.getClass() == w.getClass() || (w.extractionRare && !(n instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.DamageWand)));
 		
 		n.level( 0 );
 		int level = w.trueLevel();

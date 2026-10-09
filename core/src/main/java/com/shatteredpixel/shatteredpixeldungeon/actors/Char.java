@@ -486,7 +486,7 @@ public abstract class Char extends Actor {
 			int effectiveDamage = enemy.defenseProc( this, Math.round(dmg) );
 			//do not trigger on-hit logic if defenseProc returned a negative value
 			if (effectiveDamage >= 0) {
-				effectiveDamage = Math.max(effectiveDamage - dr, 0);
+				effectiveDamage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.armorAfterHardHit(this,enemy,effectiveDamage,dr);
 
 				if (enemy.buff(Viscosity.ViscosityTracker.class) != null) {
 					effectiveDamage = enemy.buff(Viscosity.ViscosityTracker.class).deferDamage(effectiveDamage);

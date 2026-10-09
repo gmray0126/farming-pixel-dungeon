@@ -750,6 +750,7 @@ public class Hero extends Char {
 		}
 
 		if (dmg < 0) dmg = 0;
+        dmg=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.damage(wep,dmg);
 		return extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().physicalDamage(dmg,growthWeapon(),Random.Float()) : dmg;
 	}
 

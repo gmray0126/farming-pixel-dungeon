@@ -263,15 +263,17 @@ public class ExtractionHubScene extends PixelScene {
                 p.selectRaid(selected);refresh();
             },chapter==c);
         }
-        centered(p.active&&p.raidRules<3?"이전 원정 · 기존 규칙 유지":chapter==1?"파밍과 성장":"고난도 · 이전 지역에서 준비",7,left,y+47,width,GOLD);
-        panel(left,y+62,width,48);
+        boolean hard=p.active?p.raidHard&&p.raidRules>=5:p.selectedHard;
+        button("일반",left,y+45,(width-2)/2,18,()->{p.selectHard(false);refresh();},!hard);
+        button("하드 · 레어",left+(width+2)/2,y+45,(width-2)/2,18,()->{p.selectHard(true);refresh();},hard);
+        panel(left,y+69,width,48);
         int start=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(chapter),end=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.endDepth(chapter);
-        label(start+"~"+end+"층 · "+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.bossName(chapter),8,left+5,y+67,width-10,GOLD);
+        label(start+"~"+end+"층 · "+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.bossName(chapter),8,left+5,y+74,width-10,GOLD);
         int tier=p.active&&p.raidRules<2?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.maxTier(chapter,difficulty):com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterMaxTier(chapter);
-        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+tier+" · "+(chapter==1?"반복 파밍으로 출격 준비":"강화 보스 · 높은 고정 난이도"),6,left+5,y+82,width-10,TEXT);
-        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지",6,left,y+116,width,TEXT);
-        button("챕터 / 유물 안내",left,y+139,width,13,this::expeditionGuide,false);
-        if(!p.result.isEmpty()&&y+158+35<bottom-27)label(p.result,6,left,y+158,width,GREEN);
+        label("보스 처치 후 다음 계단에서 탈출\n장비 최대 T"+tier+" · "+(hard?"하드 · 보스 레어 장비 보장":chapter==1?"반복 파밍으로 출격 준비":"강화 보스 · 높은 고정 난이도"),6,left+5,y+89,width-10,TEXT);
+        label("탈출: 장비 보관 · 포션/스크롤 골드 정산\n사망: 원정 물품 손실 · 경험치/노드 유지",6,left,y+123,width,TEXT);
+        button("챕터 / 유물 안내",left,y+146,width,13,this::expeditionGuide,false);
+        if(!p.result.isEmpty()&&y+165+35<bottom-27)label(p.result,6,left,y+165,width,GREEN);
     }
     private void contracts(float y){
         ExtractionProfile p=ExtractionProfile.get();
@@ -290,7 +292,7 @@ public class ExtractionHubScene extends PixelScene {
         add(new WndOptions("원정 안내","확인할 내용을 선택하세요.","챕터 / 보상","신규 유물","착용 / 상점"){
             @Override protected void onSelect(int index){
                 String[] pages={
-                    "각 챕터는 독립된 5층 원정입니다. 앞 챕터 보스를 처치하고 탈출하면 다음 지역이 열립니다.\n\n01 하수도 1~5층 · 구 · 최대 T2\n02 감옥 6~10층 · 텐구 · 최대 T3\n03 동굴 11~15층 · DM-300 · 최대 T4\n04 드워프 도시 16~20층 · 드워프 제왕 · 최대 T5\n05 악마의 전당 21~25층 · 요그제바 · 최대 T5\n\n챕터가 높아질수록 적의 원본 체력 / 공격 피해 배율이 크게 오릅니다.\n하수도 ×1.25 / ×1.1 → 감옥 ×4 / ×2 → 동굴 ×6 / ×2.8 → 도시 ×9 / ×3.8 → 전당 ×13 / ×5. 후반 지역일수록 보상도 높습니다. 장비와 성장 노드로 준비하세요. 보스는 해당 챕터 최상위 티어 무기를 보장합니다.\n\n보스 처치 후 아래 계단에서 정산하여 거점으로 돌아옵니다. 각 챕터 시작층(1·6·11·16·21층)의 위 계단으로 비상탈출할 수도 있습니다. 비상탈출은 장비·전리품·전투 경험치를 보존하고 포션·스크롤을 골드로 정산하지만, 이번 원정 의뢰 진행도·다음 챕터 해금·완주 경험치 보너스는 주지 않습니다. 5챕터도 같은 방식으로 완주하고 다시 파밍할 수 있습니다. 일반 원정에는 수식어 정예가 없습니다. 기존 진행 중인 원정은 이전 규칙을 유지합니다.",
+                    "각 챕터는 독립된 5층 원정입니다. 앞 챕터 보스를 처치하고 탈출하면 다음 지역이 열립니다.\n\n01 하수도 1~5층 · 구 · 최대 T2\n02 감옥 6~10층 · 텐구 · 최대 T3\n03 동굴 11~15층 · DM-300 · 최대 T4\n04 드워프 도시 16~20층 · 드워프 제왕 · 최대 T5\n05 악마의 전당 21~25층 · 요그제바 · 최대 T5\n\n챕터가 높아질수록 적의 원본 체력 / 공격 피해 배율이 크게 오릅니다.\n하수도 ×1.25 / ×1.1 → 감옥 ×4 / ×2 → 동굴 ×6 / ×2.8 → 도시 ×9 / ×3.8 → 전당 ×13 / ×5. 후반 지역일수록 보상도 높습니다. 장비와 성장 노드로 준비하세요. 보스는 해당 챕터 최상위 티어 무기를 보장합니다.\n\n보스 처치 후 아래 계단에서 정산하여 거점으로 돌아옵니다. 각 챕터 시작층(1·6·11·16·21층)의 위 계단으로 비상탈출할 수도 있습니다. 비상탈출은 장비·전리품·전투 경험치를 보존하고 포션·스크롤을 골드로 정산하지만, 이번 원정 의뢰 진행도·다음 챕터 해금·완주 경험치 보너스는 주지 않습니다. 5챕터도 같은 방식으로 완주하고 다시 파밍할 수 있습니다. 일반 원정에는 수식어 정예가 없습니다. 하드는 해금된 챕터에서 선택할 수 있습니다. 일반 대비 적 체력 ×2.5, 피해 ×2, 적 방어 증가, 정예 20%, 층당 적 4마리 추가. 적의 명중 공격은 방어 60%를 관통하며 완전히 막히지 않은 공격에는 최소 피해가 남습니다. 방어 스킬로 완전히 막은 공격은 피해가 없습니다. 골드 보상 ×1.5. 하드에서는 새 장비의 레어 확률 8%, 정예 장비 보상에 추가 레어 확률, 보스는 해당 챕터 최상위 티어 레어 무기 1개를 보장합니다. 레어는 무기·피해형 지팡이·갑옷·바지·신발의 피해 또는 방어 +20%이며 강화 상한은 같습니다. 일반에서는 레어 등급이 새로 생성되지 않습니다. 기존 진행 중인 원정은 이전 규칙을 유지합니다.",
                     "하수도: 기존 유물과 불안정한 나침반이 등장합니다. 나머지 신규 유물은 감옥부터 등장합니다.\n\n피의 등불: 처치 회복 / 물약 회복 감소\n\n탐욕의 주머니: 좋은 장비 / 골드에 따른 피해 증가\n\n깨진 모래시계: 시간 가속 / 이후 둔화\n\n사냥꾼의 표식: 지정 적 피해 증가 / 다른 적 피해 감소\n\n불안정한 나침반: 비밀 감지 / 주변 적 유인",
                     "유물은 최대 2개 착용하며 같은 유물은 중복 착용할 수 없습니다. 창고나 가방에 있는 유물은 효과가 없습니다.\n\n준비 화면에서 유물을 길게 눌러 착용할 물품을 선택하세요. 신규 유물은 적 처치로 성장하며 +15가 상한입니다. 기존 유물은 각자의 성장 방식을 따릅니다.\n\n상점은 보급품과 T1~T5 무기·갑옷·바지·신발을 판매합니다."
                 };

@@ -19,6 +19,7 @@ public final class ExtractionDifficulty {
     public static int chapterMaxTier(int chapter){return Math.min(5,chapter+1);}
     public static int raidMaxTier(){return ExtractionProfile.get().raidRules>=2?chapterMaxTier(chapter()):maxTier(chapter(),stage());}
     public static boolean active(){return Dungeon.hero!=null&&Dungeon.hero.extractionRaidID!=0;}
+    public static boolean hard(){ExtractionProfile p=ExtractionProfile.get();return active()&&p.active&&p.raidRules>=5&&p.raidHard;}
     public static int stage(){return active()?ExtractionProfile.get().raidDifficulty:1;}
     public static int chapter(){return active()?ExtractionProfile.get().raidChapter:1;}
     public static String chapterName(int chapter){
@@ -47,8 +48,8 @@ public final class ExtractionDifficulty {
     public static float damageMultiplier(int stage){int d=stage-1;return 1.1f+.09f*d+.018f*d*d;}
     public static float chapterHealthMultiplier(int chapter){return new float[]{1.25f,4f,6f,9f,13f}[Math.max(1,Math.min(5,chapter))-1];}
     public static float chapterDamageMultiplier(int chapter){return new float[]{1.1f,2f,2.8f,3.8f,5f}[Math.max(1,Math.min(5,chapter))-1];}
-    public static float raidHealthMultiplier(){return ExtractionProfile.get().raidRules>=4?chapterHealthMultiplier(chapter()):healthMultiplier(chapter(),stage());}
-    public static float raidDamageMultiplier(){return ExtractionProfile.get().raidRules>=4?chapterDamageMultiplier(chapter()):damageMultiplier(stage());}
+    public static float raidHealthMultiplier(){return (ExtractionProfile.get().raidRules>=4?chapterHealthMultiplier(chapter()):healthMultiplier(chapter(),stage()))*(hard()?2.5f:1);}
+    public static float raidDamageMultiplier(){return (ExtractionProfile.get().raidRules>=4?chapterDamageMultiplier(chapter()):damageMultiplier(stage()))*(hard()?2f:1);}
     public static float rewardMultiplier(int chapter,int stage){return 1+.18f*(stage-1)+.25f*(chapter-1);}
     public static float[] tierWeights(int chapter,int stage,boolean greed){
         return weightsForMaxTier(maxTier(chapter,stage),greed);
@@ -64,13 +65,13 @@ public final class ExtractionDifficulty {
         if(!active()||ExtractionProfile.get().raidRules<2)return tierWeights(chapter(),stage(),greed);
         return weightsForMaxTier(chapterMaxTier(chapter()),greed);
     }
-    public static int extraMobs(){return active()?2+(stage()-1)/2:0;}
+    public static int extraMobs(){return active()?2+(stage()-1)/2+(hard()?4:0):0;}
     public static void prepare(Mob mob){
         if(!active()||mob.extractionScaled||mob.alignment!=Char.Alignment.ENEMY)return;
         mob.extractionScaled=true;
         boolean boss=mob.properties().contains(Char.Property.BOSS);
         // Normal raids have no affix elites. Preserve already-running legacy expeditions.
-        if(ExtractionProfile.get().raidRules<3&&!boss&&mob.EXP>0&&Random.Float()<.08f+.035f*(stage()-1))mob.extractionElite=1+Random.Int(3);
+        if((hard()||ExtractionProfile.get().raidRules<3)&&!boss&&mob.EXP>0&&Random.Float()<(hard()?.2f:.08f+.035f*(stage()-1)))mob.extractionElite=1+Random.Int(3);
         float fraction=mob.HP/(float)Math.max(1,mob.HT);
         mob.HT=Math.max(1,Math.round(mob.HT*raidHealthMultiplier()*(mob.extractionElite>0?1.25f:1)));
         mob.HP=Math.max(1,Math.round(mob.HT*fraction));
@@ -83,7 +84,14 @@ public final class ExtractionDifficulty {
         if(enemy||tengu){float modifier=raidDamageMultiplier();if(source instanceof Mob&&((Mob)source).extractionElite==1)modifier*=1.2f;return Math.round(damage*modifier);}
         return damage;
     }
-    public static int extraArmor(Char enemy){return enemy instanceof Mob&&((Mob)enemy).extractionElite==2?2+(stage()-1)/3:0;}
+    public static int extraArmor(Char enemy){return (hard()&&enemy instanceof Mob&&enemy.alignment==Char.Alignment.ENEMY?4+2*chapter():0)+(enemy instanceof Mob&&((Mob)enemy).extractionElite==2?2+(stage()-1)/3:0);}
+    public static int armorAfterHardHit(Char attacker,Char defender,int damage,int armor){
+        boolean enemyHit=hard()&&attacker instanceof Mob&&attacker.alignment==Char.Alignment.ENEMY&&defender==Dungeon.hero;
+        if(!enemyHit)return Math.max(damage-armor,0);
+        if(damage<=0)return 0; // Successful shielding and cancelled attacks remain effective.
+        int defended=Math.max(damage-Math.round(armor*.4f),0);
+        return Math.max(defended,Math.min(damage,1+chapter()));
+    }
     public static String eliteName(int type){return type==1?"광폭":type==2?"철갑":type==3?"추적":"";}
     public static void reinforce(Mob boss){
         if(!active()||stage()<3||Dungeon.level==null||!Dungeon.level.locked||boss.HP<=0||!(boss instanceof Goo||boss instanceof Tengu))return;
@@ -104,14 +112,14 @@ public final class ExtractionDifficulty {
     public static void bossLoot(Mob boss){
         if(!active()||Dungeon.level==null||!chapterBoss(boss,chapter(),Dungeon.depth))return;
         Item gear=Generator.randomUsingDefaults(Generator.wepTiers[raidMaxTier()-1]);
-        dropLoot(gear,boss.pos);
+        ExtractionRarity.promoteLoot(gear,0,1);dropLoot(gear,boss.pos);
         if(Random.Float()<.12f+.035f*(stage()-1)+.1f*(chapter()-1)){
             Artifact relic=Generator.randomArtifact();if(relic!=null)dropLoot(relic,boss.pos);
         }
     }
     public static void eliteLoot(Mob mob){
         if(!active()||mob.extractionElite==0||Dungeon.level==null)return;
-        if(Random.Float()<.3f+(ExpeditionArtifacts.has(Dungeon.hero,ExpeditionArtifacts.GreedPouch.class)?.1f:0))dropLoot(Generator.randomWeapon(),mob.pos);
+        if(Random.Float()<.3f+(ExpeditionArtifacts.has(Dungeon.hero,ExpeditionArtifacts.GreedPouch.class)?.1f:0)){Item gear=Generator.randomWeapon();ExtractionRarity.promoteLoot(gear,Random.Float(),.3f);dropLoot(gear,mob.pos);}
     }
     private static void dropLoot(Item item,int cell){
         com.shatteredpixel.shatteredpixeldungeon.items.Heap heap=Dungeon.level.drop(item,cell);

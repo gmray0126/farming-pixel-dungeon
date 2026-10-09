@@ -684,7 +684,7 @@ public class Armor extends EquipableItem {
 
 		Random.popGenerator();
 
-		return this;
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.rollNew(this);
 	}
 
 	public int STRReq(){

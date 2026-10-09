@@ -21,7 +21,7 @@ public final class ExtractionProfile {
     public static final String FILE = "extraction-profile.dat";
     public static final int MAX_GROWTH_LEVEL=100, MAX_GROWTH_XP=2475, MAX_GROWTH_POINTS=300, PRESET_SLOTS=3;
     private static ExtractionProfile instance;
-    private int growthPointRate=3;
+    private int growthPointRate=3, growthRules=2;
     private final String[][] presets=new String[PRESET_SLOTS][];
     public final ArrayList<Item> stash = new ArrayList<>();
     public final ArrayList<Item> prepared = new ArrayList<>();
@@ -31,6 +31,7 @@ public final class ExtractionProfile {
     public int alchemyEnergy=0;
     public boolean active = false;
     public boolean debugEnabled=false;
+    public boolean selectedHard=false, raidHard=false;
     public int selectedChapter=1, selectedDifficulty=1, raidChapter=1, raidDifficulty=1;
     public int raidRules=1; // Missing in old saves: preserve an ongoing staged raid.
     public final int[] unlockedDifficulty={1,0,0,0,0};
@@ -53,6 +54,7 @@ public final class ExtractionProfile {
                 for (int i=0; i<3; i++) p.stash.add(new SupplyHealingPotion().identify(false));
                 try { p.save(); } catch (IOException e) { throw new IllegalStateException(e); }
             }
+            p.migrateGrowthRules();
             p.migrateGrowthCap();
             instance = p;
         }
@@ -65,7 +67,7 @@ public final class ExtractionProfile {
         b.put("active", active); b.put("raid", raidID); b.put("next", nextRaid); b.put("raid_xp", raidXP); b.put("result", result);
         b.put("chapter",selectedChapter);b.put("difficulty",selectedDifficulty);b.put("raid_chapter",raidChapter);b.put("raid_difficulty",raidDifficulty);
         b.put("difficulty_unlocks",unlockedDifficulty);
-        b.put("raid_rules",raidRules);
+        b.put("raid_rules",raidRules);b.put("selected_hard",selectedHard);b.put("raid_hard",raidHard);b.put("growth_rules",growthRules);
         b.put("debug_enabled",debugEnabled);
         b.put("contracts",contracts.toArray(new String[0]));b.put("completed_contracts",completedContracts.toArray(new String[0]));b.put("contract_seal",contractSealAwarded);
         for(String id:contracts)b.put("contract_progress_"+id,contractProgress.getOrDefault(id,0));
@@ -88,6 +90,7 @@ public final class ExtractionProfile {
         raidChapter=b.contains("raid_chapter")?b.getInt("raid_chapter"):1;
         raidDifficulty=b.contains("raid_difficulty")?b.getInt("raid_difficulty"):1;
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
+        selectedHard=b.getBoolean("selected_hard");raidHard=b.getBoolean("raid_hard");growthRules=b.contains("growth_rules")?b.getInt("growth_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
         contracts.clear();completedContracts.clear();contractProgress.clear();
         if(b.contains("contracts"))for(String id:b.getStringArray("contracts")){contracts.add(id);contractProgress.put(id,b.getInt("contract_progress_"+id));}
@@ -127,8 +130,12 @@ public final class ExtractionProfile {
     public void begin() {
         if (active) return; // retry the same escrow if first map creation was interrupted
         if(!ExtractionDifficulty.validChapter(selectedChapter)||unlockedDifficulty[selectedChapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
-        migrateGrowthCap();
-        change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=4;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
+        migrateGrowthRules();migrateGrowthCap();
+        change(() -> { active=true; raidChapter=selectedChapter;raidDifficulty=ExtractionDifficulty.fixedStage(selectedChapter);raidRules=5;raidHard=selectedHard;raidID=nextRaid++; raidXP=0; escrow.addAll(prepared); prepared.clear(); result=""; });
+    }
+    public void selectHard(boolean hard){
+        if(active)throw new IllegalStateException("진행 중인 원정의 난이도는 바꿀 수 없습니다.");
+        change(()->selectedHard=hard);
     }
     public void selectRaid(final int chapter){
         if(active)throw new IllegalStateException("원정 중에는 출격 지역을 바꿀 수 없습니다.");
@@ -223,7 +230,7 @@ public final class ExtractionProfile {
     public float bonus(ExtractionGrowth.Stat stat, int family) {
         float result=0;
         for(ExtractionGrowth.Node n:ExtractionGrowth.NODES){
-            if((n.branch<3||n.branch>=12||n.branch==family)&&nodes.contains(n.id)){ Float value=n.effects.get(stat);if(value!=null)result+=value; }
+            if((stat==ExtractionGrowth.Stat.STRENGTH||n.branch<3||n.branch>=12||n.branch==family)&&nodes.contains(n.id)){ Float value=n.effects.get(stat);if(value!=null)result+=value; }
         }
         return result;
     }
@@ -256,10 +263,6 @@ public final class ExtractionProfile {
             if(result.length()>0)result.append(" · ");
             result.append(NAMES[parent]).append(nodes.contains(IDS[parent])?" (습득)":" (필요)");
         }
-                if(ExtractionGrowth.NODES[index].alternatives.length>0){
-            result.append("\n또는 연결 경로: ");
-            for(int p:ExtractionGrowth.NODES[index].alternatives)result.append(NAMES[p]).append(nodes.contains(IDS[p])?" (습득)":" (필요)").append(' ');
-        }
         return result.length()==0?"없음":result.toString();
     }
     public int spentPoints(){
@@ -273,7 +276,7 @@ public final class ExtractionProfile {
     }
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
-        if (!unlocked(index)) throw new IllegalStateException("선행 경로나 연결된 계통의 노드를 먼저 배워 주세요.");
+        if (!unlocked(index)) throw new IllegalStateException("표시된 선행 노드를 모두 배워 주세요.");
         if (spentPoints()+COSTS[index]>MAX_GROWTH_POINTS) throw new IllegalStateException("성장 배분 한도는 총 300 P입니다. 다른 노드를 초기화하거나 프리셋을 바꿔 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
         change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); });
@@ -327,7 +330,7 @@ public final class ExtractionProfile {
                         && ((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)i).isEmpty());
                 loot.removeIf(i -> i instanceof NodeSpiritBow && ((NodeSpiritBow)i).enchantment==null && ((NodeSpiritBow)i).augment==com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Augment.NONE);
                 stash.addAll(loot);
-                gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
+                gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty)*(raidHard&&raidRules>=5?1.5f:1));
                 gold+=redeemed.gold;
                 if(!emergency)awardGrowthXP(10+5*(raidDifficulty-1)+10*(raidChapter-1));
                 result=(emergency?"비상탈출!":"탈출 성공!")+" 장비와 전리품을 창고에 보관했습니다."
@@ -342,6 +345,7 @@ public final class ExtractionProfile {
             active=false; escrow.clear();
             if(!success)result="사망했습니다. 출격 물품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
         });
+        migrateGrowthRules();
         migrateGrowthCap();
         Dungeon.deleteGame(GamesInProgress.curSlot, true);
     }
@@ -352,6 +356,13 @@ public final class ExtractionProfile {
     }
     private void trimPrepared(){while(prepared.size()>capacity())stash.add(prepared.remove(prepared.size()-1));}
     /** Preserve a running hero; over-budget legacy allocations are refunded at the hub. */
+    private void migrateGrowthRules(){
+        if(active||growthRules>=2)return;
+        int refund=spentPoints();
+        change(()->{growthRules=2;points=(int)Math.min(MAX_GROWTH_POINTS,(long)points+refund);
+            if(!nodes.isEmpty()){nodes.clear();trimPrepared();result+="\n성장 조건·힘 노드 개편: 사용한 "+refund+" P를 반환했습니다. 새 선행 조건으로 다시 배분해 주세요.";}
+        });
+    }
     private void migrateGrowthCap(){
         int used=spentPoints(), cappedXP=Math.min(MAX_GROWTH_XP,Math.max(0,xp));
         boolean refund=!active&&used>MAX_GROWTH_POINTS;
@@ -393,6 +404,7 @@ public final class ExtractionProfile {
             active=false;escrow.clear();raidXP=0;
             result="원정을 포기했습니다. 출격 물품과 전리품은 잃었지만 창고·성장 노드·획득한 성장 경험치는 유지됩니다.";
         });
+        migrateGrowthRules();
         migrateGrowthCap();
         Dungeon.deleteGame(1,true);
         Dungeon.hero=null;Dungeon.level=null;
