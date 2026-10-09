@@ -756,12 +756,19 @@ public class ExtractionProfileTest {
         com.watabou.utils.Bundle roundTrip=new com.watabou.utils.Bundle();restored.storeInBundle(roundTrip);
         Item again=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword();again.restoreFromBundle(roundTrip);assertEquals(9,again.trueLevel());
     }
-    @Test public void boundWandAndThrownWeaponFollowTheirWeaponTierLimits(){
+    @Test public void boundStaffCapsAtFifteenAndThrownWeaponKeepsItsTierLimit(){
         Dungeon.hero=new Hero();
         com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff staff=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff();
         com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand wand=new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile();wand.level(20);
-        staff.imbueWand(wand,null);assertEquals(3,staff.trueLevel());assertEquals(3,wand.trueLevel());
-        staff.upgrade(10);assertEquals(3,staff.trueLevel());assertEquals(3,wand.trueLevel());
+        staff.imbueWand(wand,null);assertEquals(15,staff.trueLevel());assertEquals(15,wand.trueLevel());
+        staff.upgrade(10);assertEquals(15,staff.trueLevel());assertEquals(15,wand.trueLevel());
+        staff.level(14);staff.updateWand(false);assertTrue(WeaponUpgradeLimit.eligible(staff));
+        staff.upgrade();assertEquals(15,staff.trueLevel());assertEquals(15,wand.trueLevel());assertFalse(WeaponUpgradeLimit.eligible(staff));
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();staff.storeInBundle(saved);
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff restored=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff();
+        restored.restoreFromBundle(saved);assertEquals(15,restored.trueLevel());
+        com.watabou.utils.Bundle roundTrip=new com.watabou.utils.Bundle();restored.storeInBundle(roundTrip);
+        assertEquals(15,((com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)roundTrip.get("wand")).trueLevel());
         Item trident=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Trident();trident.level(100);
         assertEquals(15,trident.trueLevel());trident.upgrade();assertEquals(15,trident.trueLevel());
     }

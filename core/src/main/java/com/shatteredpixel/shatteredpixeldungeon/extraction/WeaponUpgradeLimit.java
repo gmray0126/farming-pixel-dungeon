@@ -15,7 +15,8 @@ public final class WeaponUpgradeLimit {
     }
     public static int cap(Item item){
         if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring
-            ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)return 15;
+            ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand
+            ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff)return 15;
         if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.trinkets.Trinket)return 3;
         if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)return ((com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)item).nativeLevelCap()>0?15:0;
         int tier=tier(item);
@@ -28,7 +29,8 @@ public final class WeaponUpgradeLimit {
     public static boolean eligible(Item item){return item.isUpgradable()&&canIncrease(item);}
     public static String description(Item item){
         if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring
-            ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand)return "\n\n영구 강화 "+(item.levelKnown?"+"+item.trueLevel()+" / ":"상한 ")+"+15"+(canIncrease(item)?"":"\n영구 강화 상한에 도달했습니다.");
+            ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.Wand
+            ||item instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff)return "\n\n영구 강화 "+(item.levelKnown?"+"+item.trueLevel()+" / ":"상한 ")+"+15"+(canIncrease(item)?"":"\n영구 강화 상한에 도달했습니다.");
         if(tier(item)<=0)return "";
         return "\n\nT"+tier(item)+" · 영구 강화 "+(item.levelKnown?"+"+item.trueLevel()+" / ":"상한 ")+"+"+cap(item)
             +(canIncrease(item)?"":"\n영구 강화 상한에 도달했습니다.");
