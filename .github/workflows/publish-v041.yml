@@ -1,0 +1,83 @@
+name: Publish Farming Pixel Dungeon v0.41.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v041.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v041
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37882708520
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37882708491
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.41.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.41.0_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.41.0 / Farming Pixel Dungeon v0.41.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **선행 조건 강화:** 표시된 모든 선행 노드를 습득해야 다음 노드를 배울 수 있습니다. 다른 계통의 노드로 조건을 우회하는 연결을 제거하고, 혼합 트리는 양쪽 계통의 시작 기술을 모두 요구합니다. 혼합 트리의 합류 지점은 세 갈래를 모두 요구합니다.
+          - **힘 노드 재배치:** 힘을 2~3씩 주던 노드를 전부 +1로 바꾸고, 총 10개의 힘 노드를 여러 계통의 깊은 갈래에 분산했습니다. 힘의 반지나 물약 없이 기본 힘 10에서 20에 도달하려면 선행 경로에 많은 포인트를 투자해야 합니다.
+          - **기존 저장 호환:** 기존 성장 노드는 한 번 초기화하고 사용 포인트를 환급합니다. 진행 중인 원정은 종료하거나 포기한 뒤 환급합니다. 성장 경험치와 보관 장비는 유지합니다. 저장된 프리셋은 남지만 새 선행 조건에 맞게 다시 저장해야 할 수 있습니다.
+          - **하드 난이도:** 원정 탭에서 일반/하드를 선택합니다. 해당 챕터 일반 대비 적 체력 2.5배, 공격 피해 2배, 추가 몬스터 4마리, 적 방어 증가, 정예 확률 20%를 적용합니다. 적의 성공한 공격은 방어력의 60%를 관통하고 최소 피해를 주어 고강화 방어구만으로 모든 공격을 무효화할 수 없습니다. 빗나감과 공격 취소는 유지합니다.
+          - **하드 전용 레어 장비:** 무기·투척무기·직접 피해 지팡이·갑옷·바지·신발은 하드에서 생성 시 8% 확률로 레어가 됩니다. 챕터 보스는 해당 챕터 최대 티어의 레어 무기 1개를 보장하고 정예 전리품은 추가 레어 기회를 갖습니다. 일반에서는 새 레어가 생성되지 않습니다.
+          - 레어는 해당 장비의 공격 피해 또는 물리 방어 성능을 20% 높입니다. 힘 요구치와 강화 상한은 그대로이며, 보관·탈출·변환·재련·직업 갑옷 전환에도 등급을 유지합니다. 획득한 레어는 일반 원정에서도 사용할 수 있습니다. 하드의 기존 원정 골드 보상은 1.5배이며 소모품 환산 단가는 바뀌지 않습니다.
+          
+          ## English changes
+          - **Strict prerequisites:** Every listed prerequisite is required. Cross-path shortcuts no longer bypass the original route. Hybrid roots require both neighbouring class skills, and their junctions require all three arms.
+          - **Distributed strength:** Every permanent strength node now grants +1. Ten nodes are spread across deep weapon paths, so reaching 20 from the base 10 without rings or potions requires substantial investment.
+          - **Save migration:** Existing learned nodes are reset once and their spent points refunded. Active expeditions defer this until settlement or abandonment. Experience and stored equipment remain. Saved presets remain but may need rebuilding to satisfy the new prerequisites.
+          - **Hard mode:** Select Normal or Hard in the expedition tab. Compared with the same chapter on Normal, enemies have 2.5× health and 2× attack damage, four additional monsters, extra defense, and a 20% elite chance. Successful enemy attacks penetrate 60% of rolled armor and retain a small damage floor. Misses and cancelled attacks remain effective.
+          - **Hard-only Rare equipment:** Weapons, missiles, direct-damage wands, body armor, trousers, and boots have an 8% Rare roll when generated in Hard mode. Chapter bosses guarantee one Rare weapon at that chapter's tier ceiling; elite loot has an additional Rare chance. Normal mode creates no new Rare equipment.
+          - Rare quality adds 20% attack damage or physical defense for the corresponding equipment. Strength requirements and upgrade limits remain unchanged. Quality survives storage, extraction, transmutation, reforging, and class-armor conversion, and acquired Rare gear can be used in Normal mode. Existing expedition gold rewards receive a 1.5× Hard multiplier; consumable redemption prices are unchanged.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          All 164 core tests and the Android build passed, including strict prerequisites, strength distribution, one-time migration, Hard snapshots, armor penetration, Rare generation, boss loot, and quality persistence. Windows build and native launch/resume checks passed. Hard combat balance still needs player feedback. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/9967792a321b80f614b5b33e88f11a27d3217d02)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.41.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.41.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
