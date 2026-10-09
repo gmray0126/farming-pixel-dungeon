@@ -265,7 +265,7 @@ public class ExtractionHubScene extends PixelScene {
         }
         boolean hard=p.active?p.raidHard&&p.raidRules>=5:p.selectedHard;
         button("일반",left,y+45,(width-2)/2,18,()->{p.selectHard(false);refresh();},!hard);
-        button("하드 · 레어",left+(width+2)/2,y+45,(width-2)/2,18,()->{p.selectHard(true);refresh();},hard);
+        button("하드",left+(width+2)/2,y+45,(width-2)/2,18,()->{p.selectHard(true);refresh();},hard);
         panel(left,y+69,width,48);
         int start=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(chapter),end=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.endDepth(chapter);
         label(start+"~"+end+"층 · "+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.bossName(chapter),8,left+5,y+74,width-10,GOLD);

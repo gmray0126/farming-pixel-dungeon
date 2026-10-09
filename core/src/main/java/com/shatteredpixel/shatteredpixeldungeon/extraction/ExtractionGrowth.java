@@ -58,7 +58,10 @@ public final class ExtractionGrowth {
                 text.append(e.getKey().label).append(" +").append(Math.round(e.getValue()));
                 if(e.getKey().percent)text.append('%');
             }
-            if(branch>=3&&branch<12&&!effects.containsKey(Stat.STRENGTH))text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
+            if(branch>=3&&branch<12&&!effects.containsKey(Stat.STRENGTH)){
+                if(branch==FIST)text.append("\n\n맨손(무기 미착용)·징 박힌 장갑·돌 건틀릿으로 공격할 때 적용됩니다. 맨손도 격투 판정입니다.");
+                else text.append("\n\n").append(BRANCHES[branch]).append(" 계통의 무기를 사용할 때 적용됩니다.");
+            }
             if(branch>=12)text.append("\n\n무기 종류와 관계없이 적용됩니다. 보호막은 누적되지 않으며, 새 층 효과는 원정 중 해당 층의 첫 방문에만 발동합니다.");
             if(id.equals("ranged_0"))text.append("\n\n영혼의 활 해금: 매 출격 때 활을 가방에 기본 지급합니다. 상점 구매가 필요하지 않으며 사망 후에도 다시 지급됩니다. 초기화하면 지급과 사용이 잠깁니다.");
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
@@ -323,6 +326,23 @@ public final class ExtractionGrowth {
     public static boolean unlocked(Node node,Set<String> learned){
         for(int p:node.parents)if(!learned.contains(NODES[p].id))return false;
         return true;
+    }
+    /** Display uses the combat classifier so labels cannot drift from growth effects. */
+    public static String weaponDescription(KindOfWeapon weapon){
+        int branch=family(weapon);
+        String type=branch<0?"특수 무기":BRANCHES[branch];
+        if(weapon instanceof MagesStaff)type="마법 지팡이";
+        else if(weapon instanceof SpiritBow)type="활";
+        else if(weapon instanceof Crossbow)type="석궁";
+        else if(weapon instanceof MissileWeapon)type="투척무기";
+        else if(weapon instanceof Sai)type="쌍검";
+        else if(branch==5)type="단검";
+        else if(weapon instanceof RoundShield||weapon instanceof Greatshield)type="방패";
+        else if(branch==8)type="둔기";
+        else if(weapon instanceof Whip)type="채찍";
+        else if(weapon instanceof Sickle||weapon instanceof WarScythe)type="낫";
+        else if(branch==FIST)type=weapon==null?"맨손":"격투 무기";
+        return "_무기 종류: "+type+"_\n적용 성장: "+(branch<0?"공통 노드만 적용":BRANCHES[branch]+" 계통")+"\n\n";
     }
     public static int family(KindOfWeapon weapon){
         if(weapon==null||weapon instanceof Gloves||weapon instanceof Gauntlet)return FIST;

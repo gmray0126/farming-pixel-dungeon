@@ -43,6 +43,11 @@ import com.watabou.utils.Random;
 
 abstract public class KindOfWeapon extends EquipableItem {
 
+	@Override
+	public String info() {
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.weaponDescription(this) + super.info();
+	}
+
 	protected String hitSound = Assets.Sounds.HIT;
 	protected float hitSoundPitch = 1f;
 	

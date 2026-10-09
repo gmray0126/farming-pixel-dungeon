@@ -290,7 +290,7 @@ public abstract class Wand extends Item {
 
 	@Override
 	public String info() {
-		String desc = super.info();
+		String desc = "_무기 종류: 마법 막대_\n적용 성장: 마도 계통\n\n" + super.info();
 
 		desc += "\n\n" + statsDesc();
 
