@@ -1131,8 +1131,10 @@ public class ExtractionProfileTest {
         profile.points=300;
         int strengthNodes=0;
         for(ExtractionGrowth.Node node:ExtractionGrowth.NODES)if(node.effects.containsKey(ExtractionGrowth.Stat.STRENGTH)){
+            assertTrue(node.id,node.branch<3||node.branch>=12&&node.branch<19);
             assertEquals(1,node.effects.get(ExtractionGrowth.Stat.STRENGTH),0);strengthNodes++;learnPath(node.id);
         }
+        for(String id:profile.nodes){int branch=ExtractionGrowth.NODES[ExtractionGrowth.index(id)].branch;assertTrue("Strength must not require weapon/class nodes: "+id,branch<3||branch>=12&&branch<19);}
         assertEquals(10,strengthNodes);assertTrue(profile.spentPoints()>=150);assertTrue(profile.spentPoints()<=300);
         assertEquals(20,profile.startingStrength());profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
         Hero hero=Dungeon.hero;assertEquals(20,hero.STR);assertTrue(hero.STR>=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greataxe().STRReq(0));assertNull(hero.belongings.ring);
@@ -1262,7 +1264,7 @@ public class ExtractionProfileTest {
         }
         assertEquals(25,convergences);
         assertEquals(422,totalCost);
-        for(int b=0;b<19;b++)assertEquals(b==18?12:b==2?12:b>=3&&b<=11&&b!=7?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
+        for(int b=0;b<19;b++)assertEquals(b==18||b==2?12:b<2||b>=12?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
         profile.points=1000;

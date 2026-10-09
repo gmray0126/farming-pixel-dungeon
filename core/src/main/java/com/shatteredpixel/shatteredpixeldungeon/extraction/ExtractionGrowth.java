@@ -67,7 +67,7 @@ public final class ExtractionGrowth {
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
             if(effects.containsKey(Stat.SECOND_WIND))text.append("\n두 생존 최종 특성은 원정당 한 번의 발동 횟수를 공유합니다.");
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
-            if(effects.containsKey(Stat.STRENGTH))text.append("\n\n영구 힘 보너스입니다. 사망·탈출 후에도 유지되며 매 새 출격에 적용됩니다. 힘 물약으로 얻은 힘은 해당 원정에서만 유지됩니다.");
+            if(effects.containsKey(Stat.STRENGTH))text.append("\n\n범용 영구 힘 보너스입니다. 무기·직업과 관계없이 적용됩니다. 사망·탈출 후에도 유지되며 매 새 출격에 적용됩니다. 힘 물약으로 얻은 힘은 해당 원정에서만 유지됩니다.");
             if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
             if(parents.length>1)text.append("\n\n표시된 선행 노드를 모두 습득해야 합니다.");
             return text.toString();
@@ -113,7 +113,7 @@ public final class ExtractionGrowth {
         add(list, "iron", "철벽", 1, 2, 0, 2, new String[]{"guard"}, Stat.DEFENSE, 1f);
         add(list, "pack", "짐 정리", 2, 0, 1, 1, new String[]{}, Stat.CAPACITY, 2f);
         add(list, "porter", "원정 준비", 2, 1, 0, 1, new String[]{"pack"}, Stat.CAPACITY, 2f);
-        add(list, "strength", "완력", 3, 6, 0, 2, new String[]{"sword_7"}, Stat.STRENGTH, 1f);
+        add(list, "strength", "완력", 0, 6, 0, 2, new String[]{"combat_cap"}, Stat.STRENGTH, 1f);
         add(list, "combat_left_end", "강타", 0, 3, 0, 3, new String[]{"master"}, Stat.DAMAGE, 2f);
         add(list, "combat_right_1", "정밀 조준", 0, 1, 2, 1, new String[]{"power"}, Stat.ACCURACY, 10f);
         add(list, "combat_right_2", "집중", 0, 2, 2, 2, new String[]{"combat_right_1"}, Stat.ACCURACY, 10f);
@@ -269,17 +269,17 @@ public final class ExtractionGrowth {
         add(list, "ward_8", "생존 안전망", 17, 5, 1, 5, new String[]{"ward_7"}, Stat.SECOND_WIND, 10.0f, Stat.FLOOR_SHIELD, 8.0f);
         for(int i=0;i<ExtractionPotionKnowledge.IDS.length;i++)
             add(list,ExtractionPotionKnowledge.IDS[i],ExtractionPotionKnowledge.NAMES[i]+" 지식",18,i,1,1,new String[]{"pack"},ExtractionPotionKnowledge.STATS[i],1f);
-        // Common strength milestones: any common specialization can unlock them.
+        // Strength milestones require only common growth and utility paths.
         // Append stable IDs so old saves and existing node indices remain compatible.
-        add(list,"strength_early","양손 근력",4,6,0,2,new String[]{"greatsword_7"},Stat.STRENGTH,1f);
-        add(list,"strength_mid","묵직한 근력",8,6,0,3,new String[]{"blunt_7"},Stat.STRENGTH,1f);
-        add(list,"strength_advanced","장병기 근력",6,6,0,4,new String[]{"spear_7"},Stat.STRENGTH,1f);
-        add(list,"strength_master","마도 단련",11,6,0,5,new String[]{"magic_7"},Stat.STRENGTH,1f);
+        add(list,"strength_early","강건한 근력",1,6,0,2,new String[]{"survival_cap"},Stat.STRENGTH,1f);
+        add(list,"strength_mid","극한 단련",17,6,0,3,new String[]{"ward_7"},Stat.STRENGTH,1f);
+        add(list,"strength_advanced","회복 단련",13,6,0,4,new String[]{"medic_7"},Stat.STRENGTH,1f);
+        add(list,"strength_master","탐험가의 근력",12,6,0,5,new String[]{"scout_7"},Stat.STRENGTH,1f);
         ExtractionClassUtilities.append(list);
         ExtractionHybridTrees.append(list);
-        add(list,"strength_archer","사격 단련",10,6,0,3,new String[]{"ranged_7"},Stat.STRENGTH,1f);
-        add(list,"strength_dagger","쌍수 단련",5,6,0,3,new String[]{"dagger_7"},Stat.STRENGTH,1f);
-        add(list,"strength_fist","격투 단련",9,6,0,3,new String[]{"fist_7"},Stat.STRENGTH,1f);
+        add(list,"strength_archer","끈질긴 근력",16,6,0,3,new String[]{"momentum_7"},Stat.STRENGTH,1f);
+        add(list,"strength_dagger","균형 단련",15,6,0,3,new String[]{"stealth_7"},Stat.STRENGTH,1f);
+        add(list,"strength_fist","체력 단련",14,6,0,3,new String[]{"food_7"},Stat.STRENGTH,1f);
         String[] bagNames={"씨앗 가방","스크롤 가방","물약 가방","마법 가방"};
         for(int bag=0;bag<4;bag++){
             Node n=new Node(ExtractionBags.NODES[bag],bagNames[bag]+" 해금",2,7,bag,bag==3?3:2,new String[]{bag==0?"pack":"porter"});

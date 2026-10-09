@@ -24,7 +24,7 @@ public final class GrowthAtlasLayout {
             if(n.branch>=19)continue;
             if(n.branch==2&&n.row==7){radius=110;a+=35+n.col*90;}
             else if(n.branch==18){radius=82;a=n.row*30;}
-            else if(n.row==6&&n.effects.containsKey(ExtractionGrowth.Stat.STRENGTH)&&n.branch>=3){radius=112;}
+            else if(n.row==6&&n.effects.containsKey(ExtractionGrowth.Stat.STRENGTH)){radius=112;a-=70;}
             else if(n.row==6){radius=90;a+=n.col==0?-110:110;}
             else if(n.row==0)a+=180;
             else if(n.row==4){}
