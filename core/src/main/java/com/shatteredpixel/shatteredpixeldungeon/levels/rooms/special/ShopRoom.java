@@ -144,6 +144,7 @@ public class ShopRoom extends SpecialRoom {
 		int inset = 1;
 
 		for (Item item : itemsToSpawn.toArray(new Item[0])) {
+            if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active()&&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionBags.nodeBag(item))continue;
 
 			//place items in a clockwise pattern
 			if (curItemPlace.x == left+inset && curItemPlace.y != top+inset){
@@ -358,7 +359,8 @@ public class ShopRoom extends SpecialRoom {
 		return itemsToSpawn;
 	}
 
-	protected static Bag ChooseBag(Belongings pack){
+	public static Bag ChooseBag(Belongings pack){
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.active())return null;
 
 		//generate a hashmap of all valid bags.
 		HashMap<Bag, Integer> bags = new HashMap<>();

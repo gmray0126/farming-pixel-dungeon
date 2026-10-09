@@ -223,6 +223,24 @@ public final class ExtractionHybridCombat {
             +"\n혈기사 서약: "+(s.bloodOath?"켜짐 · 5턴마다 체력 -1":"꺼짐")+"\n코팅: "+(s.coating==1?"독":s.coating==2?"냉기":s.coating==3?"화염":"없음")+" · 남은 명중 "+s.coatedShots
             +"\n성력 "+s.faith+" / "+faithCap(h)+"\n행동 버튼 옆 정보에서 조건과 재사용 시간을 확인하세요.";
     }
+    public static java.util.ArrayList<ExtractionClassSkills.Action> shortcuts(Hero h){
+        java.util.ArrayList<ExtractionClassSkills.Action> out=new java.util.ArrayList<>();
+        if(h==null||h.extractionRaidID==0)return out;
+        if(learned(h,"shadow",5))out.add(new ExtractionClassSkills.Action("hybrid_shadow","그림자 밟기","표식한 적 옆 안전한 칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).shadowReadyAt&&!h.rooted,()->shadowStep(h)));
+        if(learned(h,"alchemy",0))for(int e=1;e<=3;e++){
+            if(e==2&&!learned(h,"alchemy",2)||e==3&&!learned(h,"alchemy",3))continue;
+            final int element=e;String name=e==1?"독":e==2?"냉기":"화염";
+            out.add(new ExtractionClassSkills.Action("coat_"+e,name+" 코팅","투척 공격에 코팅을 준비합니다. 준비 1턴.\n"+status(h),Actor.now()>=state(h).coatReadyAt,()->{if(ready(h)&&coat(h,element)){GLog.p("약품 코팅 준비: "+state(h).coatedShots+"회 명중");h.spendAndNext(1);}}));
+        }
+        if(learned(h,"storm",7))out.add(new ExtractionClassSkills.Action("hybrid_storm","사선 확보","안전한 빈칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).stepReadyAt&&!h.rooted,()->windStep(h)));
+        if(learned(h,"holy",0))out.add(new ExtractionClassSkills.Action("holy_mend","성력 회복","성력을 소모해 체력을 회복합니다.\n"+status(h),state(h).faith>=faithCost(h)&&h.HP<h.HT,()->{if(ready(h)&&mend(h))h.spendAndNext(1);}));
+        if(learned(h,"holy",2))out.add(new ExtractionClassSkills.Action("holy_judge","심판","보이는 적을 심판합니다.\n"+status(h),state(h).faith>=faithCost(h),()->GameScene.selectCell(new CellSelector.Listener(){
+            @Override public String prompt(){return "심판할 적을 선택하세요.";}
+            @Override public void onSelect(Integer cell){if(cell!=null&&ready(h)&&judge(h,Actor.findChar(cell)))h.spendAndNext(1);else if(cell!=null)GLog.w("성력과 대상의 거리·시야를 확인하세요.");}
+        })));
+        if(learned(h,"blood",0))out.add(new ExtractionClassSkills.Action("blood_oath","피의 서약 "+(state(h).bloodOath?"끄기":"켜기"),"서약을 켜거나 끕니다. 활성 중 5턴마다 체력 1 소모.\n"+status(h),true,()->{if(ready(h)){state(h).bloodOath=!state(h).bloodOath;GLog.i("피의 서약 "+(state(h).bloodOath?"활성화":"해제"));h.spendAndNext(1);}}));
+        return out;
+    }
     public static void open(){
         Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 혼합 스킬을 사용할 수 있습니다. 마법 면역 중에는 사용할 수 없습니다."));return;}
         GameScene.show(new WndOptions("혼합 스킬",status(h),"마검사 상태","그림자 밟기","약품 코팅","사선 확보","성전사 기술","피의 서약 "+(state(h).bloodOath?"끄기":"켜기"),"닫기"){

@@ -36,14 +36,23 @@ public class QuickSlot {
 	 * which can happen for a stackable item that has been 'used up', these are referred to as placeholders.
 	 */
 
-	//note that the current max size is coded at 6, due to UI constraints, but it could be much much bigger with no issue.
-	public static int SIZE = 6;
+	// Twelve persistent slots; the toolbar displays one responsive page at a time.
+	public static final int SIZE = 12;
+    private int page;
+    public static int pageSize(float width){return width>170?6:width>152?5:4;}
+    public int pageCount(int size){return (SIZE+size-1)/size;}
+    public int page(int size){page=Math.max(0,Math.min(page,pageCount(size)-1));return page;}
+    public int firstSlot(int size){return page(size)*size;}
+    public void nextPage(int size){page=(page(size)+1)%pageCount(size);}
+    public void showSlot(int slot,int size){page=slot/size;}
 	private Item[] slots = new Item[SIZE];
 
 
 	//direct array interaction methods, everything should build from these methods.
 	public void setSlot(int slot, Item item){
-		clearItem(item); //we don't want to allow the same item in multiple slots.
+		if(item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.Shortcut)
+            for(int i=0;i<SIZE;i++)if(item.isSimilar(slots[i]))slots[i]=null;
+        clearItem(item); //we don't want to allow the same item in multiple slots.
 		slots[slot] = item;
 	}
 
@@ -53,6 +62,7 @@ public class QuickSlot {
 
 	public void reset(){
 		slots = new Item[SIZE];
+        page=0;
 	}
 
 	public Item getItem(int slot){
@@ -139,6 +149,9 @@ public class QuickSlot {
 		}
 		bundle.put( PLACEHOLDERS, placeholders );
 		bundle.put( PLACEMENTS, placements );
+        bundle.put("quick_page",page);
+        for(int i=0;i<SIZE;i++)if(slots[i] instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.Shortcut)
+            bundle.put("quick_skill_"+i,slots[i]);
 	}
 
 	public void restorePlaceholders(Bundle bundle){
@@ -147,13 +160,19 @@ public class QuickSlot {
 
 		int i = 0;
 		for (Bundlable item : placeholders){
-			while (!placements[i]){
+			while (i<Math.min(SIZE,placements.length)&&!placements[i]){
 				i++;
 			}
-			setSlot( i, (Item)item );
+			if(i>=Math.min(SIZE,placements.length))break;
+            setSlot( i, (Item)item );
 			i++;
 		}
 
-	}
+        page=Math.max(0,bundle.getInt("quick_page"));
+        for(int slot=0;slot<SIZE;slot++)if(bundle.contains("quick_skill_"+slot)){
+            Bundlable skill=bundle.get("quick_skill_"+slot);
+            if(skill instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.Shortcut)setSlot(slot,(Item)skill);
+        }
+    }
 
 }

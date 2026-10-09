@@ -132,8 +132,8 @@ public final class ExtractionClassSkills {
     }
     public static void open(){
         Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 메뉴를 열 수 있습니다."));return;}
-        GameScene.show(new WndOptions("원정 메뉴","기술 또는 의뢰 현황을 선택하세요.","원본 직업 기술","혼합 트리 기술","의뢰 현황","닫기"){
-            @Override protected void onSelect(int i){if(i==0)classMenu();else if(i==1)ExtractionHybridCombat.open();else if(i==2)GameScene.show(new WndMessage(ExtractionContracts.tracker(h)));}
+        GameScene.show(new WndOptions("원정 메뉴","기술 또는 의뢰 현황을 선택하세요.","원본 직업 기술","혼합 트리 기술","의뢰 현황","퀵슬롯 등록","닫기"){
+            @Override protected void onSelect(int i){if(i==0)classMenu();else if(i==1)ExtractionHybridCombat.open();else if(i==2)GameScene.show(new WndMessage(ExtractionContracts.tracker(h)));else if(i==3)ExtractionSkillQuickslots.chooseSkill(-1,0);}
         });
     }
     private static void classMenu(){
@@ -144,28 +144,50 @@ public final class ExtractionClassSkills {
         });
     }
     private static String MessagesDecimal(float n){return String.format(java.util.Locale.ROOT,"%.1f",n);}
-    private interface Command{void use();}
-    private static class Action {String name,desc;Command command;boolean enabled;Action(String n,String d,boolean e,Command c){name=n;desc=d;enabled=e;command=c;}}
+    public static class Action {
+        public final String key,name,desc; public final boolean enabled; private final Runnable command;
+        public Action(String k,String n,String d,boolean e,Runnable c){key=k;name=n;desc=d;enabled=e;command=c;}
+        public void use(){command.run();}
+    }
     private static ArrayList<Action> actions(Hero h,int group){
         ArrayList<Action> out=new ArrayList<>();if(!hasSkills(h))return out;
         for(ExtractionGrowth.Node n:ExtractionGrowth.NODES){
             if(n.branch!=group||n.skill==null||!learned(h,n.skill))continue;
             if(n.skill.equals("prayer"))continue;
-            if(n.skill.equals("stealth"))out.add(new Action(n.name+" · 기력 20",n.description(),h.buff(MagicImmune.class)==null&&h.extractionSkills.armor.charge>=20,()->stealth(h)));
+            if(n.skill.equals("stealth"))out.add(new Action(n.skill,n.name+" · 기력 20",n.description(),h.buff(MagicImmune.class)==null&&h.extractionSkills.armor.charge>=20,()->stealth(h)));
             else {
                 ArmorAbility a=ability(h,n.skill);float cost=a.chargeUse(h);
-                out.add(new Action(n.name+" · 기력 "+Math.round(cost),n.description(),h.buff(MagicImmune.class)==null&&h.extractionSkills.armor.charge>=cost,()->{
+                out.add(new Action(n.skill,n.name+" · 기력 "+Math.round(cost),n.description(),h.buff(MagicImmune.class)==null&&h.extractionSkills.armor.charge>=cost,()->{
                     if(!ready(h)||!learned(h,n.skill)||h.extractionSkills.armor.charge<a.chargeUse(h)||h.buff(MagicImmune.class)!=null)return;
                     h.extractionSkills.armor.execute(h,"NODE_SKILL");a.use(h.extractionSkills.armor,h);
                 }));
             }
         }
-        if(group==23&&h.hasSubclass(HeroSubClass.MONK))out.add(new Action("수도승 기술","연타·집중·질주·용의 발차기·명상을 사용합니다. 적 처치로 기를 얻습니다.",true,()->{if(ready(h))GameScene.show(new WndMonkAbilities(Buff.affect(h,MonkEnergy.class)));}));
-        if(group==19&&h.hasTalent(Talent.RUNIC_TRANSFERENCE))out.add(new Action("상형문자 이전 · 기력 10","기존 갑옷의 문자를 제거해 다른 갑옷으로 옮깁니다. 1단계는 일반·희귀, 2단계는 모든 문자를 옮깁니다. 대상 갑옷은 문자가 없는 갑옷이어야 합니다.",h.extractionSkills.armor.charge>=10,()->selectRune(h)));
-        if(group==24)for(ClericSpell spell:spells(h))out.add(new Action(spell.name()+" · 기도 "+MessagesDecimal(spell.chargeUse(h)),spell.desc(),h.extractionSkills.prayer.canCast(h,spell),()->{
+        if(group==23&&h.hasSubclass(HeroSubClass.MONK))out.add(new Action("monk_menu","수도승 기술","연타·집중·질주·용의 발차기·명상을 사용합니다. 적 처치로 기를 얻습니다.",true,()->{if(ready(h))GameScene.show(new WndMonkAbilities(Buff.affect(h,MonkEnergy.class)));}));
+        if(group==19&&h.hasTalent(Talent.RUNIC_TRANSFERENCE))out.add(new Action("rune","상형문자 이전 · 기력 10","기존 갑옷의 문자를 제거해 다른 갑옷으로 옮깁니다. 1단계는 일반·희귀, 2단계는 모든 문자를 옮깁니다. 대상 갑옷은 문자가 없는 갑옷이어야 합니다.",h.extractionSkills.armor.charge>=10,()->selectRune(h)));
+        if(group==24)for(ClericSpell spell:spells(h))out.add(new Action("spell_"+spell.getClass().getSimpleName(),spell.name()+" · 기도 "+MessagesDecimal(spell.chargeUse(h)),spell.desc(),h.extractionSkills.prayer.canCast(h,spell),()->{
             if(ready(h)&&h.extractionSkills.prayer.canCast(h,spell)){h.extractionSkills.prayer.prepare(h);spell.onCast(h.extractionSkills.prayer,h);}
         }));
         return out;
+    }
+    public static ArrayList<Action> shortcuts(Hero h){
+        ensure(h);ArrayList<Action> result=new ArrayList<>();
+        for(int group=19;group<=24;group++)for(Action a:actions(h,group))if(!a.key.equals("monk_menu"))result.add(a);
+        if(h!=null&&h.extractionRaidID!=0&&h.hasSubclass(HeroSubClass.MONK)){
+            MonkEnergy energy=Buff.affect(h,MonkEnergy.class);
+            for(int i=0;i<MonkEnergy.MonkAbility.abilities.length;i++){
+                final MonkEnergy.MonkAbility a=MonkEnergy.MonkAbility.abilities[i];
+                result.add(new Action("monk_"+i,a.name()+" · 기 "+a.energyCost(),a.desc(),a.usable(energy),()->{
+                    if(!ready(h)||!h.hasSubclass(HeroSubClass.MONK)||!a.usable(energy))return;
+                    if(a.targetingPrompt()==null)a.doAbility(h,null);
+                    else GameScene.selectCell(new com.shatteredpixel.shatteredpixeldungeon.scenes.CellSelector.Listener(){
+                        @Override public String prompt(){return a.targetingPrompt();}
+                        @Override public void onSelect(Integer cell){if(cell!=null&&ready(h)&&a.usable(energy))a.doAbility(h,cell);}
+                    });
+                }));
+            }
+        }
+        result.addAll(ExtractionHybridCombat.shortcuts(h));return result;
     }
     private static void page(Hero h,int group,int page){
         ArrayList<Action> list=actions(h,group);int first=page*5,last=Math.min(list.size(),first+5);
@@ -175,7 +197,7 @@ public final class ExtractionClassSkills {
             @Override protected boolean enabled(int i){return i>=last-first||list.get(first+i).enabled;}
             @Override protected boolean hasInfo(int i){return i<last-first;}
             @Override protected void onInfo(int i){GameScene.show(new WndMessage(list.get(first+i).desc));}
-            @Override protected void onSelect(int i){if(i<last-first)list.get(first+i).command.use();else if(more&&i==last-first)page(h,group,page+1);else open();}
+            @Override protected void onSelect(int i){if(i<last-first)list.get(first+i).use();else if(more&&i==last-first)page(h,group,page+1);else open();}
         });
     }
     public static boolean canTransferRune(Hero h,Armor source,Armor destination){

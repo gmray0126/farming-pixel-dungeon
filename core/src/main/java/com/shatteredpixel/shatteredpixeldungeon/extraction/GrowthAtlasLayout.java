@@ -22,7 +22,8 @@ public final class GrowthAtlasLayout {
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
             ExtractionGrowth.Node n=ExtractionGrowth.NODES[i];float a=angles[n.branch],radius=42;
             if(n.branch>=19)continue;
-            if(n.branch==18){radius=82;a=n.row*30;}
+            if(n.branch==2&&n.row==7){radius=110;a+=35+n.col*90;}
+            else if(n.branch==18){radius=82;a=n.row*30;}
             else if(n.row==6&&n.effects.containsKey(ExtractionGrowth.Stat.STRENGTH)&&n.branch>=3){radius=112;}
             else if(n.row==6){radius=90;a+=n.col==0?-110:110;}
             else if(n.row==0)a+=180;

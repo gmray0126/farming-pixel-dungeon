@@ -229,7 +229,11 @@ public class GameScene extends PixelScene {
 			return;
 		}
 
-		Dungeon.level.playLevelMusic();
+        if(Dungeon.hero.extractionRaidID!=0){
+            com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionBags.sync(Dungeon.hero);
+            com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionBags.removeShopStock(Dungeon.level);
+        }
+        Dungeon.level.playLevelMusic();
 
 		SPDSettings.lastClass(Dungeon.hero.heroClass.ordinal());
 		
@@ -622,7 +626,10 @@ public class GameScene extends PixelScene {
 			Dungeon.droppedItems.remove( Dungeon.depth );
 		}
 
-		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.sceneReady(Dungeon.hero);
+		if(Dungeon.hero.extractionRaidID!=0){
+            com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.restore(Dungeon.hero);
+        }
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.sceneReady(Dungeon.hero);
         com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.floor(Dungeon.hero);
 
 		// Foresight searches immediately when attached, including discovery particles.

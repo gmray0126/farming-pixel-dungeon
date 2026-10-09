@@ -63,7 +63,7 @@ public class Toolbar extends Component {
 	private Tool btnWait;
 	private Tool btnSearch;
 	private Tool btnInventory;
-	private StyledButton btnSkills;
+	private StyledButton btnSkills, btnPages;
 	private QuickslotTool[] btnQuick;
 	private SlotSwapTool btnSwap;
 	
@@ -400,7 +400,11 @@ public class Toolbar extends Component {
 			});
 		}
 
-		//hidden button for inventory selector keybind
+		add(btnPages=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"퀵 1",6){
+            @Override protected void onClick(){GameScene.cancel();Dungeon.quickslot.nextPage(QuickSlot.pageSize(PixelScene.uiCamera.width));updateLayout();}
+        });
+
+        //hidden button for inventory selector keybind
 		add(new Button(){
 			@Override
 			protected void onClick() {
@@ -499,24 +503,13 @@ public class Toolbar extends Component {
 
 		float right = width;
 
-		int quickslotsToShow = 4;
-		if (PixelScene.uiCamera.width > 152) quickslotsToShow ++;
-		if (PixelScene.uiCamera.width > 170) quickslotsToShow ++;
-
-		int startingSlot;
-		if (SPDSettings.quickSwapper() && quickslotsToShow < 6){
-			quickslotsToShow = 3;
-			startingSlot = swappedQuickslots ? 3 : 0;
-			btnSwap.visible = true;
-			btnSwap.active = lastEnabled;
-			QuickSlotButton.lastVisible = 6;
-		} else {
-			startingSlot = 0;
-			btnSwap.visible = btnSwap.active = false;
-			btnSwap.setPos(0, PixelScene.uiCamera.height);
-			QuickSlotButton.lastVisible = quickslotsToShow;
-		}
-		int endingSlot = startingSlot+quickslotsToShow-1;
+        int pageSize=QuickSlot.pageSize(PixelScene.uiCamera.width);
+        int startingSlot=Dungeon.quickslot.firstSlot(pageSize);
+        int endingSlot=Math.min(QuickSlot.SIZE,startingSlot+pageSize)-1;
+        btnSwap.visible=btnSwap.active=false;
+        btnSwap.setPos(0,PixelScene.uiCamera.height);
+        QuickSlotButton.lastVisible=QuickSlot.SIZE;
+        btnPages.text("퀵 "+(Dungeon.quickslot.page(pageSize)+1)+"/"+Dungeon.quickslot.pageCount(pageSize));
 
 		for (int i = 0; i < btnQuick.length; i++){
 			btnQuick[i].visible = i >= startingSlot && i <= endingSlot;
@@ -536,7 +529,7 @@ public class Toolbar extends Component {
 				if (i == endingSlot){
 					btnQuick[i].border(0, 2);
 					btnQuick[i].frame(106, 0, 19, 24);
-				} else if (i == 0){
+				} else if (i == startingSlot){
 					btnQuick[i].border(2, 1);
 					btnQuick[i].frame(86, 0, 20, 24);
 				} else {
@@ -658,6 +651,10 @@ public class Toolbar extends Component {
 	}
 
 	private void layoutSkills() {
+        float pageLeft=width;
+        for(QuickslotTool slot:btnQuick)if(slot.visible)pageLeft=Math.min(pageLeft,slot.left());
+        btnPages.setRect(Math.min(width-34,pageLeft+26),y-18,34,16);
+        PixelScene.align(btnPages);
 		if (btnSkills != null) {
 			float hotbarLeft = width;
 			for (QuickslotTool slot : btnQuick) {
@@ -708,6 +705,7 @@ public class Toolbar extends Component {
 		btnSearch.alpha( value );
 		btnInventory.alpha( value );
 		if (btnSkills != null) btnSkills.alpha(value);
+        if(btnPages!=null)btnPages.alpha(value);
 		for (QuickslotTool tool : btnQuick){
 			tool.alpha(value);
 		}

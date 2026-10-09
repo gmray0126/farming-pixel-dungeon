@@ -22,6 +22,7 @@ public final class ExtractionProfile {
     public static final int MAX_GROWTH_LEVEL=100, MAX_GROWTH_XP=2475, MAX_GROWTH_POINTS=300, PRESET_SLOTS=3;
     private static ExtractionProfile instance;
     private int growthPointRate=3, growthRules=2;
+    public final String[] skillQuickslots=new String[com.shatteredpixel.shatteredpixeldungeon.QuickSlot.SIZE];
     private final String[][] presets=new String[PRESET_SLOTS][];
     public final ArrayList<Item> stash = new ArrayList<>();
     public final ArrayList<Item> prepared = new ArrayList<>();
@@ -69,6 +70,7 @@ public final class ExtractionProfile {
         b.put("difficulty_unlocks",unlockedDifficulty);
         b.put("raid_rules",raidRules);b.put("selected_hard",selectedHard);b.put("raid_hard",raidHard);b.put("growth_rules",growthRules);
         b.put("debug_enabled",debugEnabled);
+        for(int slot=0;slot<skillQuickslots.length;slot++)if(skillQuickslots[slot]!=null)b.put("skill_quick_"+slot,skillQuickslots[slot]);
         b.put("contracts",contracts.toArray(new String[0]));b.put("completed_contracts",completedContracts.toArray(new String[0]));b.put("contract_seal",contractSealAwarded);
         for(String id:contracts)b.put("contract_progress_"+id,contractProgress.getOrDefault(id,0));
         b.put("growth_point_rate",growthPointRate);
@@ -92,6 +94,7 @@ public final class ExtractionProfile {
         raidRules=b.contains("raid_rules")?b.getInt("raid_rules"):1;
         selectedHard=b.getBoolean("selected_hard");raidHard=b.getBoolean("raid_hard");growthRules=b.contains("growth_rules")?b.getInt("growth_rules"):1;
         debugEnabled=b.getBoolean("debug_enabled");
+        for(int slot=0;slot<skillQuickslots.length;slot++)skillQuickslots[slot]=b.contains("skill_quick_"+slot)?b.getString("skill_quick_"+slot):null;
         contracts.clear();completedContracts.clear();contractProgress.clear();
         if(b.contains("contracts"))for(String id:b.getStringArray("contracts")){contracts.add(id);contractProgress.put(id,b.getInt("contract_progress_"+id));}
         if(b.contains("completed_contracts"))for(String id:b.getStringArray("completed_contracts"))completedContracts.add(id);
@@ -103,6 +106,11 @@ public final class ExtractionProfile {
         for(int n=0;n<Math.min(unlockedDifficulty.length,unlocked.length);n++)unlockedDifficulty[n]=Math.max(n==0?1:0,Math.min(10,unlocked[n]));
     }
     private void save() throws IOException { FileUtils.bundleToFile(FILE, bundle()); }
+    public void bindSkill(int slot,String key){
+        if(slot<0||slot>=skillQuickslots.length)throw new IllegalArgumentException("퀵슬롯 범위 오류");
+        if(java.util.Objects.equals(skillQuickslots[slot],key))return;
+        change(()->{if(key!=null)for(int i=0;i<skillQuickslots.length;i++)if(key.equals(skillQuickslots[i]))skillQuickslots[i]=null;skillQuickslots[slot]=key;});
+    }
     public void setDebugEnabled(boolean enabled){change(()->debugEnabled=enabled);}
     public void debugResources(int addedGold,int addedXP,int addedPoints){
         requireDebug();
@@ -171,25 +179,17 @@ public final class ExtractionProfile {
         if (prepared.isEmpty()) return;
         change(() -> { stash.addAll(prepared); prepared.clear(); });
     }
-    public static void ensureBags(Hero h) {
-        Bag[] bags={new VelvetPouch(),new ScrollHolder(),new PotionBandolier(),new MagicalHolster()};
-        for(Bag bag:bags){
-            if(h.belongings.getItem(bag.getClass())==null && !bag.collect(h.belongings.backpack))
-                throw new IllegalStateException("기본 전용 가방을 지급하지 못했습니다.");
-        }
-        Dungeon.LimitedDrops.VELVET_POUCH.drop();
-        Dungeon.LimitedDrops.SCROLL_HOLDER.drop();
-        Dungeon.LimitedDrops.POTION_BANDOLIER.drop();
-        Dungeon.LimitedDrops.MAGICAL_HOLSTER.drop();
-    }
+    public static void ensureBags(Hero h){ExtractionBags.sync(h);}
     private static boolean isStartingBag(Item item){
         return item instanceof VelvetPouch || item instanceof ScrollHolder
                 || item instanceof PotionBandolier || item instanceof MagicalHolster;
     }
     public void initialize(Hero h) {
         h.belongings.clear();
+        Dungeon.quickslot.reset();
         h.extractionContracts=new ExtractionContracts.Run();h.extractionContracts.ids=contracts.toArray(new String[0]);h.extractionContracts.progress=new int[contracts.size()];
         h.extractionHybrid=new ExtractionHybridCombat.State();
+        ensureBags(h);
         // Reconstruct escrow items so equipped mutations cannot alter the persistent escrow.
         Bundle copy = new Bundle(); copy.put("items", escrow);
         for (Bundlable value : copy.getCollection("items")) {
@@ -204,7 +204,6 @@ public final class ExtractionProfile {
             else if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring&&h.belongings.ring==null){h.belongings.ring=(com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring)i;h.belongings.ring.activate(h);}
             else if (!i.collect(h.belongings.backpack)) throw new IllegalStateException("준비 물품이 가방에 들어가지 않습니다.");
         }
-        ensureBags(h);
         if(h.belongings.weapon==null){
             h.belongings.weapon=(KindOfWeapon)new BasicExpeditionSword().identify(false);
             h.belongings.weapon.activate(h);
@@ -225,6 +224,7 @@ public final class ExtractionProfile {
         for(Item i:h.belongings)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.shatteredpixel.shatteredpixeldungeon.items.Generator.removeArtifact((Class<? extends com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact>)i.getClass());
         h.HTBoost += Math.round(bonus(ExtractionGrowth.Stat.HEALTH)); h.updateHT(true); h.HP=h.HT;
         h.STR += Math.round(bonus(ExtractionGrowth.Stat.STRENGTH));
+        ExtractionSkillQuickslots.restore(h);
     }
     public float bonus(ExtractionGrowth.Stat stat) { return bonus(stat, -1); }
     public float bonus(ExtractionGrowth.Stat stat, int family) {

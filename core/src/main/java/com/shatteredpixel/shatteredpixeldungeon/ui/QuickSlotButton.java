@@ -97,7 +97,7 @@ public class QuickSlotButton extends Button {
 					}
 				} else {
 					Item item = select(slotNum);
-					if (Dungeon.hero.belongings.contains(item) && !GameScene.cancel()) {
+					if (com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.usableReference(Dungeon.hero,item) && !GameScene.cancel()) {
 						GameScene.centerNextWndOnInvPane();
 						item.execute(Dungeon.hero);
 						if (item.usesTargeting) {
@@ -141,7 +141,7 @@ public class QuickSlotButton extends Button {
 			@Override
 			protected String hoverText() {
 				if (item == null){
-					return Messages.titleCase(Messages.get(WndKeyBindings.class, "quickslot_" + (slotNum+1)));
+					return "퀵슬롯 "+(slotNum+1);
 				} else {
 					return super.hoverText();
 				}
@@ -183,7 +183,7 @@ public class QuickSlotButton extends Button {
 
 	@Override
 	public GameAction keyAction() {
-		switch (slotNum){
+		switch (slotNum-Dungeon.quickslot.firstSlot(QuickSlot.pageSize(PixelScene.uiCamera.width))){
 			case 0:
 				return SPDAction.QUICKSLOT_1;
 			case 1:
@@ -209,7 +209,7 @@ public class QuickSlotButton extends Button {
 	@Override
 	protected String hoverText() {
 		if (slot.item == null){
-			return Messages.titleCase(Messages.get(WndKeyBindings.class, "quickslot_" + (slotNum+1)));
+			return "퀵슬롯 "+(slotNum+1);
 		} else {
 			return super.hoverText();
 		}
@@ -218,7 +218,7 @@ public class QuickSlotButton extends Button {
 	@Override
 	protected void onClick() {
 		if (Dungeon.hero.ready && !GameScene.cancel()) {
-			GameScene.selectItem(itemSelector);
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.chooseBinding(slotNum,()->GameScene.selectItem(itemSelector));
 		}
 	}
 
@@ -271,7 +271,11 @@ public class QuickSlotButton extends Button {
 	}
 
 	public static void set(int slotNum, Item item){
-		Dungeon.quickslot.setSlot( slotNum , item );
+		if(Dungeon.hero!=null&&Dungeon.hero.extractionRaidID!=0){
+            try{com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().bindSkill(slotNum,item instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.Shortcut?((com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.Shortcut)item).key:null);}
+            catch(IllegalStateException e){GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage(e.getMessage()));return;}
+        }
+        Dungeon.quickslot.setSlot( slotNum , item );
 		Item.updateQuickslot();
 
 		//Remember if the player adds the waterskin as one of their first actions.
@@ -304,7 +308,8 @@ public class QuickSlotButton extends Button {
 	
 	private void enableSlot() {
 		slot.enable(Dungeon.quickslot.isNonePlaceholder( slotNum )
-				&& (!Dungeon.hero.belongings.lostInventory() || Dungeon.quickslot.getItem(slotNum).keptThroughLostInventory()));
+				&& com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.usableReference(Dungeon.hero,Dungeon.quickslot.getItem(slotNum))
+                && (!Dungeon.hero.belongings.lostInventory() || Dungeon.quickslot.getItem(slotNum).keptThroughLostInventory()));
 	}
 
 	public void slotMargins( int left, int top, int right, int bottom){

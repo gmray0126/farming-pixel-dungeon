@@ -277,6 +277,12 @@ public final class ExtractionGrowth {
         add(list,"strength_archer","사격 단련",10,6,0,3,new String[]{"ranged_7"},Stat.STRENGTH,1f);
         add(list,"strength_dagger","쌍수 단련",5,6,0,3,new String[]{"dagger_7"},Stat.STRENGTH,1f);
         add(list,"strength_fist","격투 단련",9,6,0,3,new String[]{"fist_7"},Stat.STRENGTH,1f);
+        String[] bagNames={"씨앗 가방","스크롤 가방","물약 가방","마법 가방"};
+        for(int bag=0;bag<4;bag++){
+            Node n=new Node(ExtractionBags.NODES[bag],bagNames[bag]+" 해금",2,7,bag,bag==3?3:2,new String[]{bag==0?"pack":"porter"});
+            n.utilityDescription=bagNames[bag]+"을 매 원정 시작 시 지급합니다. 사망 후에도 다시 지급합니다. 노드를 초기화하면 가방 지급이 잠깁니다. 전용 가방은 상인이 판매하지 않습니다.";
+            list.add(n);
+        }
         for(int b=0;b<ExtractionHybridTrees.PREFIXES.length;b++)for(Node n:list){
             String prefix=ExtractionHybridTrees.PREFIXES[b];
             if(n.id.equals(prefix+"_0"))n.required=new String[]{ExtractionClassUtilities.ROOTS[b],ExtractionClassUtilities.ROOTS[(b+1)%6]};

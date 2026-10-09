@@ -38,11 +38,11 @@ jobs:
           Copy-Item $jar.FullName pc-input/
           & "$env:JAVA_HOME/bin/jlink.exe" --module-path "$env:JAVA_HOME/jmods" --add-modules java.base,java.desktop,java.management,jdk.unsupported,jdk.crypto.ec,jdk.crypto.cryptoki,jdk.management --strip-debug --no-header-files --no-man-pages --compress=2 --output pc-runtime
           if ($LASTEXITCODE -ne 0) { throw 'Runtime bundle failed' }
-          & "$env:JAVA_HOME/bin/jpackage.exe" --type app-image --name FarmingPixelDungeon --app-version 0.41.0 --input pc-input --main-jar $jar.Name --main-class com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher --runtime-image pc-runtime --icon desktop/src/main/assets/icons/windows.ico --dest pc-output
+          & "$env:JAVA_HOME/bin/jpackage.exe" --type app-image --name FarmingPixelDungeon --app-version 0.42.0 --input pc-input --main-jar $jar.Name --main-class com.shatteredpixel.shatteredpixeldungeon.desktop.DesktopLauncher --runtime-image pc-runtime --icon desktop/src/main/assets/icons/windows.ico --dest pc-output
           if ($LASTEXITCODE -ne 0) { throw 'Windows image failed' }
           Copy-Item desktop/README-PC.txt pc-output/README-PC.txt
           Copy-Item LICENSE.txt pc-output/LICENSE.txt
-          Compress-Archive -Path pc-output/* -DestinationPath pc-delivery/Farming_Pixel_Dungeon_PC_v0.41.0_Windows.zip -CompressionLevel Optimal
+          Compress-Archive -Path pc-output/* -DestinationPath pc-delivery/Farming_Pixel_Dungeon_PC_v0.42.0_Windows.zip -CompressionLevel Optimal
           Get-FileHash pc-delivery/*.zip -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $([IO.Path]::GetFileName($_.Path))" } | Set-Content pc-delivery/SHA256SUMS.txt
       - name: Provide software graphics for the build machine
         shell: pwsh

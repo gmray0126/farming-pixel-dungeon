@@ -39,7 +39,7 @@ public class ExtractionHybridTest {
     private Mob enemy(){Mob m=new Rat();m.HP=m.HT=100;return m;}
     private void learn(String tree,int... nodes){for(int n:nodes)p.nodes.add(tree+"_"+n);}
     @Test public void sixTreesRequireBothClassNeighboursAndAllThreeConvergingPaths(){
-        assertEquals(625,ExtractionGrowth.NODES.length);
+        assertEquals(629,ExtractionGrowth.NODES.length);
         for(int b=25;b<31;b++){
             assertEquals(15,ExtractionGrowth.BRANCH_NODES[b].length);
             ExtractionGrowth.Node root=ExtractionGrowth.NODES[ExtractionGrowth.BRANCH_NODES[b][0]];

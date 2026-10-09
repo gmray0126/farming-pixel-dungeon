@@ -22,6 +22,58 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void quickslotPagesAndSkillReferencesRoundTripWithoutOccupyingInventory() throws Exception {
+        profile.nodes.add("skill_stealth");profile.bindSkill(11,"stealth");profile.begin();
+        Hero hero=new Hero();hero.extractionRaidID=profile.raidID;Dungeon.hero=hero;profile.initialize(hero);
+        assertEquals(12,com.shatteredpixel.shatteredpixeldungeon.QuickSlot.SIZE);
+        assertTrue(Dungeon.quickslot.getItem(11) instanceof ExtractionSkillQuickslots.Shortcut);
+        assertFalse(hero.belongings.contains(Dungeon.quickslot.getItem(11)));assertTrue(ExtractionSkillQuickslots.usableReference(hero,Dungeon.quickslot.getItem(11)));
+        Dungeon.quickslot.showSlot(11,4);assertEquals(8,Dungeon.quickslot.firstSlot(4));assertEquals(3,Dungeon.quickslot.pageCount(4));
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();Dungeon.quickslot.storePlaceholders(saved);
+        Dungeon.quickslot.reset();Dungeon.quickslot.restorePlaceholders(saved);
+        assertEquals("stealth",((ExtractionSkillQuickslots.Shortcut)Dungeon.quickslot.getItem(11)).key);assertEquals(8,Dungeon.quickslot.firstSlot(4));
+        assertEquals(6,Dungeon.quickslot.firstSlot(6));Dungeon.quickslot.nextPage(6);assertEquals(0,Dungeon.quickslot.firstSlot(6));
+        profile.settle(profile.raidID,false);forgetProfile();profile=ExtractionProfile.get();assertEquals("stealth",profile.skillQuickslots[11]);
+        profile.begin();Hero next=new Hero();next.extractionRaidID=profile.raidID;Dungeon.hero=next;Dungeon.quickslot.reset();profile.initialize(next);assertNotNull(Dungeon.quickslot.getItem(11));
+        profile.nodes.clear();ExtractionSkillQuickslots.restore(next);assertNull(Dungeon.quickslot.getItem(11));
+    }
+    @Test public void quickslotStealthCallsTheNativeHandlerAndCannotBypassChargeOrLearning(){
+        profile.nodes.add("skill_stealth");profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.level=Dungeon.newLevel();
+        Hero hero=Dungeon.hero;hero.pos=Dungeon.level.entrance();hero.sprite=new EffectSprite();hero.ready=true;
+        ExtractionSkillQuickslots.Shortcut skill=new ExtractionSkillQuickslots.Shortcut("stealth");
+        skill.execute(hero);assertEquals(80,hero.extractionSkills.armor.charge,0.001f);assertNotNull(hero.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Invisibility.class));
+        hero.ready=true;hero.extractionSkills.armor.charge=19;skill.execute(hero);assertEquals(19,hero.extractionSkills.armor.charge,0.001f);
+        profile.nodes.clear();hero.extractionSkills.armor.charge=100;skill.execute(hero);assertEquals(100,hero.extractionSkills.armor.charge,0.001f);hero.sprite=null;
+    }
+    @Test public void skillCatalogIncludesHybridSpellAndIndividualMonkActions(){
+        profile.nodes.add("skill_stealth");profile.nodes.add("skill_prayer");profile.nodes.add("subclass_monk");profile.nodes.add("alchemy_0");profile.nodes.add("alchemy_2");profile.nodes.add("holy_0");profile.nodes.add("holy_2");profile.nodes.add("blood_0");
+        Hero hero=new Hero();hero.extractionRaidID=1;Dungeon.hero=hero;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
+        assertNotNull(ExtractionSkillQuickslots.find(hero,"stealth"));assertNotNull(ExtractionSkillQuickslots.find(hero,"spell_GuidingLight"));assertNotNull(ExtractionSkillQuickslots.find(hero,"monk_0"));
+        assertNotNull(ExtractionSkillQuickslots.find(hero,"coat_2"));assertNull(ExtractionSkillQuickslots.find(hero,"coat_3"));assertNotNull(ExtractionSkillQuickslots.find(hero,"holy_judge"));assertNotNull(ExtractionSkillQuickslots.find(hero,"blood_oath"));
+    }
+    @Test public void bagNodesReplaceAutomaticBagsAndOldContentsSurviveRemoval(){
+        profile.begin();Hero hero=new Hero();hero.extractionRaidID=profile.raidID;Dungeon.hero=hero;profile.initialize(hero);
+        assertEquals(1,hero.belongings.getBags().size());assertNull(com.shatteredpixel.shatteredpixeldungeon.levels.rooms.special.ShopRoom.ChooseBag(hero.belongings));
+        Bag old=new com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier();Item potion=new SupplyHealingPotion().quantity(4);old.items.add(potion);hero.belongings.backpack.items.add(old);
+        ExtractionBags.sync(hero);assertEquals(1,hero.belongings.getBags().size());assertEquals(4,hero.belongings.getItem(SupplyHealingPotion.class).quantity());
+        profile.nodes.add("pack");profile.nodes.add("porter");profile.nodes.add("bag_potion");ExtractionBags.sync(hero);ExtractionBags.sync(hero);
+        assertEquals(2,hero.belongings.getBags().size());assertTrue(hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.PotionBandolier.class).items.contains(potion));
+        assertNull(hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch.class));
+    }
+    @Test public void oldMerchantBagStockIsRemovedWithoutRemovingArtifacts(){
+        com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel level=new com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel();level.heaps=new com.watabou.utils.SparseArray<>();
+        com.shatteredpixel.shatteredpixeldungeon.items.Heap heap=new com.shatteredpixel.shatteredpixeldungeon.items.Heap();heap.pos=5;heap.type=com.shatteredpixel.shatteredpixeldungeon.items.Heap.Type.FOR_SALE;heap.items.add(new com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch());level.heaps.put(5,heap);
+        com.shatteredpixel.shatteredpixeldungeon.items.Heap relic=new com.shatteredpixel.shatteredpixeldungeon.items.Heap();relic.pos=6;relic.type=com.shatteredpixel.shatteredpixeldungeon.items.Heap.Type.FOR_SALE;relic.items.add(new ExpeditionArtifacts.GreedPouch());level.heaps.put(6,relic);
+        ExtractionBags.removeShopStock(level);assertNull(level.heaps.get(5));assertNotNull(level.heaps.get(6));
+    }
+    @Test public void greedPouchIsAnEquippablePassiveArtifactWithItsOwnIcon(){
+        Hero hero=new Hero();hero.extractionRaidID=1;Dungeon.hero=hero;ExpeditionArtifacts.GreedPouch greed=new ExpeditionArtifacts.GreedPouch();
+        assertFalse(ExtractionBags.nodeBag(greed));assertNotEquals(new com.shatteredpixel.shatteredpixeldungeon.items.bags.VelvetPouch().image(),greed.image());
+        assertTrue(greed.actions(hero).contains(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.AC_EQUIP));assertEquals(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.AC_EQUIP,greed.defaultAction());
+        hero.belongings.artifact=greed;assertTrue(ExpeditionArtifacts.has(hero,ExpeditionArtifacts.GreedPouch.class));assertEquals("VIEW_GREED",greed.defaultAction());assertTrue(greed.actions(hero).contains("VIEW_GREED"));
+        Dungeon.gold=250;assertEquals(110,ExpeditionArtifacts.incoming(hero,100));greed.cursed=true;assertFalse(ExpeditionArtifacts.has(hero,ExpeditionArtifacts.GreedPouch.class));assertEquals(100,ExpeditionArtifacts.incoming(hero,100));
+    }
     @Test public void everyRequiredParentIsMandatoryAndAllNodesRemainReachable(){
         java.util.Set<String> reached=new java.util.HashSet<>();boolean changed;
         do{changed=false;for(ExtractionGrowth.Node n:ExtractionGrowth.NODES)if(!reached.contains(n.id)&&ExtractionGrowth.unlocked(n,reached)){reached.add(n.id);changed=true;}}while(changed);
@@ -275,7 +327,8 @@ public class ExtractionProfileTest {
             assertNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Stylus.class));
         } finally {user.set(null,previous);}
     }
-    @Test public void allBagsRoutePreparedSuppliesAndRemainUniqueAfterSave() throws Exception {
+    @Test public void unlockedBagsRoutePreparedSuppliesAndRemainUniqueAfterSave() throws Exception {
+        profile.points=100;for(String id:ExtractionBags.NODES)learnPath(id);
         Item potion=new SupplyHealingPotion().quantity(2);
         Item scroll=new ExtractionShop.SupplyUpgrade().quantity(3);
         Item seed=new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed();
@@ -293,7 +346,8 @@ public class ExtractionProfileTest {
         assertEquals(2,h.belongings.getItem(SupplyHealingPotion.class).quantity());
         assertTrue(Dungeon.LimitedDrops.MAGICAL_HOLSTER.dropped());
     }
-    @Test public void freeBagsDepositContentsOnceAndAreReissuedAfterDeath() throws Exception {
+    @Test public void nodeBagsDepositContentsOnceAndAreReissuedAfterDeath() throws Exception {
+        profile.points=100;for(String id:ExtractionBags.NODES)learnPath(id);
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);Dungeon.gold=0;
         new ExtractionShop.SupplyUpgrade().quantity(2).collect(h.belongings.backpack);
         new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed().quantity(3).collect(h.belongings.backpack);
@@ -915,7 +969,7 @@ public class ExtractionProfileTest {
         SPDSettings.set(new HeadlessPreferences("test-preferences.xml", folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, folder.getRoot().getAbsolutePath()+"/");
         com.shatteredpixel.shatteredpixeldungeon.Badges.reset();
-        Dungeon.hero = null;
+        Dungeon.hero = null;Dungeon.level=null;Dungeon.quickslot.reset();com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton.reset();
         GamesInProgress.curSlot = 1;
         forgetProfile();
         profile = ExtractionProfile.get();
@@ -1165,7 +1219,7 @@ public class ExtractionProfileTest {
         profile.points=100;learnPath("porter");int cap=profile.capacity(),stored=profile.stash.size();assertTrue(cap>12);
         for(int i=0;i<cap;i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
         profile.resetNodes();assertEquals(12,profile.prepared.size());assertEquals(stored+cap-12,profile.stash.size());
-        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(16,h.belongings.backpack.items.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(12,h.belongings.backpack.items.size());
     }
     @Test public void firstArcherNodeGivesTheNativeBowEveryRaidAndResetLocksItAgain(){
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);
@@ -1179,7 +1233,7 @@ public class ExtractionProfileTest {
     }
     @Test public void freeBowFitsAFullLoadoutAndPreparedBowNeverReplacesTheSword(){
         learnPath("ranged_0");for(int i=0;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
-        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(17,h.belongings.backpack.items.size());
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;profile.initialize(h);assertEquals(13,h.belongings.backpack.items.size());
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");assertNotNull(restored.belongings.getItem(NodeSpiritBow.class));
         Dungeon.gold=0;profile.settle(profile.raidID,true);for(Item item:profile.stash)assertFalse(item instanceof NodeSpiritBow);
@@ -1188,7 +1242,7 @@ public class ExtractionProfileTest {
         assertEquals(1,bows);assertTrue(h.belongings.weapon instanceof BasicExpeditionSword);
     }
     @Test public void graphPreserves178ExistingNodesAndAddsClassSkillsAndSubclasses() {
-        assertEquals(625, ExtractionGrowth.NODES.length);
+        assertEquals(629, ExtractionGrowth.NODES.length);
         java.util.HashSet<String> ids=new java.util.HashSet<>();
         int totalCost=0,convergences=0;
         for(int i=0;i<ExtractionGrowth.NODES.length;i++){
@@ -1201,7 +1255,7 @@ public class ExtractionProfileTest {
         }
         assertEquals(25,convergences);
         assertEquals(422,totalCost);
-        for(int b=0;b<19;b++)assertEquals(b==18?12:b==2?8:b>=3&&b<=11&&b!=7?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
+        for(int b=0;b<19;b++)assertEquals(b==18?12:b==2?12:b>=3&&b<=11&&b!=7?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
         profile.points=1000;
@@ -1407,7 +1461,7 @@ public class ExtractionProfileTest {
         for(ExtractionGrowth.Node node:ExtractionGrowth.NODES)profile.nodes.add(node.id);profile.xp=100000;profile.points=1000;
         com.watabou.utils.Bundle saved=(com.watabou.utils.Bundle)snapshot.invoke(profile);saved.put("active",true);saved.put("raid",7);
         FileUtils.bundleToFile(ExtractionProfile.FILE,saved);forgetProfile();profile=ExtractionProfile.get();
-        assertTrue(profile.active);assertEquals(625,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
+        assertTrue(profile.active);assertEquals(629,profile.nodes.size());assertEquals(100,profile.growthLevel());assertEquals(0,profile.points);
         profile.abandon();assertTrue(profile.nodes.isEmpty());assertEquals(300,profile.points);assertEquals(2475,profile.xp);
         forgetProfile();profile=ExtractionProfile.get();assertEquals(300,profile.points);assertTrue(profile.result.contains("300 P"));
     }

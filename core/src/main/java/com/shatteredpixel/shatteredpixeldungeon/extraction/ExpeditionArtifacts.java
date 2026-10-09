@@ -86,9 +86,15 @@ public final class ExpeditionArtifacts {
         @Override public ItemSprite.Glowing glowing(){return new ItemSprite.Glowing(0xD64254);}
     }
     public static class GreedPouch extends Relic {
-        public GreedPouch(){image=ItemSpriteSheet.POUCH;defaultAction=AC_EQUIP;}
+        private static final String VIEW="VIEW_GREED";
+        public GreedPouch(){image=ItemSpriteSheet.SANDBAG;defaultAction=AC_EQUIP;}
+        @Override public int image(){return ItemSpriteSheet.SANDBAG;}
+        @Override public String defaultAction(){return Dungeon.hero!=null&&isEquipped(Dungeon.hero)?VIEW:AC_EQUIP;}
+        @Override public ArrayList<String> actions(Hero hero){ArrayList<String> a=super.actions(hero);if(isEquipped(hero))a.add(VIEW);return a;}
+        @Override public String actionName(String action,Hero hero){return VIEW.equals(action)?"자동 적용 효과 확인":super.actionName(action,hero);}
+        @Override public void execute(Hero hero,String action){super.execute(hero,action);if(VIEW.equals(action))GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndMessage(desc()+"\n\n현재 상태: "+(has(hero,GreedPouch.class)?"효과 적용 중":"저주 또는 마법 면역으로 효과 정지")));}
         @Override public String name(){return "탐욕의 주머니";}
-        @Override public String desc(){return "현재 챕터에서 최상위 티어 장비의 생성 비중과 정예 장비 드롭 확률이 10%p 증가합니다. 원정 골드 250 G마다 받는 피해 +10%(최대 +30%). 창고 골드는 계산하지 않습니다."+progress();}
+        @Override public String desc(){return "전용 가방이 아닌 착용 유물입니다. 유물 칸에 착용하면 자동으로 적용되며, 충전을 사용해 여는 아이템이 아닙니다.\n\n현재 챕터에서 최상위 티어 장비의 생성 비중과 정예 장비 드롭 확률이 10%p 증가합니다. 원정 골드 250 G마다 받는 피해 +10%(최대 +30%). 창고 골드는 계산하지 않습니다."+progress();}
         @Override public ItemSprite.Glowing glowing(){return new ItemSprite.Glowing(0xE4BD58);}
     }
     public static class BrokenHourglass extends Relic {
