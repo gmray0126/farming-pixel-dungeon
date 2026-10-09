@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.41.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.41.0-farming)
+[v0.42.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.42.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.41.0-farming/Farming_Pixel_Dungeon_v0.41.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.41.0-farming/Farming_Pixel_Dungeon_PC_v0.41.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.42.0-farming/Farming_Pixel_Dungeon_v0.42.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.42.0-farming/Farming_Pixel_Dungeon_PC_v0.42.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,16 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.42.0 스킬 퀵슬롯과 가방 / Skill quickslots and bags
+
+퀵슬롯은 총 12칸이며 하단 퀵 페이지 버튼으로 바꿉니다. 좁은 모바일 화면에서는 4칸씩 3페이지, 넓은 화면에서는 6칸씩 2페이지를 표시합니다. 빈 칸을 누르거나 퀵슬롯을 길게 눌러 스킬·아이템을 등록하거나 비웁니다. 스킬 메뉴의 퀵슬롯 등록에서도 배운 직업 기술·기도·수도승 기술·혼합 스킬을 선택합니다. 등록은 다음 원정에도 유지하고 충전·재사용 조건은 기존 규칙을 따릅니다.
+
+씨앗·스크롤·물약·마법 가방은 탐사 계통의 각 해금 노드를 배워야 지급하며 상인은 판매하지 않습니다. 기존 무료 가방의 내용물은 보존합니다. 기본 배낭과 물통은 유지됩니다. 탐욕의 주머니는 전용 가방이 아닌 착용 유물로, 착용 후 자동 적용되며 클릭하면 효과와 상태를 확인합니다.
+
+Twelve quickslots use a page button: four per page on narrow screens and six on wide screens. Tap an empty slot or long-press one to bind a skill or item, or clear it. The skill menu also offers registration for learned class abilities, prayers, individual Monk moves, and active hybrid skills. Skill bindings persist into future expeditions; original resource and cooldown rules remain.
+
+Dedicated Seed, Scroll, Potion, and Magical bags require their new Exploration nodes and are not sold by dungeon merchants. Existing bag contents are preserved. The root backpack and waterskin remain. Greed Pouch is a passive equipped artifact, with a distinct icon and an effects/status action while equipped.
 
 ## v0.41.0 성장과 하드 / Growth and Hard mode
 
