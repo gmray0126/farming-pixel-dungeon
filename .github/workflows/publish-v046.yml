@@ -1,0 +1,81 @@
+name: Publish Farming Pixel Dungeon v0.46.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v046.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v046
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37959452070
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37959452143
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.46.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.46.0_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.46.0 / Farming Pixel Dungeon v0.46.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **힘 노드 범용화:** 무기·직업 계통에 있던 영구 힘 노드를 전투·생존·탐사와 정찰·야전 치료·식량 활용·잠행·기세·위기 대응으로 이동했습니다.
+          - 힘 노드의 선행 조건에서도 무기·직업 노드를 제거했습니다. 원하는 무기 빌드와 관계없이 범용 능력에 투자하여 힘을 얻습니다.
+          - 힘 노드는 총 10개, 각 +1이며 기존 노드별 비용과 습득 식별자는 유지합니다. 기본 힘 10에서 힘 20까지 모두 배우는 범용 경로는 총 191 P가 필요합니다.
+          - 성장 지도에서 옮겨진 힘 노드 위치를 조정하고, 설명에 범용 영구 힘임을 명시했습니다.
+          - 이미 배운 힘 노드와 영구 힘, 장비, 경험치와 포인트를 보존합니다. 강제 초기화하지 않습니다. 기존 프리셋은 새 선행 조건으로 검사하므로 필요한 경우 새 경로로 배분한 뒤 다시 저장하세요.
+          
+          ## English changes
+          - **Common strength growth:** Move permanent strength nodes from weapon paths into Combat, Survival, Exploration, Scouting, Field Medicine, Food, Stealth, Momentum, and Hazard Defense.
+          - Their complete prerequisite paths no longer require weapon or class nodes. Invest in common abilities independently of your weapon build.
+          - Keep ten +1 nodes, their existing individual costs, and stable identifiers. Learning every common path to reach base strength 20 costs 191 points.
+          - Adjust atlas positions and explicitly label strength as a permanent common bonus.
+          - Preserve already learned strength nodes and permanent strength, gear, experience, and points without a forced reset. Existing presets are checked against the new prerequisites; reallocate and resave if necessary.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. Strength coverage checks all ten +1 nodes, common-only prerequisites, substantial point investment, strength 20 without a ring, save/restore, and raid-only strength potions. Windows packaging and native launch/depart/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/54375340e23ba1a9cf9d7c4fa5aca6b523fff837)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.46.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.46.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
