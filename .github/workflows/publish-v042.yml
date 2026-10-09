@@ -1,0 +1,84 @@
+name: Publish Farming Pixel Dungeon v0.42.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v042.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v042
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 37907025347
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 37906473534
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.42.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.42.0_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.42.0 / Farming Pixel Dungeon v0.42.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **스킬 퀵슬롯:** 습득한 원본 직업 기술, 기도 주문, 수도승의 개별 기술, 혼합 트리의 사용 스킬을 퀵슬롯에 등록할 수 있습니다. 스킬 바로가기는 가방 칸을 차지하지 않으며 대상 선택으로 바로 넘어갑니다. 충전·재사용 시간·마법 면역·습득 여부는 기존 규칙을 따릅니다.
+          - **퀵슬롯 확장:** 총 12칸으로 늘렸습니다. 하단의 퀵 페이지 버튼으로 전환하며 좁은 모바일 화면은 4칸씩 3페이지, 넓은 화면은 6칸씩 2페이지입니다. 중간 폭에서는 5칸씩 표시합니다. 1~6 단축키는 현재 페이지의 위치에 대응합니다.
+          - 빈 칸이나 퀵슬롯을 길게 누르면 스킬 등록·아이템 등록·비우기를 선택할 수 있습니다. 스킬 메뉴의 퀵슬롯 등록에서도 배운 기술과 위치를 고를 수 있습니다. 스킬 등록은 이어하기뿐 아니라 다음 원정에도 유지됩니다. 초기화로 미습득 상태가 된 기술은 사용할 수 없습니다.
+          - **탐욕의 주머니:** 벨벳 주머니와 구별되는 아이콘을 적용했습니다. 착용 후 기본 동작이 재장착을 시도하던 문제를 고쳐 자동 적용 효과 확인으로 바꿨습니다. 유물 칸에 착용해 작동하는 패시브이며, 저주·마법 면역 중에는 효과가 중지됩니다.
+          - **가방 노드:** 씨앗·스크롤·물약·마법 가방의 시작 자동 지급을 제거했습니다. 탐사 계통에서 가방별 노드를 배워야 매 원정에 지급합니다. 씨앗 가방은 짐 정리 후 2포인트, 스크롤·물약 가방은 원정 준비 후 각 2포인트, 마법 가방은 원정 준비 후 3포인트입니다. 사망 뒤에도 배운 가방을 다시 지급합니다.
+          - 인게임 상인은 전용 가방을 판매하지 않습니다. 기존 저장에 있는 가방 판매 재고도 제거합니다. 이전 무료 가방을 제거할 때 내용물은 기본 가방으로 옮겨 보존하며 용량 초과분도 삭제하지 않습니다. 기본 배낭과 이슬을 담는 물통, 검·갑옷·돌멩이 보급은 유지합니다.
+          
+          ## English changes
+          - **Skill quickslots:** Bind learned native class abilities, cleric spells, individual Monk moves, and active hybrid-tree skills. Skill references take no inventory space and go straight to targeting when necessary. Original charge, cooldown, immunity, and learning requirements still apply.
+          - **Twelve slots:** Switch pages with the toolbar's Quick page button. Narrow mobile layouts show four slots across three pages; wide layouts show six across two pages. Intermediate widths show five per page. Keys 1–6 address positions on the current page.
+          - Tap an empty slot or long-press a quickslot to register a skill or item, or clear it. The skill menu also has a registration entry. Skill bindings survive save/resume and future expeditions; unlearned skills become unavailable after a growth reset.
+          - **Greed Pouch:** It has an icon distinct from the Velvet Pouch. Using its default action while equipped now displays its passive effects instead of trying to equip it again. Effects require an equipped, uncursed artifact and stop during magic immunity.
+          - **Node-unlocked bags:** Remove automatic starting Seed, Scroll, Potion, and Magical bags. Learn each new Exploration node for reissue every expedition, including after death. The Seed Pouch costs two points after Pack Organization; Scroll and Potion bags each cost two after Expedition Preparation, and the Magical Holster costs three.
+          - Dungeon merchants no longer offer dedicated bags; old saved bag stock is removed. Contents of removed free bags are preserved in the backpack even if they temporarily exceed capacity. The root backpack, waterskin, and fallback sword/armor/stone supplies remain.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          All 170 core tests and the Android build passed. Checks cover skill execution and costs, binding persistence, paging, bag unlocks, old contents, merchant stock, and Greed Pouch behavior. Windows build and native launch/depart/resume checks passed. The follow-up commit updates only test expectations; game code is identical to the verified Windows source. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to the upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [Windows 검증 소스 / Windows tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/d0ab3427b659d46dce196378d5df91c143d9ad3f)
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/deb98f6f79aecdaf985caee4e00d293e0b25a808)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.42.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.42.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
