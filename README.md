@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.40.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.40.0-farming)
+[v0.41.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.41.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.40.0-farming/Farming_Pixel_Dungeon_v0.40.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.40.0-farming/Farming_Pixel_Dungeon_PC_v0.40.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.41.0-farming/Farming_Pixel_Dungeon_v0.41.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.41.0-farming/Farming_Pixel_Dungeon_PC_v0.41.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,16 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.41.0 성장과 하드 / Growth and Hard mode
+
+성장 노드는 표시된 모든 선행 조건을 요구합니다. 힘은 모두 +1인 10개 노드를 여러 계통 깊숙이 나누어 배치했습니다. 기존 배분은 한 번 초기화하여 포인트를 돌려주며, 진행 중인 원정은 종료한 뒤 환급합니다. 경험치와 보관 장비는 유지됩니다.
+
+원정 탭에서 일반/하드를 선택합니다. 하드는 해당 챕터 일반 대비 적 체력 2.5배·공격 피해 2배에 추가 몬스터·정예·방어 관통을 적용합니다. 하드에서만 새 레어 장비가 나오며 보스는 해당 챕터 최대 티어 레어 무기 1개를 보장합니다. 레어는 해당 장비의 공격 피해 또는 물리 방어를 20% 높이고 강화 상한과 힘 요구치는 바꾸지 않습니다.
+
+Growth nodes require every listed prerequisite. Ten +1 strength nodes are spread across deep paths. Existing allocations receive a one-time reset and point refund, deferred until the active expedition ends. Experience and stored gear remain.
+
+Select Normal or Hard in the expedition tab. Hard adds 2.5× enemy health and 2× damage, more monsters, elites, and armor penetration. New Rare equipment drops only in Hard; each chapter boss guarantees one Rare weapon at its chapter tier ceiling. Rare quality adds 20% attack damage or physical defense without changing strength requirements or upgrade limits.
 
 ## 챕터 / Chapters
 
@@ -76,9 +86,9 @@ Use **기록** at the top right of the hub to open the original personal records
 
 ## 로비 연금술과 보급 / Hub alchemy and supplies
 
-로비 상단 여섯 번째 **연금술** 탭의 **연금술 열기** 버튼에서 재료를 최대 3개 넣고 기존 연금술 제작법으로 제작합니다. 에너지 1은 10 G로 구매하거나 창고 재료를 분해하여 얻습니다. 재료·에너지·완성품은 한 번에 저장되며 원정 중에는 이용할 수 없습니다. 장신구 촉매의 세 선택지는 저장됩니다.
+로비 상단 여섯 번째 **연금술** 탭의 **연금술 열기** 버튼에서 재료를 최대 3개 넣고 기존 연금술 제작법으로 제작합니다. 에너지 1은 5 G로 구매하거나 창고 재료를 분해하여 얻습니다. 재료·에너지·완성품은 한 번에 저장되며 원정 중에는 이용할 수 없습니다. 장신구 촉매의 세 선택지는 저장됩니다.
 
-Use **연금술 열기** in the sixth **연금술** hub tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 10 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
+Use **연금술 열기** in the sixth **연금술** hub tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 5 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
 
 식량은 층에서 자연 생성되며 몬스터 전리품과 상점에서도 얻을 수 있습니다. 출격 시 준비한 무기나 갑옷이 없으면 해당 보급 검·천 갑옷을 중복 없이 지급하고, 돌멩이 3개와 빈 물통(미준비 시)을 지급합니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
 
