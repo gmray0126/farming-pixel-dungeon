@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.45.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.45.0-farming)
+[v0.46.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.46.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.45.0-farming/Farming_Pixel_Dungeon_v0.45.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.45.0-farming/Farming_Pixel_Dungeon_PC_v0.45.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.46.0-farming/Farming_Pixel_Dungeon_v0.46.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.46.0-farming/Farming_Pixel_Dungeon_PC_v0.46.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.46.0 범용 힘 노드 / Common strength nodes
+
+영구 힘은 무기·직업 대신 범용 전투·생존·탐사와 유틸리티 계통에서 얻습니다. 선행 조건에도 무기·직업 노드가 없습니다. 총 10개가 각 +1이며 기본 힘 10에서 20까지 모든 경로를 배우려면 191 P가 필요합니다. 기존에 배운 힘과 포인트는 보존하며 강제로 초기화하지 않습니다.
+
+Permanent strength comes from common growth and utility paths, with no weapon/class prerequisites. Ten +1 nodes require 191 total points across their paths to reach base strength 20. Existing learned strength and points are preserved without a forced reset.
 
 ## v0.45.0 지팡이 강화 / Staff upgrades
 
