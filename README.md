@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.42.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.42.0-farming)
+[v0.43.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.43.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.42.0-farming/Farming_Pixel_Dungeon_v0.42.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.42.0-farming/Farming_Pixel_Dungeon_PC_v0.42.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.43.0-farming/Farming_Pixel_Dungeon_v0.43.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.43.0-farming/Farming_Pixel_Dungeon_PC_v0.43.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.43.0 무기 분류 / Weapon classification
+
+무기 상세창 맨 위에서 무기 종류와 적용 성장 계통을 확인합니다. 소검은 검 계통입니다. 맨손도 격투 판정으로 격투 노드 효과를 받으며, 해당 노드 설명에 적용 대상을 표시합니다. 난이도 버튼은 '하드'로 표시하고 레어 드롭 정보는 원정 설명에 안내합니다.
+
+Weapon details show the type and matching growth family first. Shortswords use Sword growth. Bare hands receive Fist growth bonuses, explicitly noted on the Fist effect nodes. The difficulty button reads Hard; expedition descriptions explain Rare drops.
 
 ## v0.42.0 스킬 퀵슬롯과 가방 / Skill quickslots and bags
 
