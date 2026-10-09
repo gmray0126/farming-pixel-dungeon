@@ -123,7 +123,7 @@ public final class ExtractionGrowth {
         add(list, "survival_right_end", "끈질긴 생존", 1, 3, 2, 3, new String[]{"survival_right_2"}, Stat.HEALTH, 8f, Stat.EVASION, 10f);
         add(list, "survival_merge", "불굴", 1, 4, 1, 4, new String[]{"survival_left_end", "survival_right_end"}, Stat.HEALTH, 10f, Stat.DEFENSE, 2f);
         add(list, "survival_cap", "생존의 달인", 1, 5, 1, 5, new String[]{"survival_merge"}, Stat.HEALTH, 12f, Stat.DEFENSE, 3f);
-        add(list, "explore_left_end", "괴력", 2, 3, 0, 3, new String[]{"strength"}, Stat.STRENGTH, 1f);
+        add(list, "explore_left_end", "괴력", 2, 3, 0, 3, new String[]{"strength","porter"}, Stat.STRENGTH, 1f);
         add(list, "explore_right_1", "가벼운 발", 2, 1, 2, 1, new String[]{"pack"}, Stat.MOVE_SPEED, 5f);
         add(list, "explore_right_2", "수집가", 2, 2, 2, 2, new String[]{"explore_right_1"}, Stat.GOLD, 10f);
         add(list, "explore_right_end", "능숙한 이동", 2, 3, 2, 3, new String[]{"explore_right_2"}, Stat.MOVE_SPEED, 5f, Stat.GOLD, 10f);

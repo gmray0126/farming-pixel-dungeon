@@ -23,7 +23,7 @@ public final class ExtractionRarity {
     public static String description(Item item){
         if(!item.extractionRare)return "";
         boolean defensive=item instanceof Armor||item instanceof ExpeditionClothing;
-        return "\n\n_레어 등급_ · "+(defensive?"장비의 물리 방어 성능":"피해")+" +20%. 강화 상한·요구 힘·인챈트·문양은 기존 규칙을 따릅니다. 하드 원정에서 획득한 등급은 탈출·강화·보관 후에도 유지됩니다.";
+        return "\n\n_레어 등급_ · "+(defensive?"장비의 물리 방어 성능":item instanceof DamageWand?"직접 마법 피해":"물리 공격 피해")+" +20%. 강화 상한·요구 힘·인챈트·문양은 기존 규칙을 따릅니다. 하드 원정에서 획득한 등급은 탈출·강화·보관 후에도 유지됩니다.";
     }
     private ExtractionRarity(){}
 }

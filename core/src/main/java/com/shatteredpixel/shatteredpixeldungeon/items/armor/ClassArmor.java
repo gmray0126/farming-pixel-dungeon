@@ -120,6 +120,7 @@ abstract public class ClassArmor extends Armor {
 				break;
 		}
 		
+		classArmor.extractionRare=armor.extractionRare;classArmor.extractionQualityRolled=armor.extractionQualityRolled;
 		classArmor.tier = armor.tier;
 		classArmor.level(armor.trueLevel());
 		classArmor.augment = armor.augment;
@@ -237,6 +238,7 @@ abstract public class ClassArmor extends Armor {
 										((HeroSprite) hero.sprite).updateArmor();
 									}
 								}
+								extractionRare=armor.extractionRare;extractionQualityRolled=armor.extractionQualityRolled;
 								tier = armor.tier;
 								level(armor.trueLevel());
 								augment = armor.augment;

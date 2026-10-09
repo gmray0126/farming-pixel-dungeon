@@ -71,7 +71,7 @@ public class ExtractionProfileTest {
     }
     @Test public void hardBossGuaranteesRareGearAtTheCurrentChapterTierCeiling(){
         profile.selectHard(true);profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;
-        com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel level=new com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel();level.setSize(8,8);java.util.Arrays.fill(level.map,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.EMPTY);level.buildFlagMaps();Dungeon.level=level;Dungeon.depth=5;
+        com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel level=new com.shatteredpixel.shatteredpixeldungeon.levels.SewerLevel();level.blobs=new java.util.HashMap<>();level.heaps=new com.watabou.utils.SparseArray<>();level.setSize(8,8);java.util.Arrays.fill(level.map,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.EMPTY);level.buildFlagMaps();Dungeon.level=level;Dungeon.depth=5;
         com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo boss=new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Goo();boss.pos=10;ExtractionDifficulty.bossLoot(boss);
         boolean found=false;for(com.shatteredpixel.shatteredpixeldungeon.items.Heap heap:level.heaps.valueList())for(Item item:heap.items)if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon){assertTrue(item.extractionRare);assertEquals(2,WeaponUpgradeLimit.tier(item));found=true;}
         assertTrue(found);
@@ -222,9 +222,9 @@ public class ExtractionProfileTest {
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();item.storeInBundle(saved);saved.put("level",100);
         com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor copy=new com.shatteredpixel.shatteredpixeldungeon.items.armor.WarriorArmor();copy.restoreFromBundle(saved);assertEquals(2,copy.tier);assertEquals(6,copy.trueLevel());
         Hero hero=new Hero();hero.heroClass=com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
-        com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor source=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();source.upgrade(3);
+        com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor source=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();source.upgrade(3);source.extractionRare=true;
         com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor transferred=com.shatteredpixel.shatteredpixeldungeon.items.armor.ClassArmor.upgrade(hero,source);
-        assertEquals(1,transferred.tier);assertEquals(3,transferred.trueLevel());
+        assertEquals(1,transferred.tier);assertEquals(3,transferred.trueLevel());assertTrue(transferred.extractionRare);
     }
     @Test public void emergencyExtractionKeepsLootAndEarnedXpButRejectsAllCurrentContractCredit() throws Exception {
         ExtractionContracts.accept(profile,"hunt_1");ExtractionContracts.accept(profile,"record_1");ExtractionContracts.accept(profile,"supply_1");
@@ -1195,13 +1195,13 @@ public class ExtractionProfileTest {
             ExtractionGrowth.Node node=ExtractionGrowth.NODES[i];
             assertTrue(ids.add(node.id));
             assertTrue(!node.effects.isEmpty()||node.utilityDescription!=null);
-            for(int parent:node.parents)assertTrue("Primary paths must be acyclic", parent<i);
+            for(int parent:node.parents)assertTrue("Stable IDs may precede their new prerequisites", parent>=0&&parent<ExtractionGrowth.NODES.length&&parent!=i);
             if(node.parents.length==2)convergences++;
             if(i<178)totalCost+=node.cost;
         }
-        assertEquals(18,convergences);
+        assertEquals(25,convergences);
         assertEquals(422,totalCost);
-        for(int b=0;b<19;b++)assertEquals(b==18?12:b==0?11:b==1||b==2?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
+        for(int b=0;b<19;b++)assertEquals(b==18?12:b==2?8:b>=3&&b<=11&&b!=7?10:9,ExtractionGrowth.BRANCH_NODES[b].length);
     }
     @Test public void convergenceRequiresBothPathsAndPersists() throws Exception {
         profile.points=1000;
@@ -1263,21 +1263,16 @@ public class ExtractionProfileTest {
         old.put("raid",0);old.put("next",1);old.put("raid_xp",0);old.put("result","");
         FileUtils.bundleToFile(ExtractionProfile.FILE,old);
         forgetProfile();profile=ExtractionProfile.get();
-        assertEquals(4,profile.attackBonus());assertEquals(2,profile.defenseBonus());
-        assertEquals(16,profile.capacity());assertEquals(6f,profile.bonus(ExtractionGrowth.Stat.HEALTH),0.001f);
-        assertEquals(2f,profile.bonus(ExtractionGrowth.Stat.STRENGTH),0.001f);
-        assertEquals(123,profile.gold);assertEquals(9,profile.nodes.size());
+        assertEquals(0,profile.attackBonus());assertEquals(0,profile.defenseBonus());assertEquals(12,profile.capacity());
+        assertEquals(10,profile.startingStrength());assertEquals(123,profile.gold);assertEquals(200,profile.xp);assertTrue(profile.nodes.isEmpty());assertEquals(32,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(32,profile.points);
     }
-    @Test public void connectedWeaponRouteUnlocksAcrossSpecializations() throws Exception {
-        profile.points=1000;
-        learnPath("sword_2");
-        int connected=ExtractionGrowth.index("greatsword_5");
-        assertFalse(profile.nodes.contains("greatsword_4"));
-        assertTrue(profile.unlocked(connected));
-        profile.learn(connected);
-        forgetProfile();profile=ExtractionProfile.get();
-        assertTrue(profile.nodes.contains("greatsword_5"));
-        assertEquals(1,profile.defenseBonus(new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Greatsword()));
+    @Test public void connectedWeaponShortcutsCannotReplaceTheirOwnRequiredPath() throws Exception {
+        profile.points=1000;learnPath("sword_2");int next=ExtractionGrowth.index("greatsword_5");
+        assertFalse(profile.unlocked(next));
+        try{profile.learn(next);fail("A neighbouring specialization is insufficient");}catch(IllegalStateException expected){}
+        learnPath("greatsword_4");assertTrue(profile.unlocked(next));profile.learn(next);
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.nodes.contains("greatsword_5"));
     }
     @Test public void allFiveChapterUnlocksRequireSuccessfulExtractionAndPersist() throws Exception {
         for(int c=2;c<=5;c++){
