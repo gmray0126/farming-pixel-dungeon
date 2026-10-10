@@ -91,7 +91,11 @@ public class ExtractionHubScene extends PixelScene {
             },false);
             return;
         }
-        label("보관 창고  "+p.stash.size(),7,left,y,width,GOLD);
+        label("보관 창고  "+p.stash.size(),7,left,y,width-58,GOLD);
+        button("정렬·합치기",left+width-56,y-2,56,13,()->{
+            int combined=p.organizeStash();stashPage=0;refresh();
+            add(new WndMessage("창고를 종류별로 정렬했습니다.\n같은 소모품 "+combined+"칸을 합쳤습니다."));
+        },false);
         int count=4*stashRows, pages=Math.max(1,(p.stash.size()+count-1)/count);
         stashPage=Math.min(stashPage,pages-1);
         grid(p.stash,stashPage*count,stashRows,y+12,false);

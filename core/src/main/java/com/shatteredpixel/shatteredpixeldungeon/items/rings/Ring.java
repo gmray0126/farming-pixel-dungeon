@@ -107,6 +107,11 @@ public class Ring extends KindofMisc {
 	//and their sprite is replaced by a placeholder if they are not known,
 	//useful for items that appear in UIs, or which are only spawned for their effects
 	protected boolean anonymous = false;
+	private boolean extractionIdentified = false;
+	public Item identifyForExtraction(){
+		anonymize();extractionIdentified=true;
+		return identify(false);
+	}
 	public void anonymize(){
 		if (!isKnown()) image = ItemSpriteSheet.RING_HOLDER;
 		anonymous = true;
@@ -152,7 +157,7 @@ public class Ring extends KindofMisc {
 	}
 	
 	public boolean isKnown() {
-		return anonymous || (handler != null && handler.isKnown( this ));
+		return anonymous || extractionIdentified || (handler != null && handler.isKnown( this ));
 	}
 	
 	public void setKnown() {
@@ -319,12 +324,14 @@ public class Ring extends KindofMisc {
 	public void storeInBundle( Bundle bundle ) {
 		super.storeInBundle( bundle );
 		bundle.put( LEVELS_TO_ID, levelsToID );
+		bundle.put("extraction_identified",extractionIdentified);
 	}
 
 	@Override
 	public void restoreFromBundle( Bundle bundle ) {
 		super.restoreFromBundle( bundle );
 		levelsToID = bundle.getFloat( LEVELS_TO_ID );
+		extractionIdentified=bundle.getBoolean("extraction_identified");
 	}
 	
 	public void onHeroGainExp( float levelPercent, Hero hero ){

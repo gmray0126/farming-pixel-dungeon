@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
 import com.watabou.utils.FileUtils;
@@ -22,6 +23,52 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void stashOrganizationCombinesConsumablesAndPreservesSeparateGearAndPreparedItems() throws Exception {
+        profile.stash.clear();
+        Item prepared=new Food().quantity(7);profile.prepared.add(prepared);
+        profile.stash.add(new SupplyHealingPotion().quantity(2));profile.stash.add(new SupplyHealingPotion().identify(false).quantity(3));
+        profile.stash.add(new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed().quantity(4));
+        profile.stash.add(new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed().quantity(6));
+        Item blade=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword().identify(false).level(2);
+        Item other=blade.duplicate();other.cursed=true;other.extractionRare=true;
+        profile.stash.add(blade);profile.stash.add(other);
+        assertEquals(2,profile.organizeStash());assertSame(prepared,profile.prepared.get(0));assertEquals(7,prepared.quantity());
+        assertEquals(4,profile.stash.size());assertTrue(profile.stash.get(0) instanceof KindOfWeapon);
+        assertEquals(2,profile.stash.stream().filter(i->i instanceof KindOfWeapon).count());
+        assertTrue(profile.stash.stream().anyMatch(i->i.extractionRare&&i.cursed&&i.trueLevel()==2));
+        assertEquals(5,profile.stash.stream().filter(i->i instanceof SupplyHealingPotion).findFirst().get().quantity());
+        assertEquals(10,profile.stash.stream().filter(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed).findFirst().get().quantity());
+        assertEquals(2,blade.trueLevel());assertFalse(blade.cursed);assertEquals(0,profile.organizeStash());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(4,profile.stash.size());assertEquals(7,profile.prepared.get(0).quantity());
+    }
+    @Test public void stashOrganizationRollsBackFailedWritesWithoutMutatingOriginalStacks() throws Exception {
+        profile.stash.clear();Item first=new SupplyHealingPotion().quantity(2),second=new SupplyHealingPotion().quantity(3);
+        profile.stash.add(first);profile.stash.add(second);
+        java.io.File blocker=folder.newFile("stash-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.organizeStash();fail("Write must fail");}catch(IllegalStateException expected){}
+        assertEquals(2,profile.stash.size());assertEquals(2,profile.stash.get(0).quantity());assertEquals(3,profile.stash.get(1).quantity());
+        assertEquals(2,first.quantity());assertEquals(3,second.quantity());
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        profile.begin();try{profile.organizeStash();fail("Active raid must block organization");}catch(IllegalStateException expected){}
+    }
+    @Test public void bothExtractionRoutesIdentifyAllEquipmentAndRingsStayKnownAcrossNewRuns() throws Exception {
+        for(boolean emergency:new boolean[]{false,true}){
+            profile.stash.clear();profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;Dungeon.gold=0;
+            Item[] equipment={new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),
+                new com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor(),new ExpeditionClothing.PlatePants(),new ExpeditionClothing.PlateBoots(),
+                new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce(),new com.shatteredpixel.shatteredpixeldungeon.items.wands.WandOfMagicMissile(),
+                new ExpeditionArtifacts.GreedPouch(),new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MagesStaff(),
+                new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.Trident()};
+            for(Item item:equipment){item.level(2);item.levelKnown=item.cursedKnown=false;item.cursed=true;h.belongings.backpack.items.add(item);}
+            if(emergency)profile.emergencyExtract(profile.raidID);else profile.settle(profile.raidID,true);
+            assertEquals(equipment.length,profile.stash.size());
+            for(Item item:profile.stash){assertTrue(item.getClass().getName(),item.isIdentified());assertTrue(item.cursed);assertEquals(2,item.trueLevel());}
+            for(Item item:equipment){assertFalse(item.levelKnown);assertFalse(item.cursedKnown);}
+            forgetProfile();profile=ExtractionProfile.get();
+            com.shatteredpixel.shatteredpixeldungeon.items.rings.Ring.initGems();
+            for(Item item:profile.stash)assertTrue(item.getClass().getName(),item.isIdentified());
+        }
+    }
     @Test public void quickslotPagesAndSkillReferencesRoundTripWithoutOccupyingInventory() throws Exception {
         profile.nodes.add("skill_stealth");profile.bindSkill(11,"stealth");profile.begin();
         Hero hero=new Hero();hero.extractionRaidID=profile.raidID;Dungeon.hero=hero;profile.initialize(hero);

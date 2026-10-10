@@ -135,6 +135,12 @@ public final class ExtractionProfile {
         if (take && prepared.size() >= capacity()) throw new IllegalStateException("출격 가방이 가득 찼습니다.");
         change(() -> { if (take && stash.remove(i)) prepared.add(i); else if (!take && prepared.remove(i)) stash.add(i); });
     }
+    public int organizeStash(){
+        if(active)throw new IllegalStateException("원정을 끝내거나 포기한 뒤 창고를 정리할 수 있습니다.");
+        int before=stash.size();
+        change(()->{ArrayList<Item> organized=ExtractionStash.organized(stash);stash.clear();stash.addAll(organized);});
+        return before-stash.size();
+    }
     public void begin() {
         if (active) return; // retry the same escrow if first map creation was interrupted
         if(!ExtractionDifficulty.validChapter(selectedChapter)||unlockedDifficulty[selectedChapter-1]==0)throw new IllegalStateException("아직 해금되지 않은 챕터입니다.");
@@ -329,11 +335,12 @@ public final class ExtractionProfile {
                 loot.removeIf(i -> i instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin
                         && ((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)i).isEmpty());
                 loot.removeIf(i -> i instanceof NodeSpiritBow && ((NodeSpiritBow)i).enchantment==null && ((NodeSpiritBow)i).augment==com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Augment.NONE);
+                for(Item item:loot)ExtractionStash.identifyEquipment(item);
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty)*(raidHard&&raidRules>=5?1.5f:1));
                 gold+=redeemed.gold;
                 if(!emergency)awardGrowthXP(10+5*(raidDifficulty-1)+10*(raidChapter-1));
-                result=(emergency?"비상탈출!":"탈출 성공!")+" 장비와 전리품을 창고에 보관했습니다."
+                result=(emergency?"비상탈출!":"탈출 성공!")+" 장비를 모두 감정하고 전리품을 창고에 보관했습니다."
                         +(redeemed.potions+redeemed.scrolls>0?"\n포션 "+redeemed.potions+"개 · 스크롤 "+redeemed.scrolls+"장 정산 · +"+redeemed.gold+" G":"");
                 if(emergency)result+="\n이번 원정의 의뢰 진행도는 반영되지 않습니다. 기존 의뢰 진행도와 전투 경험치는 유지됩니다.\n챕터 해금과 완주 경험치 보너스는 없습니다.";
                 else {
