@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 public class ExtractionProfileTest {
     @Test public void interruptedVaultEntryRestoresStoredGearAndPreservesLaterLoot() throws Exception {
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;h.STR=30;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword();h.belongings.weapon.level(3);
         h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor();h.belongings.armor.level(5);
         h.belongings.pants=new ExpeditionClothing.PlatePants();h.belongings.boots=new ExpeditionClothing.PlateBoots();
