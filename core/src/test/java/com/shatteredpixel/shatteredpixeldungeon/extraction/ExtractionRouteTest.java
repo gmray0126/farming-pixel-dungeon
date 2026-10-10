@@ -5,6 +5,20 @@ import static com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRout
 import static com.shatteredpixel.shatteredpixeldungeon.levels.features.LevelTransition.Type.*;
 
 public class ExtractionRouteTest {
+    @Test public void nativeSideQuestsTravelWithinTheirChapterWithoutBypassingBosses(){
+        for(int chapter=1;chapter<=5;chapter++){
+            int start=ExtractionDifficulty.startDepth(chapter),end=ExtractionDifficulty.endDepth(chapter);
+            for(int depth=start;depth<=end;depth++){
+                boolean valid=(chapter==3||chapter==4)&&depth<end;
+                assertEquals(valid?TRAVEL:BLOCK,ExtractionRoute.action(chapter,depth,0,BRANCH_EXIT,depth,1,false,false));
+                assertEquals(valid?TRAVEL:BLOCK,ExtractionRoute.action(chapter,depth,1,BRANCH_ENTRANCE,depth,0,false,false));
+                assertEquals(BLOCK,ExtractionRoute.action(chapter,depth,0,BRANCH_EXIT,depth,1,false,true));
+                assertEquals(BLOCK,ExtractionRoute.action(chapter,depth,0,BRANCH_EXIT,depth+1,1,true,false));
+                assertEquals(BLOCK,ExtractionRoute.action(chapter,depth,0,BRANCH_EXIT,depth,2,true,false));
+                assertEquals(BLOCK,ExtractionRoute.action(chapter,depth,1,REGULAR_EXIT,depth+1,0,true,false));
+            }
+        }
+    }
     @Test public void prisonIsAnIndependentFiveFloorRaidWithTenguExtraction(){
         for(int floor=6;floor<10;floor++)assertEquals(TRAVEL,ExtractionRoute.action(2,floor,0,REGULAR_EXIT,floor+1,false,false));
         assertEquals(EMERGENCY_EXTRACT,ExtractionRoute.action(2,6,0,REGULAR_ENTRANCE,5,true,false));

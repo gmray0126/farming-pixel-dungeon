@@ -23,6 +23,33 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void interruptedVaultEntryRestoresStoredGearAndPreservesLaterLoot() throws Exception {
+        profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;h.STR=30;
+        h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword();h.belongings.weapon.level(3);
+        h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.PlateArmor();h.belongings.armor.level(5);
+        h.belongings.pants=new ExpeditionClothing.PlatePants();h.belongings.boots=new ExpeditionClothing.PlateBoots();
+        h.belongings.backpack.items.add(new Food().quantity(2));Dungeon.quickslot.setSlot(0,h.belongings.weapon);
+        Dungeon.gold=123;Dungeon.energy=7;
+        com.shatteredpixel.shatteredpixeldungeon.items.quest.EscapeCrystal crystal=new com.shatteredpixel.shatteredpixeldungeon.items.quest.EscapeCrystal();
+        crystal.storeHeroBelongings(h);h.belongings.backpack.items.add(crystal);
+        h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();h.belongings.armor.level(3);
+        h.belongings.backpack.items.add(new Food().quantity(3));Dungeon.gold=40;Dungeon.energy=2;
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();h.storeInBundle(saved);
+        Hero resumed=new Hero();Dungeon.hero=resumed;resumed.restoreFromBundle(saved);
+        Dungeon.level=new com.shatteredpixel.shatteredpixeldungeon.levels.VaultLevel();
+        assertNull(ExtractionVaultRecovery.recover(resumed));
+        assertNotNull(resumed.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.quest.EscapeCrystal.class).storedItems);
+        Dungeon.level=new com.shatteredpixel.shatteredpixeldungeon.levels.CityLevel();
+        java.util.ArrayList<Item> overflow=ExtractionVaultRecovery.recover(resumed);assertNotNull(overflow);assertTrue(overflow.isEmpty());
+        assertEquals(3,resumed.belongings.weapon.trueLevel());assertEquals(5,resumed.belongings.armor.trueLevel());
+        assertTrue(resumed.belongings.pants instanceof ExpeditionClothing.PlatePants);assertTrue(resumed.belongings.boots instanceof ExpeditionClothing.PlateBoots);
+        assertEquals(5,resumed.belongings.getItem(Food.class).quantity());
+        assertTrue(resumed.belongings.backpack.items.stream().anyMatch(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor&&i.trueLevel()==3));
+        assertEquals(163,Dungeon.gold);assertEquals(9,Dungeon.energy);
+        assertNull(resumed.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.quest.EscapeCrystal.class));
+        assertSame(resumed.belongings.weapon,Dungeon.quickslot.getItem(0));
+        assertNull(ExtractionVaultRecovery.recover(resumed));assertEquals(163,Dungeon.gold);assertEquals(9,Dungeon.energy);
+    }
     @Test public void stashOrganizationCombinesConsumablesAndPreservesSeparateGearAndPreparedItems() throws Exception {
         profile.stash.clear();
         Item prepared=new Food().quantity(7);profile.prepared.add(prepared);

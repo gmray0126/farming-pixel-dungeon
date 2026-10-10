@@ -595,9 +595,11 @@ public abstract class Level implements Bundlable {
 	public boolean activateTransition(Hero hero, LevelTransition transition){
 		if (hero.extractionRaidID != 0) {
             com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action action =
-                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,Dungeon.depth,Dungeon.branch,transition.type,transition.destDepth,hero.extractionBossDefeated,locked);
+                com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,Dungeon.depth,Dungeon.branch,transition.type,transition.destDepth,transition.destBranch,hero.extractionBossDefeated,locked);
             if (action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.BLOCK){
-                com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w("이 챕터의 마지막 층 보스를 처치한 뒤 아래 계단으로 탈출하세요.");return false;
+                com.shatteredpixel.shatteredpixeldungeon.utils.GLog.w(transition.type == LevelTransition.Type.BRANCH_EXIT || transition.type == LevelTransition.Type.BRANCH_ENTRANCE
+                    ? "현재 원정에서는 이 분기층으로 이동할 수 없습니다."
+                    : "이 챕터의 마지막 층 보스를 처치한 뒤 아래 계단으로 탈출하세요.");return false;
             }
             if(action == com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.EMERGENCY_EXTRACT){
                 Game.runOnRenderThread(() -> GameScene.show(new com.shatteredpixel.shatteredpixeldungeon.windows.WndOptions(

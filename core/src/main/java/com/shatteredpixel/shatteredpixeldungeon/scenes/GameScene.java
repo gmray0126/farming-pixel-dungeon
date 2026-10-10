@@ -626,6 +626,14 @@ public class GameScene extends PixelScene {
 			Dungeon.droppedItems.remove( Dungeon.depth );
 		}
 
+        ArrayList<Item> recoveredOverflow = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionVaultRecovery.recover(Dungeon.hero);
+        if (recoveredOverflow != null) {
+            for (Item item : recoveredOverflow) Dungeon.level.drop(item, Dungeon.hero.pos);
+            GLog.p("금고 입장 오류로 보관되었던 장비를 복구했습니다. 가방에 못 넣은 물품은 발밑에 놓았습니다.");
+            try { Dungeon.saveAll(); } catch (IOException error) {
+                GLog.w("복구된 장비를 아직 저장하지 못했습니다. 원정을 다시 저장해 주세요.");
+            }
+        }
 		if(Dungeon.hero.extractionRaidID!=0){
             com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.restore(Dungeon.hero);
         }

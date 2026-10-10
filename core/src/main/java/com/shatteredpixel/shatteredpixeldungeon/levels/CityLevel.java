@@ -141,6 +141,14 @@ public class CityLevel extends RegularLevel {
 	public boolean activateTransition(Hero hero, LevelTransition transition) {
 		if (transition.type == LevelTransition.Type.BRANCH_EXIT) {
 
+            // Reject invalid raid routes before healing, clearing buffs, or storing equipment.
+            if (hero.extractionRaidID != 0 && com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(
+                    com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,
+                    Dungeon.depth, Dungeon.branch, transition.type, transition.destDepth, transition.destBranch,
+                    hero.extractionBossDefeated, locked) != com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.TRAVEL) {
+                return super.activateTransition(hero, transition);
+            }
+
 			if ( Imp.Quest.isOld() || Imp.Quest.isCompleted() || !Imp.Quest.given()
 					|| hero.buff(AscensionChallenge.class) != null
 					|| hero.buff(LostInventory.class) != null){
@@ -158,6 +166,12 @@ public class CityLevel extends RegularLevel {
 						@Override
 						protected void onSelect(int index) {
 							if (index == 0){
+
+                                if (Dungeon.hero != hero || Dungeon.level != CityLevel.this || locked) return;
+                                if (hero.extractionRaidID != 0 && com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.action(
+                                        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().raidChapter,
+                                        Dungeon.depth, Dungeon.branch, transition.type, transition.destDepth, transition.destBranch,
+                                        hero.extractionBossDefeated, locked) != com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRoute.Action.TRAVEL) return;
 
 								Dungeon.hero.live(); //clears all non-persist buffs, resets hunger/regen
 								hero.HP = hero.HT; //full heal

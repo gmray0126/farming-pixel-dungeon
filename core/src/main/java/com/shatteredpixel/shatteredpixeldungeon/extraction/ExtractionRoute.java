@@ -9,9 +9,18 @@ public final class ExtractionRoute {
         return action(1,depth,branch,type,destination,bossDefeated,locked);
     }
     public static Action action(int chapter,int depth,int branch,LevelTransition.Type type,int destination,boolean bossDefeated,boolean locked){
+        return action(chapter,depth,branch,type,destination,branch,bossDefeated,locked);
+    }
+    public static Action action(int chapter,int depth,int branch,LevelTransition.Type type,int destination,int destinationBranch,boolean bossDefeated,boolean locked){
         if(!ExtractionDifficulty.validChapter(chapter))return Action.BLOCK;
         int start=ExtractionDifficulty.startDepth(chapter),end=ExtractionDifficulty.endDepth(chapter);
-        if(locked||branch!=0)return Action.BLOCK;
+        if(locked)return Action.BLOCK;
+        // Native mines and vaults are side trips on the same floor, never chapter exits.
+        if((chapter==3||chapter==4)&&depth>=start&&depth<end&&destination==depth){
+            if(branch==0&&destinationBranch==1&&type==LevelTransition.Type.BRANCH_EXIT)return Action.TRAVEL;
+            if(branch==1&&destinationBranch==0&&type==LevelTransition.Type.BRANCH_ENTRANCE)return Action.TRAVEL;
+        }
+        if(branch!=0||destinationBranch!=0)return Action.BLOCK;
         if(depth==start&&destination==start-1&&(type==LevelTransition.Type.REGULAR_ENTRANCE
                 ||chapter==1&&type==LevelTransition.Type.SURFACE))return Action.EMERGENCY_EXTRACT;
         if(type==LevelTransition.Type.REGULAR_ENTRANCE)
