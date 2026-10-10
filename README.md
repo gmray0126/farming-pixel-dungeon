@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.46.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.46.0-farming)
+[v0.47.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.47.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.46.0-farming/Farming_Pixel_Dungeon_v0.46.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.46.0-farming/Farming_Pixel_Dungeon_PC_v0.46.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.47.0-farming/Farming_Pixel_Dungeon_v0.47.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.47.0-farming/Farming_Pixel_Dungeon_PC_v0.47.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.47.0 창고 정리와 탈출 감정 / Stash organization and extraction identification
+
+준비 탭의 창고 옆 정렬·합치기 버튼으로 같은 소모품을 합치고 종류별로 정렬합니다. 장비와 출격 준비 물품은 각각 보존합니다. 일반·비상탈출 때 보관하는 모든 장비를 감정하며, 반지는 다음 원정에도 종류 식별을 유지합니다. 저주는 제거하지 않습니다.
+
+Sort/Merge beside the stash heading combines matching consumables and groups items by type. Equipment stays separate and prepared supplies are untouched. Both extraction routes identify deposited gear; ring types remain known in future expeditions. Identification does not remove curses.
 
 ## v0.46.0 범용 힘 노드 / Common strength nodes
 
