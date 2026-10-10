@@ -392,12 +392,7 @@ public class Toolbar extends Component {
 		btnInventory.icon( 160, 0, 16, 16 );
 
 		if (Dungeon.hero.extractionRaidID != 0) {
-			add(btnSkills = new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON, "스킬", 6) {
-				@Override
-				protected void onClick() {
-					com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.open();
-				}
-			});
+			add(btnSkills = new ExtractionSkillButton());
 		}
 
 		add(btnPages=new StyledButton(com.shatteredpixel.shatteredpixeldungeon.Chrome.Type.GREY_BUTTON,"퀵 1",6){
