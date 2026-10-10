@@ -46,6 +46,7 @@ public class ExtractionSkillButton extends StyledButton {
         energyFill = new ColorBlock(1, 2, 0xFFFFFFFF);
         add(energyFill);
         energyText = new BitmapText(PixelScene.pixelFont);
+        energyText.scale.set(0.75f);
         add(energyText);
         refreshEnergy();
     }
@@ -90,7 +91,7 @@ public class ExtractionSkillButton extends StyledButton {
         text.setPos(x + (width - text.width()) / 2f, y + (height >= 24 ? 4 : 1));
         PixelScene.align(text);
         energyText.x = x + (width - energyText.width()) / 2f;
-        energyText.y = bottom() - 8;
+        energyText.y = bottom() - 9;
         PixelScene.align(energyText);
         energyTrack.x = energyFill.x = x + 2;
         energyTrack.y = energyFill.y = bottom() - 3;
