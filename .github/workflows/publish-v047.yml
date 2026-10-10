@@ -1,0 +1,81 @@
+name: Publish Farming Pixel Dungeon v0.47.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v047.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v047
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38019443247
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38019443285
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.47.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.47.0_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.47.0 / Farming Pixel Dungeon v0.47.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **창고 정렬·합치기:** 준비 탭 창고 제목 옆 버튼을 누르면 물품을 종류별로 정렬하고 같은 소모품을 합칩니다. 포션·씨앗·재료 등 쌓을 수 있는 물품의 수량을 보존합니다. 장비는 각각 유지하며, 소모품도 종류와 실제 상태가 다르면 합치지 않습니다.
+          - 출격 준비 칸은 정리 대상이 아닙니다. 정리 후 창고 첫 페이지를 보여주고 합쳐진 칸 수를 안내합니다. 원정 중에는 정리할 수 없습니다.
+          - **탈출 장비 자동 감정:** 일반 탈출과 비상탈출 시 창고에 넣는 무기·투척무기·갑옷·바지·신발·반지·마법 막대·지팡이·유물·장신구를 감정합니다. 강화 수치와 저주 여부가 드러나며 저주 자체는 제거하지 않습니다.
+          - 탈출 감정된 반지는 재접속과 다음 원정에서 종류 식별을 유지합니다. 감정은 복사된 전리품에 적용하여 정산 실패가 진행 중인 원정 장비의 감정 상태를 바꾸지 않습니다.
+          - 기존 창고 물품의 자동 감정은 하지 않습니다. 포션·스크롤의 탈출 골드 정산은 유지합니다.
+          
+          ## English changes
+          - **Organize stash:** Use Sort/Merge beside the stash heading in Preparation to group items by type and combine matching stackable consumables. Quantities are preserved. Equipment stays separate; consumables with different types or state also remain separate.
+          - Prepared loadout items are excluded. Organization returns to the first stash page and reports combined slots. It is unavailable during an expedition.
+          - **Identify extracted gear:** Both normal and emergency extraction identify deposited weapons, thrown weapons, body armor, trousers, boots, rings, wands, staves, artifacts, and trinkets. Upgrade levels and curse state become visible; curses remain.
+          - Extracted rings retain their type identification after restart and across new expedition labels. Identification operates on copied loot so failed settlement does not identify the live expedition equipment.
+          - Existing stored gear is not retroactively identified. Potion and scroll conversion to gold still applies.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. New tests cover consumable quantities, distinct gear, prepared items, repeated organization, reload, failed-write rollback, both extraction routes, live equipment preservation, and ring identification after new labels. Windows packaging and native launch/depart/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/01f2c39443759d160fb6acd0875cb0d637e07b72)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.47.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.47.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
