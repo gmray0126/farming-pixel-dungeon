@@ -44,7 +44,13 @@ public class ExtractionProfileTest {
         assertFalse(merged.indices.contains(ExtractionGrowth.index("combat_right_end")));
         assertFalse(merged.indices.contains(ExtractionGrowth.index("sword_8")));
         ExtractionProfile.NodeRemoval root=profile.previewNodeRemoval(ExtractionGrowth.index("power"));
-        assertTrue(root.indices.contains(ExtractionGrowth.index("sword_8")));assertTrue(root.indices.contains(ExtractionGrowth.index("magic_8")));assertTrue(root.indices.contains(ExtractionGrowth.index("spell_8")));
+        assertTrue(root.indices.contains(ExtractionGrowth.index("sword_8")));assertTrue(root.indices.contains(ExtractionGrowth.index("magic_8")));
+        // Hybrid roots depend on the two class skill roots, rather than weapon roots.
+        ExtractionProfile.NodeRemoval classRoot=profile.previewNodeRemoval(ExtractionGrowth.index(ExtractionClassUtilities.ROOTS[0]));
+        assertTrue(classRoot.indices.contains(ExtractionGrowth.index("spell_8")));
+        int originalBudget=profile.points+profile.spentPoints();profile.cancelNode(classRoot);
+        assertFalse(profile.nodes.contains("spell_8"));assertEquals(originalBudget,profile.points+profile.spentPoints());
+        root=profile.previewNodeRemoval(ExtractionGrowth.index("power"));
         int expected=0;for(int n:root.indices)expected+=ExtractionGrowth.COSTS[n];
         int budget=profile.points+profile.spentPoints();assertEquals(expected,profile.cancelNode(root));
         assertTrue(profile.nodes.contains("vital"));assertTrue(profile.nodes.contains("pack"));
