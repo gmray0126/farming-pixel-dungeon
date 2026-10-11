@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.51.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.51.0-farming)
+[v0.52.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.52.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.51.0-farming/Farming_Pixel_Dungeon_v0.51.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.51.0-farming/Farming_Pixel_Dungeon_PC_v0.51.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.52.0-farming/Farming_Pixel_Dungeon_v0.52.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.52.0-farming/Farming_Pixel_Dungeon_PC_v0.52.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.52.0 — 자유로운 영혼 보상 수정 / Free Spirit reward fix
+
+수도사 특성 **자유로운 영혼 3단계**의 천 갑옷·징 박힌 장갑 지급 누락을 수정했습니다. 처음 3단계를 습득하면 감정된 장비를 창고에 각각 하나씩 지급합니다. 징 박힌 장갑은 공격 속도가 빠른 T1 격투 무기입니다. 1·2단계에서는 장비를 지급하지 않습니다. 이미 3단계를 습득한 기존 프로필은 보상을 한 번 복구하며, 진행 중인 원정의 장비는 바꾸지 않습니다. 노드 취소·초기화·프리셋 변경으로 보상이 반복되지 않습니다.
+
+Fixed missing **Unencumbered Spirit rank-three** equipment rewards. The first acquisition grants identified Cloth Armor and Gloves to the stash; Gloves are a fast tier-one fist weapon. Ranks one and two do not grant equipment. Existing rank-three owners receive one recovery without modifying their active raid. Refunds, resets, and preset changes cannot duplicate the reward.
 
 ## v0.51.0 — 사용자 스킨 / Player PNG skins
 
