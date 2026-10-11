@@ -21,7 +21,11 @@ public final class WndGrowthNode {
             @Override protected void onSelect(int choice){
                 if(choice!=0)return;
                 if(canCancel){confirmCancellation(index,refreshed);return;}
-                if(canLearn)try{p.learn(index);if(refreshed!=null)refreshed.run();}
+                if(canLearn)try{
+                    boolean awarded=p.monkEquipmentAwarded();
+                    p.learn(index);if(refreshed!=null)refreshed.run();
+                    if(!awarded&&p.monkEquipmentAwarded())Game.scene().add(new WndMessage("자유로운 영혼 3단계 보상으로 천 갑옷과 징 박힌 장갑을 창고에 지급했습니다.\n준비 탭에서 출격 물품에 넣어 주세요.\n\n징 박힌 장갑은 T1 격투 무기입니다. 보상은 프로필당 한 번 지급됩니다."));
+                }
                 catch(RuntimeException e){Game.scene().add(new WndMessage(e.getMessage()));}
             }
         });

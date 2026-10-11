@@ -23,6 +23,53 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void freeSpiritEquipmentRequiresRankThreeAndIsNotRepeatedByRefundsOrPresets() throws Exception {
+        profile.points=300;int stash=profile.stash.size();
+        learnPath("utility_unencumbered_spirit_1");assertEquals(stash,profile.stash.size());assertFalse(profile.monkEquipmentAwarded());
+        learnPath("utility_unencumbered_spirit_2");assertEquals(stash,profile.stash.size());assertFalse(profile.monkEquipmentAwarded());
+        learnPath(ExtractionProfile.MONK_EQUIPMENT_NODE);assertEquals(stash+2,profile.stash.size());assertTrue(profile.monkEquipmentAwarded());
+        Item gloves=profile.stash.get(stash+1);assertTrue(gloves instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves);
+        assertEquals(1,((com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves)gloves).tier);
+        assertEquals(ExtractionGrowth.FIST,ExtractionGrowth.family((KindOfWeapon)gloves));assertTrue(gloves.isIdentified());assertEquals(0,gloves.trueLevel());
+        assertTrue(profile.stash.get(stash) instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor);assertTrue(profile.stash.get(stash).isIdentified());
+        profile.savePreset(0);profile.cancelNode(ExtractionGrowth.index(ExtractionProfile.MONK_EQUIPMENT_NODE));
+        learnPath(ExtractionProfile.MONK_EQUIPMENT_NODE);assertEquals(stash+2,profile.stash.size());
+        profile.resetNodes();profile.applyPreset(0);assertEquals(stash+2,profile.stash.size());
+        profile.stash.remove(gloves);profile.bindSkill(0,null);profile.savePreset(0);
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.monkEquipmentAwarded());assertEquals(stash+1,profile.stash.size());
+        profile.resetNodes();profile.applyPreset(0);assertEquals(stash+1,profile.stash.size());
+    }
+    @Test public void existingFreeSpiritOwnersReceiveOneRecoveryWithoutChangingTheirActiveRaid() throws Exception {
+        profile.points=300;learnPath(ExtractionProfile.MONK_EQUIPMENT_NODE);
+        profile.stash.removeIf(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor);
+        int stash=profile.stash.size(),points=profile.points,gold=profile.gold;profile.begin();int raid=profile.raidID;
+        com.watabou.utils.Bundle old=FileUtils.bundleFromFile(ExtractionProfile.FILE);old.put("monk_equipment_awarded",false);FileUtils.bundleToFile(ExtractionProfile.FILE,old);
+        Hero playing=new Hero();playing.extractionRaidID=raid;playing.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword();Dungeon.hero=playing;
+        KindOfWeapon weapon=playing.belongings.weapon;forgetProfile();profile=ExtractionProfile.get();
+        assertTrue(profile.active);assertEquals(raid,profile.raidID);assertEquals(points,profile.points);assertEquals(gold,profile.gold);
+        assertSame(playing,Dungeon.hero);assertSame(weapon,playing.belongings.weapon);assertEquals(stash+2,profile.stash.size());assertTrue(profile.monkEquipmentAwarded());
+        assertTrue(profile.result.contains("창고에 지급"));assertTrue(profile.nodes.contains(ExtractionProfile.MONK_EQUIPMENT_NODE));
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(stash+2,profile.stash.size());assertTrue(profile.monkEquipmentAwarded());
+        profile.abandon();profile.resetNodes();learnPath(ExtractionProfile.MONK_EQUIPMENT_NODE);assertEquals(stash+2,profile.stash.size());
+    }
+    @Test public void freeSpiritRewardRollsBackWithAFailedNodeSaveAndCanBeRetried() throws Exception {
+        profile.points=300;learnPath("utility_unencumbered_spirit_2");int stash=profile.stash.size(),points=profile.points;
+        java.io.File blocker=folder.newFile("monk-reward-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.learn(ExtractionGrowth.index(ExtractionProfile.MONK_EQUIPMENT_NODE));fail("Failed save must roll back the reward and allocation");}catch(IllegalStateException expected){}
+        assertEquals(stash,profile.stash.size());assertEquals(points,profile.points);assertFalse(profile.monkEquipmentAwarded());assertFalse(profile.nodes.contains(ExtractionProfile.MONK_EQUIPMENT_NODE));
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        profile.learn(ExtractionGrowth.index(ExtractionProfile.MONK_EQUIPMENT_NODE));assertEquals(stash+2,profile.stash.size());assertTrue(profile.monkEquipmentAwarded());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(stash+2,profile.stash.size());assertTrue(profile.monkEquipmentAwarded());
+    }
+    @Test public void firstFreeSpiritAcquisitionThroughAPresetAlsoAwardsEquipment() throws Exception {
+        profile.points=300;learnPath(ExtractionProfile.MONK_EQUIPMENT_NODE);profile.savePreset(0);profile.resetNodes();
+        profile.stash.removeIf(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor);
+        int stash=profile.stash.size();profile.savePreset(1);
+        com.watabou.utils.Bundle legacy=FileUtils.bundleFromFile(ExtractionProfile.FILE);legacy.put("monk_equipment_awarded",false);FileUtils.bundleToFile(ExtractionProfile.FILE,legacy);
+        forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.monkEquipmentAwarded());assertEquals(stash,profile.stash.size());
+        profile.applyPreset(0);assertTrue(profile.monkEquipmentAwarded());assertEquals(stash+2,profile.stash.size());
+        profile.applyPreset(1);profile.applyPreset(0);assertEquals(stash+2,profile.stash.size());
+    }
     @Test public void individualNodeCancellationRefundsOnlyTheLeafAndPreservesSavedPresets() throws Exception {
         profile.points=300;learnPath("sword_8");learnPath("vital");profile.savePreset(0);
         java.util.HashSet<String> before=new java.util.HashSet<>(profile.nodes);int points=profile.points,used=profile.spentPoints();
