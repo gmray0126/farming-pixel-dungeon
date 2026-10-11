@@ -1,0 +1,81 @@
+name: Publish Farming Pixel Dungeon v0.50.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v050.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v050
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38106668552
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38106355322
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.50.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.50.0_Windows.zip release-output/
+          cd release-output
+          sha256sum *.apk *.zip > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.50.0 / Farming Pixel Dungeon v0.50.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **성장 노드 개별 취소:** 성장 지도에서 배운 노드를 선택한 뒤 습득 취소를 누릅니다. 작은 지도와 전체 지도 모두 사용할 수 있습니다.
+          - 선택한 노드를 요구하는 배운 후속 노드도 모든 계통에 걸쳐 연쇄 취소합니다. 합류 노드는 요구사항 하나만 취소되어도 함께 취소하며, 관계없는 노드는 유지합니다.
+          - 확인창에 선택한 노드, 전체 취소 목록, 취소 수, 환급 포인트와 남은 포인트 변화를 표시합니다. 확인하기 전에는 배분이 바뀌지 않습니다.
+          - 취소한 노드의 비용을 전액 반환하고 남은·사용한 포인트와 지도 색상을 갱신합니다. 확인 이후 취소 범위가 바뀌면 다시 확인하도록 하여 경고하지 않은 노드를 취소하지 않습니다.
+          - 거점에서만 취소할 수 있습니다. 가방 용량 감소로 초과하는 출격 준비 물품은 창고에 돌려놓습니다. 저장 실패 시 노드·포인트·물품 변경을 되돌립니다. 저장한 프리셋은 유지합니다.
+          
+          ## English changes
+          - **Individual growth node refunds:** Select a learned node and choose Cancel learning in either growth map.
+          - All learned transitive dependents across branches are removed too. A merge loses eligibility when any required parent is canceled; unrelated nodes remain.
+          - Confirmation lists all affected nodes, their count, the full refund, and the remaining-point change. Previewing does not alter your allocation.
+          - Refunded points and map colors update after confirmation. A changed removal scope requires a fresh confirmation instead of silently canceling more nodes.
+          - Cancellation is available at the hub. Prepared items exceeding the reduced capacity return to the stash. Failed saves roll back nodes, points, and item movement. Saved presets remain available.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. Regression tests cover leaf refunds, merge and cross-branch dependency cancellation, point conservation, previews, stale confirmation rejection, active raid restrictions, save rollback, preparation overflow, presets, and reload. Windows packaging and native launch/depart/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/e596c4cb613dd71cc2b9bce200429b0636708c5d)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.50.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.50.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
