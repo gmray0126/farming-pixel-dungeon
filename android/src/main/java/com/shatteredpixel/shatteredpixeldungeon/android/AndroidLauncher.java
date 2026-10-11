@@ -56,6 +56,49 @@ public class AndroidLauncher extends AndroidApplication {
 	public static AndroidApplication instance;
 	
 	private static AndroidPlatformSupport support;
+	private static final int SKIN_PNG_REQUEST = 5131;
+	private static com.watabou.utils.PlatformSupport.PngSelection skinSelection;
+
+	public void selectSkinPng(com.watabou.utils.PlatformSupport.PngSelection result) {
+		runOnUiThread(() -> {
+			if (skinSelection != null) {
+				Gdx.app.postRunnable(() -> result.failed("이미 파일을 선택하고 있습니다."));
+				return;
+			}
+			skinSelection = result;
+			try {
+				Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+				intent.addCategory(Intent.CATEGORY_OPENABLE);
+				intent.setType("image/png");
+				intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+				startActivityForResult(intent, SKIN_PNG_REQUEST);
+			} catch (Exception error) {
+				skinSelection = null;
+				Gdx.app.postRunnable(() -> result.failed("파일 선택기를 열 수 없습니다."));
+			}
+		});
+	}
+	@Override protected void onActivityResult(int request, int resultCode, Intent data) {
+		super.onActivityResult(request, resultCode, data);
+		if (request != SKIN_PNG_REQUEST) return;
+		com.watabou.utils.PlatformSupport.PngSelection result = skinSelection;
+		skinSelection = null;
+		if (result == null) return;
+		if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+			Gdx.app.postRunnable(result::canceled);
+			return;
+		}
+		final android.net.Uri uri = data.getData();
+		new Thread(() -> {
+			try (java.io.InputStream input = getContentResolver().openInputStream(uri)) {
+				if (input == null) throw new java.io.IOException("파일을 읽을 수 없습니다.");
+				byte[] bytes = com.watabou.utils.PlatformSupport.readPngStream(input);
+				Gdx.app.postRunnable(() -> result.selected(bytes));
+			} catch (Exception error) {
+				Gdx.app.postRunnable(() -> result.failed("PNG 파일을 읽지 못했습니다. 4 MB 이하 파일을 선택해 주세요."));
+			}
+		}, "skin-png-read").start();
+	}
 	
 	@SuppressLint("SetTextI18n")
 	@Override

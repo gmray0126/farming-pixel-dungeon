@@ -226,6 +226,7 @@ public class WndSettings extends WndTabbed {
 		OptionSlider optVisGrid;
 		OptionSlider optFollowIntensity;
 		OptionSlider optScreenShake;
+		RedButton btnHeroSkin;
 
 		@Override
 		protected void createChildren() {
@@ -321,6 +322,10 @@ public class WndSettings extends WndTabbed {
 			};
 			optScreenShake.setSelectedValue(SPDSettings.screenShake());
 			add(optScreenShake);
+			btnHeroSkin = new RedButton("캐릭터 스킨",7) {
+				@Override protected void onClick() { Game.scene().add(new WndHeroSkin()); }
+			};
+			add(btnHeroSkin);
 
 		}
 
@@ -361,7 +366,8 @@ public class WndSettings extends WndTabbed {
 				optScreenShake.setRect(0, optFollowIntensity.bottom() + GAP, width, SLIDER_HEIGHT);
 			}
 
-			height = optScreenShake.bottom();
+			btnHeroSkin.setRect(0,optScreenShake.bottom()+4,width,20);
+			height = btnHeroSkin.bottom();
 		}
 
 	}

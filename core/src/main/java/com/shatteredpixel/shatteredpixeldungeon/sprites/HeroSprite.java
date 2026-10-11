@@ -64,11 +64,17 @@ public class HeroSprite extends CharSprite {
 	}
 
 	public void disguise(HeroClass cls){
-		texture( cls.spritesheet() );
-		updateArmor();
+		texture( cls == Dungeon.hero.heroClass ? HeroSkin.textureOrDefault(cls.spritesheet()) : cls.spritesheet() );
+		buildArmorAnimations();
 	}
 	
 	public void updateArmor() {
+		HeroDisguise disguise = Dungeon.hero.buff(HeroDisguise.class);
+		texture(disguise != null && disguise.getDisguise() != null ? disguise.getDisguise().spritesheet()
+				: HeroSkin.textureOrDefault(Dungeon.hero.heroClass.spritesheet()));
+		buildArmorAnimations();
+	}
+	private void buildArmorAnimations() {
 
 		TextureFilm film = new TextureFilm( tiers(), Dungeon.hero.tier(), FRAME_WIDTH, FRAME_HEIGHT );
 		
@@ -178,14 +184,17 @@ public class HeroSprite extends CharSprite {
 		if (hero.buff(HeroDisguise.class) != null){
 			return avatar(hero.buff(HeroDisguise.class).getDisguise(), hero.tier());
 		} else {
-			return avatar(hero.heroClass, hero.tier());
+			return avatarTexture(HeroSkin.textureOrDefault(hero.heroClass.spritesheet()), hero.tier());
 		}
 	}
 	
 	public static Image avatar( HeroClass cl, int armorTier ) {
+		return avatarTexture(cl.spritesheet(), armorTier);
+	}
+	private static Image avatarTexture(Object sheet, int armorTier) {
 		
 		RectF patch = tiers().get( armorTier );
-		Image avatar = new Image( cl.spritesheet() );
+		Image avatar = new Image( sheet );
 		RectF frame = avatar.texture.uvRect( 1, 0, FRAME_WIDTH, FRAME_HEIGHT );
 		frame.shift( patch.left, patch.top );
 		avatar.frame( frame );

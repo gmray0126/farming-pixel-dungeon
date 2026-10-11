@@ -38,6 +38,32 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DesktopPlatformSupport extends PlatformSupport {
+	private boolean selectingPng;
+	@Override public void selectPng(PngSelection result) {
+		if (selectingPng) { result.failed("이미 파일을 선택하고 있습니다."); return; }
+		selectingPng = true;
+		new Thread(() -> {
+			try {
+				java.io.File[] selected = new java.io.File[1];
+				javax.swing.SwingUtilities.invokeAndWait(() -> {
+					javax.swing.JFileChooser chooser = new javax.swing.JFileChooser();
+					chooser.setDialogTitle("캐릭터 스킨 PNG 선택");
+					chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PNG 이미지", "png"));
+					chooser.setAcceptAllFileFilterUsed(false);
+					if (chooser.showOpenDialog(null) == javax.swing.JFileChooser.APPROVE_OPTION) selected[0] = chooser.getSelectedFile();
+				});
+				if (selected[0] == null) {
+					Gdx.app.postRunnable(() -> { selectingPng = false; result.canceled(); });
+				} else {
+					byte[] bytes;
+					try (java.io.InputStream input = new java.io.FileInputStream(selected[0])) { bytes = readPngStream(input); }
+					Gdx.app.postRunnable(() -> { selectingPng = false; result.selected(bytes); });
+				}
+			} catch (Exception error) {
+				Gdx.app.postRunnable(() -> { selectingPng = false; result.failed("PNG 파일을 읽지 못했습니다. 4 MB 이하 파일을 선택해 주세요."); });
+			}
+		}, "skin-png-picker").start();
+	}
 
 	//we recall previous window sizes as a workaround to not save maximized size to settings
 	//have to do this as updateDisplaySize is called before maximized is set =S

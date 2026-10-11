@@ -33,6 +33,28 @@ import com.watabou.noosa.Game;
 import java.util.HashMap;
 
 public abstract class PlatformSupport {
+
+	public static final int PNG_FILE_LIMIT = 4 * 1024 * 1024;
+	public interface PngSelection {
+		void selected(byte[] bytes);
+		void canceled();
+		void failed(String message);
+	}
+	// All callbacks run on the game thread. Platforms copy the selected document;
+	// the game never needs ongoing access to a user's external file.
+	public void selectPng(PngSelection result) {
+		result.failed("이 환경에서는 PNG 파일 선택을 지원하지 않습니다.");
+	}
+	public static byte[] readPngStream(java.io.InputStream input) throws java.io.IOException {
+		java.io.ByteArrayOutputStream output = new java.io.ByteArrayOutputStream();
+		byte[] buffer = new byte[8192];
+		int count;
+		while ((count = input.read(buffer)) != -1) {
+			if (output.size() + count > PNG_FILE_LIMIT) throw new java.io.IOException("PNG 파일은 4 MB 이하여야 합니다.");
+			output.write(buffer, 0, count);
+		}
+		return output.toByteArray();
+	}
 	
 	public abstract void updateDisplaySize();
 

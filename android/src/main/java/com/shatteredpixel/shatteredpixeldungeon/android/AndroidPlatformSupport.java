@@ -46,6 +46,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AndroidPlatformSupport extends PlatformSupport {
+	@Override public void selectPng(PngSelection result) {
+		((AndroidLauncher)AndroidLauncher.instance).selectSkinPng(result);
+	}
 	
 	public void updateDisplaySize(){
 		AndroidLauncher.instance.setRequestedOrientation( SPDSettings.landscape() ?
