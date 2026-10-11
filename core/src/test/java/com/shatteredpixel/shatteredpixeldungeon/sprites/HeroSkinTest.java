@@ -26,13 +26,24 @@ import static org.junit.Assert.*;
 public class HeroSkinTest {
     @Rule public TemporaryFolder folder = new TemporaryFolder();
     private byte[] original;
+    private com.badlogic.gdx.graphics.GL20 previousGl;
     @Before public void setup() {
+        previousGl = Gdx.gl;
+        // Texture disposal calls GL even when a texture was never drawn. Headless
+        // tests still exercise native PNG decoding and real file persistence.
+        Gdx.gl = (com.badlogic.gdx.graphics.GL20)java.lang.reflect.Proxy.newProxyInstance(
+                com.badlogic.gdx.graphics.GL20.class.getClassLoader(),new Class[]{com.badlogic.gdx.graphics.GL20.class},
+                (proxy,method,args) -> {
+                    if (method.getReturnType() == boolean.class) return false;
+                    if (method.getReturnType() == int.class) return 0;
+                    return null;
+                });
         Gdx.files = new HeadlessFiles(); GdxNativesLoader.load(); HeroSkin.clearCache();
         SPDSettings.set(new HeadlessPreferences("skin-test.xml",folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
         original = Gdx.files.internal(Assets.Sprites.HUNTRESS).readBytes();
     }
-    @After public void cleanup() { HeroSkin.clearCache(); }
+    @After public void cleanup() { try { HeroSkin.clearCache(); } finally { Gdx.gl = previousGl; } }
     @Test public void originalHuntressFitsAllAnimationFramesAndPreviewDoesNotApply() {
         try (HeroSkin.Candidate preview = HeroSkin.inspect(original)) {
             assertFalse(HeroSkin.enabled());

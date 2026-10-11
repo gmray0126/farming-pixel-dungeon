@@ -11,10 +11,12 @@ import com.shatteredpixel.shatteredpixeldungeon.sprites.HeroSprite;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RedButton;
 import com.shatteredpixel.shatteredpixeldungeon.ui.RenderedTextBlock;
 import com.shatteredpixel.shatteredpixeldungeon.ui.Window;
+import com.shatteredpixel.shatteredpixeldungeon.ui.ScrollPane;
 import com.watabou.noosa.ColorBlock;
 import com.watabou.noosa.Game;
 import com.watabou.noosa.MovieClip;
 import com.watabou.noosa.TextureFilm;
+import com.watabou.noosa.ui.Component;
 import com.watabou.utils.PlatformSupport;
 
 public class WndHeroSkin extends WndOptions {
@@ -58,30 +60,35 @@ public class WndHeroSkin extends WndOptions {
         Preview(HeroSkin.Candidate candidate) {
             this.candidate = candidate;
             int w = Math.min(144,maxContentWidth());
+            Component content = new Component();
             RenderedTextBlock title = PixelScene.renderTextBlock("스킨 미리보기",9);
-            title.maxWidth(w); title.hardlight(TITLE_COLOR); add(title);
+            title.maxWidth(w); title.hardlight(TITLE_COLOR); content.add(title);
             RenderedTextBlock info = PixelScene.renderTextBlock("256×128 PNG · 2배 확대\n장비별 8개 행을 유지해 주세요.",6);
-            info.maxWidth(w); info.setPos(0,title.bottom()+4); add(info);
+            info.maxWidth(w); info.setPos(0,title.bottom()+4); content.add(info);
             float top = info.bottom()+4;
             ColorBlock background = new ColorBlock(w,52,0xFF000000);
-            background.y = top; add(background);
+            background.y = top; content.add(background);
             String[] labels = {"대기","걷기","공격"};
             Object texture = candidate.texture();
             for (int i = 0; i < clips.length; i++) {
-                RenderedTextBlock label = PixelScene.renderTextBlock(labels[i],6); add(label);
+                RenderedTextBlock label = PixelScene.renderTextBlock(labels[i],6); content.add(label);
                 label.setPos(w*(i+0.5f)/3-label.width()/2,top+3);
-                clips[i] = new MovieClip(texture); clips[i].scale.set(2); add(clips[i]);
+                clips[i] = new MovieClip(texture); clips[i].scale.set(2); content.add(clips[i]);
                 clips[i].x = w*(i+0.5f)/3-12; clips[i].y = top+15;
             }
             float pos = top+56;
             tierButton = new RedButton("장비 외형 0 / 7",6) {
                 @Override protected void onClick() { tier = (tier+1)%HeroSkin.ROWS; updateAnimations(); }
             };
-            tierButton.setRect(0,pos,w*0.64f-2,18); add(tierButton);
+            tierButton.setRect(0,pos,w*0.64f-2,18); content.add(tierButton);
             RedButton flip = new RedButton("좌우 반전",6) {
                 @Override protected void onClick() { for (MovieClip clip : clips) clip.flipHorizontal = !clip.flipHorizontal; }
             };
-            flip.setRect(tierButton.right()+2,pos,w-tierButton.right()-2,18); add(flip);
+            flip.setRect(tierButton.right()+2,pos,w-tierButton.right()-2,18); content.add(flip);
+            content.setSize(w,tierButton.bottom());
+            int bodyHeight = Math.min((int)Math.ceil(content.height()),Math.max(15,maxContentHeight()-47));
+            ScrollPane scroll = new ScrollPane(content); add(scroll);
+            scroll.setRect(0,0,w,bodyHeight);
             RedButton apply = new RedButton("이 스킨 적용",8) {
                 @Override protected void onClick() {
                     try {
@@ -90,10 +97,10 @@ public class WndHeroSkin extends WndOptions {
                     } catch (RuntimeException error) { Game.scene().add(new WndMessage(error.getMessage())); }
                 }
             };
-            apply.setRect(0,pos+22,w,22); add(apply);
+            apply.setRect(0,bodyHeight+3,w,22); add(apply);
             RedButton cancel = new RedButton("취소",7) { @Override protected void onClick() { hide(); } };
             cancel.setRect(0,apply.bottom()+3,w,18); add(cancel);
-            resize(w,(int)cancel.bottom()); updateAnimations();
+            resize(w,(int)cancel.bottom()); scroll.setRect(0,0,w,bodyHeight); updateAnimations();
         }
         private void updateAnimations() {
             TextureFilm film = new TextureFilm(HeroSprite.tiers(),tier,HeroSkin.FRAME_WIDTH,HeroSkin.FRAME_HEIGHT);
