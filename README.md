@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.49.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.49.0-farming)
+[v0.50.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.50.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.49.0-farming/Farming_Pixel_Dungeon_v0.49.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.49.0-farming/Farming_Pixel_Dungeon_PC_v0.49.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.50.0-farming/Farming_Pixel_Dungeon_v0.50.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.50.0-farming/Farming_Pixel_Dungeon_PC_v0.50.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.50.0 성장 노드 개별 취소 / Individual growth node refunds
+
+성장 지도에서 배운 노드를 선택하고 습득 취소를 누릅니다. 선택한 노드를 요구하는 모든 배운 후속 노드도 함께 취소하며, 확인창에 전체 목록과 환급 포인트를 표시합니다. 관계없는 배분은 유지하고 취소 비용은 전액 반환합니다. 거점에서만 사용할 수 있으며, 줄어든 가방 한도를 넘는 준비 물품은 창고로 돌아갑니다. 저장한 프리셋은 유지됩니다.
+
+Select a learned node in either growth map and choose Cancel learning. Confirmation lists every learned transitive dependent and the full refund. Unrelated allocations remain intact. Cancellation is available at the hub; prepared items exceeding reduced capacity return to the stash. Saved presets are preserved.
 
 ## v0.49.0 금고 입장 수정과 장비 복구 / Vault entry and stranded gear recovery
 
