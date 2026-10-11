@@ -1,0 +1,85 @@
+name: Publish Farming Pixel Dungeon v0.51.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v051.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v051
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38135446547
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38135446541
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.51.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.51.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.51.0 / Farming Pixel Dungeon v0.51.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **사용자 PNG 스킨 등록:** 설정 → 화면 탭(모니터 아이콘) → 캐릭터 스킨 → PNG 파일 등록에서 선택합니다. Android 파일 선택기와 PC 파일 선택기를 지원합니다.
+          - 이번 버전은 **원본과 같은 256×128 투명 PNG(최대 4 MB)**를 사용합니다. 프레임은 12×15 픽셀, 가로 21개 동작, 세로 8개 장비 외형 행입니다. 미소녀 스킨을 제작할 때 이 양식을 유지해 주세요.
+          - 적용 전 대기·걷기·공격 애니메이션, 장비 외형 전환과 좌우 반전을 미리 볼 수 있습니다. 취소하면 기존 외형을 유지합니다.
+          - 실제 캐릭터와 상태창 초상화에 적용되고 재실행 후에도 유지됩니다. 원본 파일은 앱 저장 영역에 복사합니다. 외형만 바뀌며 능력치·직업·장비 성능은 바뀌지 않습니다. 변신 중에는 해당 효과의 외형을 사용합니다.
+          - **원본 사냥꾼 미리보기/적용**과 **기본 외형으로 복구**를 제공합니다. 원본 사냥꾼 PNG도 아래 다운로드에 포함합니다. 새로 그린 미소녀 자산은 이번 업데이트에 포함하지 않습니다.
+          - 손상된 파일, 다른 크기, 불투명 배경, 빈 이미지, 과도한 파일 크기는 적용하지 않습니다. 저장 실패 시 기존 스킨을 유지하고, 저장된 파일이 손상되거나 없어지면 기본 외형으로 표시합니다.
+          - [프레임 양식과 사용 안내 / Skin guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/SKIN_TEMPLATE_KO.md)
+          
+          ## English changes
+          - **Import player PNG skins:** Settings → Display (monitor icon) → Character skin → Import PNG. Uses Android's document picker and a desktop file picker.
+          - This version accepts the **original 256×128 transparent PNG layout, up to 4 MB**: 12×15 pixel frames, 21 animation frames per row, and eight equipment appearance rows.
+          - Preview idle, walking, attacks, appearance rows, and horizontal mirroring before applying. Cancel leaves the current appearance unchanged.
+          - Applied skins affect the player and status portrait and persist across launches. Selected files are copied into game storage. Stats, class, and equipment performance do not change. Disguise effects temporarily use their own appearance.
+          - Preview/apply the **original Huntress** or **restore the default appearance**. The unchanged original Huntress PNG is included below as a template. This release does not include newly drawn character artwork.
+          - Rejects damaged, incorrectly sized, opaque, empty, and oversized images. Failed saves preserve the previous skin; missing or corrupt stored files fall back to the original appearance.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. Regression tests cover the original sheet and all frame bounds, preview cancellation, copied-file persistence and replacement, default restoration, invalid image rejection, failed writes, missing/corrupt files, and bounded document reads. Windows packaging and native launch/depart/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/993459680284426c5fe1f3de178e992b97e1a2b4)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.51.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.51.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
