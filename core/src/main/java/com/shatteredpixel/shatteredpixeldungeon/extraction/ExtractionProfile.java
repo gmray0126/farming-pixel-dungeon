@@ -280,6 +280,48 @@ public final class ExtractionProfile {
         int refunded=spentPoints();if(nodes.isEmpty())return 0;
         change(()->{points=(int)Math.min(MAX_GROWTH_POINTS,(long)points+refunded);nodes.clear();trimPrepared();});return refunded;
     }
+    /** Read-only cancellation preview, including every learned dependent across branches. */
+    public static final class NodeRemoval {
+        public final int index, refund;
+        public final java.util.List<Integer> indices;
+        private NodeRemoval(int index, java.util.List<Integer> indices, int refund){
+            this.index=index;this.indices=java.util.Collections.unmodifiableList(new ArrayList<>(indices));this.refund=refund;
+        }
+    }
+    public synchronized NodeRemoval previewNodeRemoval(int index){
+        if(index<0||index>=IDS.length)throw new IllegalArgumentException("없는 성장 노드입니다.");
+        java.util.List<Integer> affected=new ArrayList<>();
+        HashSet<String> removed=new HashSet<>();
+        if(nodes.contains(IDS[index])){removed.add(IDS[index]);affected.add(index);}
+        boolean progress;
+        do{
+            progress=false;
+            for(int n=0;n<ExtractionGrowth.NODES.length;n++){
+                ExtractionGrowth.Node node=ExtractionGrowth.NODES[n];
+                if(!nodes.contains(node.id)||removed.contains(node.id))continue;
+                for(int parent:node.parents)if(removed.contains(IDS[parent])){
+                    removed.add(node.id);affected.add(n);progress=true;break;
+                }
+            }
+        }while(progress);
+        int refund=0;for(int n:affected)refund=Math.addExact(refund,COSTS[n]);
+        return new NodeRemoval(index,affected,refund);
+    }
+    public int cancelNode(int index){return cancelNode(previewNodeRemoval(index));}
+    /** Apply exactly the reviewed cancellation, or require a fresh preview if it changed. */
+    public synchronized int cancelNode(NodeRemoval reviewed){
+        if(active)throw new IllegalStateException("진행 중인 원정을 끝내거나 포기한 뒤 노드를 취소할 수 있습니다.");
+        NodeRemoval current=previewNodeRemoval(reviewed.index);
+        if(current.refund!=reviewed.refund||!current.indices.equals(reviewed.indices))
+            throw new IllegalStateException("노드 배분이 변경되었습니다. 취소할 노드를 다시 선택해 주세요.");
+        if(current.indices.isEmpty())return 0;
+        change(()->{
+            for(int n:current.indices)nodes.remove(IDS[n]);
+            points=(int)Math.min(MAX_GROWTH_POINTS-spentPoints(),(long)points+current.refund);
+            trimPrepared();
+        });
+        return current.refund;
+    }
     public void learn(final int index) {
         if (active || index<0 || index>=IDS.length || nodes.contains(IDS[index])) return;
         if (!unlocked(index)) throw new IllegalStateException("표시된 선행 노드를 모두 배워 주세요.");

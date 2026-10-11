@@ -247,13 +247,7 @@ public class ExtractionHubScene extends PixelScene {
         if(after+9<bottom-26)label("레벨은 능력치를 올리지 않음 · 레벨당 3 P",6,left,after,width,GREEN);
     }
     private void node(final int n){
-        ExtractionProfile p=ExtractionProfile.get();boolean learned=p.nodes.contains(ExtractionProfile.IDS[n]);
-        boolean unlocked=p.unlocked(n);
-        String state=learned?"이미 습득했습니다.":!unlocked?"선행: "+p.prerequisites(n):p.active?"거점으로 돌아온 뒤 배울 수 있습니다.":"비용 "+ExtractionProfile.COSTS[n]+" P · 보유 "+p.points+" P";
-        boolean can=!learned&&unlocked&&!p.active&&p.points>=ExtractionProfile.COSTS[n];
-        add(new WndOptions(ExtractionProfile.NAMES[n],ExtractionProfile.DESCS[n]+"\n\n선행: "+p.prerequisites(n)+"\n\n"+state,can?new String[]{"습득 · "+ExtractionProfile.COSTS[n]+" P","닫기"}:new String[]{"닫기"}){
-            @Override protected void onSelect(int c){if(can&&c==0)try{p.learn(n);refresh();}catch(RuntimeException e){error(e);}}
-        });
+        com.shatteredpixel.shatteredpixeldungeon.windows.WndGrowthNode.open(n,this::refresh);
     }
     private void expedition(float y){
         ExtractionProfile p=ExtractionProfile.get();

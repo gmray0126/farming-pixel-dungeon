@@ -23,6 +23,62 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void individualNodeCancellationRefundsOnlyTheLeafAndPreservesSavedPresets() throws Exception {
+        profile.points=300;learnPath("sword_8");learnPath("vital");profile.savePreset(0);
+        java.util.HashSet<String> before=new java.util.HashSet<>(profile.nodes);int points=profile.points,used=profile.spentPoints();
+        int index=ExtractionGrowth.index("sword_8"),cost=ExtractionGrowth.COSTS[index];
+        ExtractionProfile.NodeRemoval preview=profile.previewNodeRemoval(index);
+        assertEquals(before,profile.nodes);assertEquals(points,profile.points);assertEquals(1,preview.indices.size());assertEquals(cost,preview.refund);
+        assertEquals(cost,profile.cancelNode(preview));before.remove("sword_8");assertEquals(before,profile.nodes);
+        assertEquals(points+cost,profile.points);assertEquals(used-cost,profile.spentPoints());
+        assertEquals(0,profile.cancelNode(index));assertEquals(points+cost,profile.points);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(before,profile.nodes);assertEquals(points+cost,profile.points);
+        profile.applyPreset(0);assertTrue(profile.nodes.contains("sword_8"));assertEquals(points,profile.points);
+    }
+    @Test public void cancellationFollowsBothMergeRequirementsAndTransitiveCrossBranchDependencies() throws Exception {
+        profile.points=300;learnPath("combat_cap");learnPath("sword_8");learnPath("magic_8");learnPath("spell_8");learnPath("vital");learnPath("pack");
+        int index=ExtractionGrowth.index("combat_left_end");
+        ExtractionProfile.NodeRemoval merged=profile.previewNodeRemoval(index);
+        assertTrue(merged.indices.contains(ExtractionGrowth.index("combat_merge")));
+        assertTrue(merged.indices.contains(ExtractionGrowth.index("combat_cap")));
+        assertFalse(merged.indices.contains(ExtractionGrowth.index("combat_right_end")));
+        assertFalse(merged.indices.contains(ExtractionGrowth.index("sword_8")));
+        ExtractionProfile.NodeRemoval root=profile.previewNodeRemoval(ExtractionGrowth.index("power"));
+        assertTrue(root.indices.contains(ExtractionGrowth.index("sword_8")));assertTrue(root.indices.contains(ExtractionGrowth.index("magic_8")));assertTrue(root.indices.contains(ExtractionGrowth.index("spell_8")));
+        int expected=0;for(int n:root.indices)expected+=ExtractionGrowth.COSTS[n];
+        int budget=profile.points+profile.spentPoints();assertEquals(expected,profile.cancelNode(root));
+        assertTrue(profile.nodes.contains("vital"));assertTrue(profile.nodes.contains("pack"));
+        for(String id:profile.nodes)assertTrue(ExtractionGrowth.unlocked(ExtractionGrowth.NODES[ExtractionGrowth.index(id)],profile.nodes));
+        assertEquals(budget,profile.points+profile.spentPoints());
+    }
+    @Test public void nodeCancellationRejectsStalePreviewsActiveRaidsAndRollsBackFailedSaves() throws Exception {
+        profile.points=300;learnPath("sword_3");
+        ExtractionProfile.NodeRemoval preview=profile.previewNodeRemoval(ExtractionGrowth.index("sword_3"));
+        learnPath("sword_8");java.util.HashSet<String> before=new java.util.HashSet<>(profile.nodes);int points=profile.points;
+        try{profile.cancelNode(preview);fail("Changed cancellation must require a new warning");}catch(IllegalStateException expected){}
+        assertEquals(before,profile.nodes);assertEquals(points,profile.points);
+        preview=profile.previewNodeRemoval(ExtractionGrowth.index("sword_3"));profile.begin();
+        try{profile.cancelNode(preview);fail("Active raid cancellation must be blocked");}catch(IllegalStateException expected){}
+        assertEquals(before,profile.nodes);assertEquals(points,profile.points);profile.abandon();
+        java.io.File blocker=folder.newFile("cancel-node-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.cancelNode(preview);fail("Cancellation save must fail");}catch(IllegalStateException expected){}
+        assertEquals(before,profile.nodes);assertEquals(points,profile.points);
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        assertEquals(preview.refund,profile.cancelNode(preview));
+    }
+    @Test public void capacityNodeCancellationReturnsPreparedOverflowAndRollsBackAllListsOnSaveFailure() throws Exception {
+        profile.points=300;learnPath("pack");int beforeCapacity=profile.capacity(),stash=profile.stash.size();
+        for(int i=0;i<beforeCapacity;i++)profile.prepared.add(new Food().quantity(i+1));
+        ExtractionProfile.NodeRemoval plan=profile.previewNodeRemoval(ExtractionGrowth.index("pack"));int points=profile.points;
+        java.io.File blocker=folder.newFile("cancel-capacity-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.cancelNode(plan);fail("Failed write must restore moved preparation items");}catch(IllegalStateException expected){}
+        assertEquals(beforeCapacity,profile.prepared.size());assertEquals(stash,profile.stash.size());assertEquals(points,profile.points);assertTrue(profile.nodes.contains("pack"));
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");profile.cancelNode(plan);
+        assertEquals(profile.capacity(),profile.prepared.size());assertEquals(stash+beforeCapacity-profile.capacity(),profile.stash.size());
+        int total=0;for(Item item:profile.prepared)if(item instanceof Food)total+=item.quantity();for(Item item:profile.stash)if(item instanceof Food)total+=item.quantity();
+        assertEquals(beforeCapacity*(beforeCapacity+1)/2,total);
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(profile.capacity(),profile.prepared.size());assertFalse(profile.nodes.contains("pack"));
+    }
     @Test public void interruptedVaultEntryRestoresStoredGearAndPreservesLaterLoot() throws Exception {
         profile.begin();Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;h.STR=30;
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);

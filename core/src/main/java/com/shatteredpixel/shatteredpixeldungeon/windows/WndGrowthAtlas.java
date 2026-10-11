@@ -44,12 +44,7 @@ public class WndGrowthAtlas extends Window {
         text("밀어서 이동 · 두 손가락 확대 · 노드 선택",5,0,atlasHeight-10,atlasWidth,ExtractionNodeTree.GREEN);
     }
     private void node(final int index){
-        ExtractionProfile p=ExtractionProfile.get();boolean learned=p.nodes.contains(ExtractionProfile.IDS[index]);
-        boolean can=!learned&&!p.active&&p.unlocked(index)&&p.points>=ExtractionProfile.COSTS[index];
-        String state=learned?"이미 습득한 노드입니다.":p.active?"거점에서 습득할 수 있습니다.":"비용 "+ExtractionProfile.COSTS[index]+" P · 보유 "+p.points+" P";
-        Game.scene().add(new WndOptions(ExtractionProfile.NAMES[index],ExtractionProfile.DESCS[index]+"\n\n연결 조건: "+p.prerequisites(index)+"\n\n"+state,can?new String[]{"습득 · "+ExtractionProfile.COSTS[index]+" P","닫기"}:new String[]{"닫기"}){
-            @Override protected void onSelect(int choice){if(can&&choice==0)try{p.learn(index);refresh();}catch(RuntimeException e){Game.scene().add(new WndMessage(e.getMessage()));}}
-        });
+        WndGrowthNode.open(index,this::refresh);
     }
     private void text(String value,int size,float x,float y,int maxWidth,int color){
         RenderedTextBlock text=PixelScene.renderTextBlock(value,size);text.maxWidth(maxWidth);text.hardlight(color);text.setPos(x,y);body.add(text);
