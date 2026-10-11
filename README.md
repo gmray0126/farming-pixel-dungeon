@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.50.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.50.0-farming)
+[v0.51.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.51.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.50.0-farming/Farming_Pixel_Dungeon_v0.50.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.50.0-farming/Farming_Pixel_Dungeon_PC_v0.50.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.51.0-farming/Farming_Pixel_Dungeon_v0.51.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.51.0-farming/Farming_Pixel_Dungeon_PC_v0.51.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,14 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.51.0 — 사용자 스킨 / Player PNG skins
+
+설정 → 화면 탭 → 캐릭터 스킨에서 원본과 같은 **256×128 투명 PNG**를 등록할 수 있습니다. 대기·걷기·공격, 장비 외형과 좌우 반전을 미리 확인하고 적용하세요. 재실행 후에도 유지되며 기본 외형으로 복구할 수 있습니다. 능력치와 직업은 바뀌지 않습니다.
+
+Import an original-layout **256×128 transparent PNG** in Settings → Display → Character skin. Preview animations, equipment appearance rows, and mirroring before applying. Skins persist across launches and can be reset; gameplay stats and class stay the same.
+
+[원본 사냥꾼 PNG / Original Huntress template](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.51.0-farming/Huntress_Original_256x128.png) · [양식 안내 / Frame guide](https://github.com/gmray0126/farming-pixel-dungeon/blob/extraction/SKIN_TEMPLATE_KO.md)
 
 ## v0.50.0 성장 노드 개별 취소 / Individual growth node refunds
 
