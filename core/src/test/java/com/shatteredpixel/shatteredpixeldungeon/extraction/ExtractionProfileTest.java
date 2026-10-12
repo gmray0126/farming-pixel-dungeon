@@ -60,6 +60,7 @@ public class ExtractionProfileTest {
     }
     @Test public void freeSpiritPreservesEnemyEnergyRatesTheCapAndEquipmentAfterResume(){
         profile.nodes.add(ExtractionProfile.MONK_EQUIPMENT_NODE);Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves();h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();
         h.belongings.pants=ExpeditionClothing.create(false,1);h.belongings.boots=ExpeditionClothing.create(true,1);
         com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy energy=com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy.class);
