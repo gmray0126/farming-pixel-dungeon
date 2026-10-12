@@ -24,6 +24,8 @@ public final class ExtractionProfile {
     private int growthPointRate=3, growthRules=2;
     public static final String MONK_EQUIPMENT_NODE="utility_unencumbered_spirit_3";
     private boolean monkEquipmentAwarded;
+    public static final String WARRIOR_SEAL_NODE="skill_endure";
+    private boolean warriorSealAwarded;
     public final String[] skillQuickslots=new String[com.shatteredpixel.shatteredpixeldungeon.QuickSlot.SIZE];
     private final String[][] presets=new String[PRESET_SLOTS][];
     public final ArrayList<Item> stash = new ArrayList<>();
@@ -60,6 +62,7 @@ public final class ExtractionProfile {
             p.migrateGrowthRules();
             p.migrateGrowthCap();
             p.recoverMonkEquipmentReward();
+            p.recoverWarriorSealReward();
             instance = p;
         }
         return instance;
@@ -68,6 +71,7 @@ public final class ExtractionProfile {
         Bundle b = new Bundle(); b.put("schema", 1); b.put("stash", stash); b.put("prepared", prepared); b.put("escrow", escrow);
         b.put("alchemy_energy",alchemyEnergy);
         b.put("monk_equipment_awarded",monkEquipmentAwarded);
+        b.put("warrior_seal_awarded",warriorSealAwarded);
         b.put("nodes", nodes.toArray(new String[0])); b.put("gold", gold); b.put("xp", xp); b.put("points", points);
         b.put("active", active); b.put("raid", raidID); b.put("next", nextRaid); b.put("raid_xp", raidXP); b.put("result", result);
         b.put("chapter",selectedChapter);b.put("difficulty",selectedDifficulty);b.put("raid_chapter",raidChapter);b.put("raid_difficulty",raidDifficulty);
@@ -90,6 +94,7 @@ public final class ExtractionProfile {
         for (String n : b.getStringArray("nodes")) nodes.add(n);
         alchemyEnergy=Math.max(0,b.getInt("alchemy_energy"));
         monkEquipmentAwarded=b.getBoolean("monk_equipment_awarded");
+        warriorSealAwarded=b.getBoolean("warrior_seal_awarded");
         gold=b.getInt("gold"); xp=b.getInt("xp"); points=b.getInt("points"); active=b.getBoolean("active");
         raidID=b.getInt("raid"); nextRaid=b.getInt("next"); raidXP=b.getInt("raid_xp"); result=b.getString("result");
         selectedChapter=b.contains("chapter")?b.getInt("chapter"):1;
@@ -332,7 +337,7 @@ public final class ExtractionProfile {
         if (!unlocked(index)) throw new IllegalStateException("표시된 선행 노드를 모두 배워 주세요.");
         if (spentPoints()+COSTS[index]>MAX_GROWTH_POINTS) throw new IllegalStateException("성장 배분 한도는 총 300 P입니다. 다른 노드를 초기화하거나 프리셋을 바꿔 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
-        change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); grantMonkEquipmentReward(); });
+        change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); grantMonkEquipmentReward(); grantWarriorSealReward(); });
     }
     public boolean monkEquipmentAwarded(){return monkEquipmentAwarded;}
     // A permanent, one-time reward, separate from the allocation: refunds and
@@ -348,6 +353,29 @@ public final class ExtractionProfile {
         change(()->{
             grantMonkEquipmentReward();
             result+="\n자유로운 영혼 3단계 보상 복구: 천 갑옷과 징 박힌 장갑을 창고에 지급했습니다. 준비 탭에서 챙겨 주세요.";
+        });
+    }
+    public boolean warriorSealAwarded(){return warriorSealAwarded;}
+    private void grantWarriorSealReward(){
+        if(warriorSealAwarded||!nodes.contains(WARRIOR_SEAL_NODE))return;
+        boolean alreadyOwned=false;
+        for(java.util.List<Item> items:java.util.Arrays.asList(stash,prepared,escrow))
+            for(Item item:items)if(containsWarriorSeal(item))alreadyOwned=true;
+        if(!alreadyOwned)stash.add(new com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal().identify(false));
+        warriorSealAwarded=true;
+    }
+    private static boolean containsWarriorSeal(Item item){
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal)return true;
+        if(item instanceof Armor&&((Armor)item).checkSeal()!=null)return true;
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag)
+            for(Item child:((com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag)item).items)if(containsWarriorSeal(child))return true;
+        return false;
+    }
+    private void recoverWarriorSealReward(){
+        if(warriorSealAwarded||!nodes.contains(WARRIOR_SEAL_NODE))return;
+        change(()->{
+            int before=stash.size();grantWarriorSealReward();
+            if(stash.size()>before)result+="\n전사 입문 보상 복구: 부러진 인장을 창고에 지급했습니다. 준비 탭에서 챙긴 뒤 몸통 갑옷에 붙여 주세요.";
         });
     }
     /** High-water credit prevents replaying an older run save from awarding the same XP twice. */
@@ -462,7 +490,7 @@ public final class ExtractionProfile {
         HashSet<String> valid=new HashSet<>();boolean progress;
         do{progress=false;for(String id:target)if(!valid.contains(id)&&ExtractionGrowth.unlocked(ExtractionGrowth.NODES[ExtractionGrowth.index(id)],valid)){valid.add(id);progress=true;}}while(progress);
         if(valid.size()!=target.size())throw new IllegalStateException("프리셋의 선행 노드가 부족합니다.");
-        change(()->{nodes.clear();nodes.addAll(target);points=budget-cost;trimPrepared();grantMonkEquipmentReward();});
+        change(()->{nodes.clear();nodes.addAll(target);points=budget-cost;trimPrepared();grantMonkEquipmentReward();grantWarriorSealReward();});
     }
     public void buyPotion() {
         buy(0);

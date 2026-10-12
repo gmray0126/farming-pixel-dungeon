@@ -10,6 +10,7 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
 import com.shatteredpixel.shatteredpixeldungeon.items.food.Food;
@@ -23,6 +24,46 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void warriorFirstNodeGrantsOneSealAndRefundsAndPresetsCannotDuplicateIt() throws Exception {
+        profile.points=300;int before=profile.stash.size();learnPath(ExtractionProfile.WARRIOR_SEAL_NODE);
+        assertTrue(profile.warriorSealAwarded());assertEquals(before+1,profile.stash.size());
+        Item seal=profile.stash.get(before);assertTrue(seal instanceof com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal);assertTrue(seal.isIdentified());
+        profile.savePreset(0);profile.cancelNode(ExtractionGrowth.index(ExtractionProfile.WARRIOR_SEAL_NODE));learnPath(ExtractionProfile.WARRIOR_SEAL_NODE);
+        assertEquals(before+1,profile.stash.size());profile.resetNodes();profile.applyPreset(0);assertEquals(before+1,profile.stash.size());
+        profile.stash.remove(seal);profile.savePreset(0);forgetProfile();profile=ExtractionProfile.get();
+        assertTrue(profile.warriorSealAwarded());assertEquals(before,profile.stash.size());profile.resetNodes();profile.applyPreset(0);assertEquals(before,profile.stash.size());
+    }
+    @Test public void existingWarriorOwnersRecoverTheSealWithoutChangingActiveGear() throws Exception {
+        profile.points=300;learnPath(ExtractionProfile.WARRIOR_SEAL_NODE);
+        profile.stash.removeIf(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal);profile.begin();
+        int stash=profile.stash.size(),points=profile.points,raid=profile.raidID;
+        com.watabou.utils.Bundle old=FileUtils.bundleFromFile(ExtractionProfile.FILE);old.put("warrior_seal_awarded",false);FileUtils.bundleToFile(ExtractionProfile.FILE,old);
+        Hero h=new Hero();h.extractionRaidID=raid;h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();Dungeon.hero=h;
+        Armor original=h.belongings.armor;forgetProfile();profile=ExtractionProfile.get();
+        assertTrue(profile.active);assertEquals(raid,profile.raidID);assertEquals(points,profile.points);assertSame(original,h.belongings.armor);assertNull(original.checkSeal());
+        assertTrue(profile.warriorSealAwarded());assertEquals(stash+1,profile.stash.size());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(stash+1,profile.stash.size());
+    }
+    @Test public void warriorSealGrantIsAtomicAndRecognizesAlreadyAffixedOrStoredSeals() throws Exception {
+        profile.points=300;learnPath("vital");int stash=profile.stash.size(),points=profile.points;
+        java.io.File blocker=folder.newFile("seal-reward-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.learn(ExtractionGrowth.index(ExtractionProfile.WARRIOR_SEAL_NODE));fail("Failed save must roll back the seal");}catch(IllegalStateException expected){}
+        assertFalse(profile.warriorSealAwarded());assertEquals(stash,profile.stash.size());assertEquals(points,profile.points);assertFalse(profile.nodes.contains(ExtractionProfile.WARRIOR_SEAL_NODE));
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        Dungeon.hero=new Hero();Armor armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();armor.affixSeal(new com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal());profile.stash.add(armor);
+        profile.prepare(armor,true);profile.learn(ExtractionGrowth.index(ExtractionProfile.WARRIOR_SEAL_NODE));assertTrue(profile.warriorSealAwarded());assertEquals(stash,profile.stash.size());assertNotNull(((Armor)profile.prepared.get(0)).checkSeal());
+        forgetProfile();profile=ExtractionProfile.get();assertEquals(stash,profile.stash.size());assertTrue(profile.warriorSealAwarded());
+    }
+    @Test public void grantedWarriorSealCanBePreparedAndItsShieldSurvivesHeroSave(){
+        profile.points=300;learnPath(ExtractionProfile.WARRIOR_SEAL_NODE);
+        Item reward=profile.stash.stream().filter(i->i instanceof com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal).findFirst().get();profile.prepare(reward,true);profile.begin();
+        Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);profile.initialize(h);
+        com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal seal=h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.class);assertNotNull(seal);
+        seal.detach(h.belongings.backpack);h.belongings.armor.affixSeal(seal);
+        assertNotNull(h.buff(com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.WarriorShield.class));
+        com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();h.storeInBundle(saved);Hero restored=new Hero();Dungeon.hero=restored;restored.restoreFromBundle(saved);
+        assertNotNull(restored.belongings.armor.checkSeal());assertNotNull(restored.buff(com.shatteredpixel.shatteredpixeldungeon.items.BrokenSeal.WarriorShield.class));
+    }
     @Test public void freeSpiritStacksAllFourSlotsAtEveryRankAndUsesTierNotUpgradeLevel(){
         Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
         com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy energy=com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy.class);

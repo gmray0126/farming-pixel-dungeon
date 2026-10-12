@@ -23,8 +23,10 @@ public final class WndGrowthNode {
                 if(canCancel){confirmCancellation(index,refreshed);return;}
                 if(canLearn)try{
                     boolean awarded=p.monkEquipmentAwarded();
+                    boolean sealAwarded=p.warriorSealAwarded();
                     p.learn(index);if(refreshed!=null)refreshed.run();
                     if(!awarded&&p.monkEquipmentAwarded())Game.scene().add(new WndMessage("자유로운 영혼 3단계 보상으로 천 갑옷과 징 박힌 장갑을 창고에 지급했습니다.\n준비 탭에서 출격 물품에 넣어 주세요.\n\n징 박힌 장갑은 T1 격투 무기입니다. 보상은 프로필당 한 번 지급됩니다."));
+                    if(!sealAwarded&&p.warriorSealAwarded())Game.scene().add(new WndMessage("전사 입문 보상: 부러진 인장을 해금했습니다.\n처음 습득하면 창고에 하나 지급합니다. 이미 보관 중이거나 갑옷에 붙어 있다면 중복 지급하지 않습니다.\n\n준비 탭에서 챙긴 뒤 원정 가방에서 인장을 몸통 갑옷에 붙여 사용하세요. 초기화·재습득으로 반복 지급하지 않습니다."));
                 }
                 catch(RuntimeException e){Game.scene().add(new WndMessage(e.getMessage()));}
             }
