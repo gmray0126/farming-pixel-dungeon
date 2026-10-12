@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.52.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.52.0-farming)
+[v0.53.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.53.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.52.0-farming/Farming_Pixel_Dungeon_v0.52.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.52.0-farming/Farming_Pixel_Dungeon_PC_v0.52.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.53.0-farming/Farming_Pixel_Dungeon_v0.53.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.53.0-farming/Farming_Pixel_Dungeon_PC_v0.53.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.53.0 — 수도사 에너지 합산 / Monk energy stacking
+
+자유로운 영혼이 주무기·몸통 갑옷만 계산하던 문제를 수정하여 **바지와 신발도 각각 합산**합니다. 3단계에서 T1 네 부위를 착용하면 일반 적 처치당 기본 1 + 부위별 1씩 = **5 에너지**를 얻습니다. 강화 수치가 아닌 티어로 계산하고 최대 에너지는 기존 10을 유지합니다. 가방 속 물품·보조 무기는 제외합니다. 맨손이나 완력의 반지 격투 자세에서는 무기 보너스만 제외되며, 방어구 세 부위는 계속 적용됩니다. 에너지 설명창에 현재 배율을 표시합니다.
+
+Unencumbered Spirit now adds bonuses from **pants and boots** alongside the primary melee weapon and body armor. Four tier-one pieces at rank three grant **5 energy** from a regular enemy (1 base plus 1 per slot). Uses item tiers, not upgrade levels; the existing raid cap of 10 remains. Backpack items and secondary weapons do not count. Unarmed attacks and active Brawler's Stance exclude only the weapon bonus. The energy tooltip shows the current multiplier.
 
 ## v0.52.0 — 자유로운 영혼 보상 수정 / Free Spirit reward fix
 
