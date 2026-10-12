@@ -122,6 +122,10 @@ public class MonkEnergy extends Buff implements ActionIndicator.Action {
 		if (cooldown > 0){
 			desc += "\n\n" + Messages.get(this, "desc_cooldown", cooldown);
 		}
+        if (target instanceof Hero && ((Hero)target).hasTalent(Talent.UNENCUMBERED_SPIRIT)){
+            desc += "\n\n자유로운 영혼: 현재 에너지 획득 ×" + String.format(java.util.Locale.ROOT,"%.2f",energyGainMultiplier())
+                    + "\n주무기·몸통 갑옷·바지·신발의 티어 보너스를 각각 합산합니다. 일반 적은 기본 1 에너지이며, 적 종류에 따라 기본량이 다릅니다. 최대 에너지는 늘어나지 않습니다.";
+        }
 		return desc;
 	}
 
@@ -164,37 +168,7 @@ public class MonkEnergy extends Buff implements ActionIndicator.Action {
 		else if (enemy instanceof Wraith)                       energyGain = 0.5f;
 		else                                                    energyGain = 1;
 
-		float enGainMulti = 1f;
-		if (target instanceof Hero) {
-			Hero hero = (Hero) target;
-			if (hero.hasTalent(Talent.UNENCUMBERED_SPIRIT)) {
-				int points = hero.pointsInTalent(Talent.UNENCUMBERED_SPIRIT);
-
-				if (hero.belongings.armor() != null){
-					if (hero.belongings.armor().tier <= 1 && points >= 3){
-						enGainMulti += 1.00f;
-					} else if (hero.belongings.armor().tier <= 2 && points >= 2){
-						enGainMulti += 0.75f;
-					} else if (hero.belongings.armor().tier <= 3 && points >= 1){
-						enGainMulti += 0.50f;
-					}
-				}
-
-				if (hero.belongings.weapon() instanceof MeleeWeapon
-						&& (hero.buff(RingOfForce.BrawlersStance.class) == null
-						|| !hero.buff(RingOfForce.BrawlersStance.class).active)){
-					if (((MeleeWeapon) hero.belongings.weapon()).tier <= 1 && points >= 3){
-						enGainMulti += 1.00f;
-					} else if (((MeleeWeapon) hero.belongings.weapon()).tier <= 2 && points >= 2){
-						enGainMulti += 0.75f;
-					} else if (((MeleeWeapon) hero.belongings.weapon()).tier <= 3 && points >= 1){
-						enGainMulti += 0.50f;
-					}
-				}
-
-			}
-		}
-		energyGain *= enGainMulti;
+		energyGain *= energyGainMultiplier();
 
 		energy += energyGain;
 		//if we kill while using an ability, don't apply the cap yet, will be enforced after spending
@@ -206,6 +180,30 @@ public class MonkEnergy extends Buff implements ActionIndicator.Action {
 			ActionIndicator.setAction(this);
 		}
 		BuffIndicator.refreshHero();
+	}
+
+	private float energyGainMultiplier(){
+		if (!(target instanceof Hero)) return 1f;
+		Hero hero = (Hero)target;
+		int points = hero.pointsInTalent(Talent.UNENCUMBERED_SPIRIT);
+		if (points == 0) return 1f;
+		float multiplier = 1f;
+		if (hero.belongings.armor() != null)
+			multiplier += lowTierEnergyBonus(hero.belongings.armor().tier, points);
+		if (hero.belongings.pants() != null)
+			multiplier += lowTierEnergyBonus(hero.belongings.pants().tier, points);
+		if (hero.belongings.boots() != null)
+			multiplier += lowTierEnergyBonus(hero.belongings.boots().tier, points);
+		RingOfForce.BrawlersStance stance = hero.buff(RingOfForce.BrawlersStance.class);
+		if (hero.belongings.weapon() instanceof MeleeWeapon && (stance == null || !stance.active))
+			multiplier += lowTierEnergyBonus(((MeleeWeapon)hero.belongings.weapon()).tier, points);
+		return multiplier;
+	}
+	private static float lowTierEnergyBonus(int tier, int points){
+		if (tier <= 1 && points >= 3) return 1f;
+		if (tier <= 2 && points >= 2) return .75f;
+		if (tier <= 3 && points >= 1) return .5f;
+		return 0f;
 	}
 
 	//10 at base, 20 at level 30

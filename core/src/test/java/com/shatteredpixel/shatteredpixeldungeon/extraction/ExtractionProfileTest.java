@@ -23,6 +23,53 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    @Test public void freeSpiritStacksAllFourSlotsAtEveryRankAndUsesTierNotUpgradeLevel(){
+        Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy energy=com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy.class);
+        float[][] expected={{3,3,3,1,1},{4,4,3,1,1},{5,4,3,1,1}};
+        for(int rank=1;rank<=3;rank++)for(int tier=1;tier<=5;tier++){
+            profile.nodes.clear();profile.nodes.add("utility_unencumbered_spirit_"+rank);
+            h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon();
+            ((com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.MeleeWeapon)h.belongings.weapon).tier=tier;
+            h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor(tier);
+            h.belongings.pants=ExpeditionClothing.create(false,tier);h.belongings.boots=ExpeditionClothing.create(true,tier);
+            h.belongings.weapon.level(3*tier);h.belongings.armor.level(3*tier);h.belongings.pants.level(3*tier);h.belongings.boots.level(3*tier);
+            energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());
+            assertEquals("Rank "+rank+", tier "+tier,expected[rank-1][tier-1],energy.energy,.001f);
+        }
+        profile.nodes.clear();energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(1,energy.energy,.001f);
+    }
+    @Test public void freeSpiritCountsEachWornPieceIgnoresBackpackAndPreservesUnarmedStanceRules(){
+        profile.nodes.add(ExtractionProfile.MONK_EQUIPMENT_NODE);Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy energy=com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy.class);
+        h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves();
+        h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();
+        h.belongings.pants=ExpeditionClothing.create(false,1);h.belongings.boots=ExpeditionClothing.create(true,1);
+        h.belongings.secondWep=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves();
+        h.belongings.backpack.items.add(ExpeditionClothing.create(false,1));h.belongings.backpack.items.add(ExpeditionClothing.create(true,1));
+        energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(5,energy.energy,.001f);assertTrue(energy.desc().contains("×5.00"));
+        h.belongings.boots=null;energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(4,energy.energy,.001f);
+        h.belongings.boots=ExpeditionClothing.create(true,1);h.belongings.weapon=null;energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(4,energy.energy,.001f);
+        h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves();
+        h.belongings.ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce();
+        energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(5,energy.energy,.001f);
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.BrawlersStance stance=com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.BrawlersStance.class);
+        energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(4,energy.energy,.001f);
+        stance.active=false;energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(5,energy.energy,.001f);
+        h.belongings.lostInventory(true);energy.energy=0;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(1,energy.energy,.001f);
+    }
+    @Test public void freeSpiritPreservesEnemyEnergyRatesTheCapAndEquipmentAfterResume(){
+        profile.nodes.add(ExtractionProfile.MONK_EQUIPMENT_NODE);Hero h=new Hero();h.extractionRaidID=1;Dungeon.hero=h;
+        h.belongings.weapon=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Gloves();h.belongings.armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor();
+        h.belongings.pants=ExpeditionClothing.create(false,1);h.belongings.boots=ExpeditionClothing.create(true,1);
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy energy=com.shatteredpixel.shatteredpixeldungeon.actors.buffs.Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy.class);
+        energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Wraith());assertEquals(2.5f,energy.energy,.001f);
+        energy.energy=9;energy.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(10,energy.energy,.001f);assertEquals(10,energy.energyCap());
+        energy.energy=0;com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();h.storeInBundle(saved);
+        Hero resumed=new Hero();Dungeon.hero=resumed;resumed.restoreFromBundle(saved);
+        com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy restored=resumed.buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MonkEnergy.class);assertNotNull(restored);
+        restored.gainEnergy(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat());assertEquals(5,restored.energy,.001f);
+    }
     @Test public void freeSpiritEquipmentRequiresRankThreeAndIsNotRepeatedByRefundsOrPresets() throws Exception {
         profile.points=300;int stash=profile.stash.size();
         learnPath("utility_unencumbered_spirit_1");assertEquals(stash,profile.stash.size());assertFalse(profile.monkEquipmentAwarded());
