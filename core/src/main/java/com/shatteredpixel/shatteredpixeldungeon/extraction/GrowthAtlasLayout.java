@@ -4,6 +4,7 @@ package com.shatteredpixel.shatteredpixeldungeon.extraction;
 /** World coordinates shared by the native canvas and input hit testing. */
 public final class GrowthAtlasLayout {
     public static final float SIZE=3800,CENTER=1900;
+    public static final float NODE_CLEARANCE=8;
     public static final float[] X=new float[ExtractionGrowth.NODES.length],Y=new float[ExtractionGrowth.NODES.length],RADIUS=new float[ExtractionGrowth.NODES.length];
     public static final float[] GROUP_X=new float[ExtractionGrowth.BRANCHES.length],GROUP_Y=new float[ExtractionGrowth.BRANCHES.length];
     public static final float[] GROUP_RING=new float[ExtractionGrowth.BRANCHES.length],GROUP_EXTENT=new float[ExtractionGrowth.BRANCHES.length];
@@ -73,6 +74,42 @@ public final class GrowthAtlasLayout {
                 else if(node.row<=4){position(n,GROUP_X[b],GROUP_Y[b],65+(node.row-1)*25,angles[b]+node.col*120+(node.row-1)*12);RADIUS[n]=7;}
                 else {position(n,GROUP_X[b],GROUP_Y[b],node.row==5?40:70,angles[b]+60);RADIUS[n]=node.row==5?10:12;}
             }
+        }
+        separateNodes();
+        for(int b=0;b<ExtractionGrowth.BRANCHES.length;b++)for(int n:ExtractionGrowth.BRANCH_NODES[b])
+            GROUP_EXTENT[b]=Math.max(GROUP_EXTENT[b],(float)Math.hypot(X[n]-GROUP_X[b],Y[n]-GROUP_Y[b])+visualRadius(n)+16);
+    }
+    /** Include the extra outer ring, not just the smaller disk/touch radius. */
+    public static float visualRadius(int n){return RADIUS[n]+(ExtractionGrowth.NODES[n].row>=4?3:0);}
+    // Preserve the round clusters and their prerequisite paths, then resolve all
+    // collisions across the complete atlas. Stable iteration keeps reloads and
+    // the small/full canvases identical; this also handles future appended nodes.
+    private static void separateNodes(){
+        for(int pass=0;pass<240;pass++){
+            boolean moved=false;
+            for(int i=0;i<X.length;i++)for(int j=0;j<i;j++){
+                float dx=X[i]-X[j],dy=Y[i]-Y[j];
+                float minimum=visualRadius(i)+visualRadius(j)+NODE_CLEARANCE;
+                double distanceSquared=(double)dx*dx+(double)dy*dy;
+                if(distanceSquared>=minimum*minimum)continue;
+                float distance=(float)Math.sqrt(distanceSquared);
+                if(distance<.001f){double angle=(i*137+j*53)*Math.PI/180;dx=(float)Math.cos(angle);dy=(float)Math.sin(angle);distance=1;}
+                float push=(minimum-distance+.1f)*.5f;
+                float px=dx/distance*push,py=dy/distance*push;
+                X[i]+=px;Y[i]+=py;X[j]-=px;Y[j]-=py;moved=true;
+            }
+            for(int i=0;i<X.length;i++){
+                float margin=visualRadius(i)+NODE_CLEARANCE;
+                X[i]=Math.max(margin,Math.min(SIZE-margin,X[i]));
+                Y[i]=Math.max(margin,Math.min(SIZE-margin,Y[i]));
+                float dx=X[i]-CENTER,dy=Y[i]-CENTER;
+                float distance=(float)Math.hypot(dx,dy),minimum=22+margin;
+                if(distance<minimum){
+                    if(distance<.001f){dx=1;dy=0;distance=1;}
+                    X[i]=CENTER+dx/distance*(minimum+.1f);Y[i]=CENTER+dy/distance*(minimum+.1f);moved=true;
+                }
+            }
+            if(!moved)return;
         }
     }
     private static void position(int n,float cx,float cy,float distance,float degrees){
