@@ -247,7 +247,7 @@ public final class ExtractionHybridCombat {
     }
     public static void open(){
         Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 혼합 스킬을 사용할 수 있습니다. 마법 면역 중에는 사용할 수 없습니다."));return;}
-        GameScene.show(new WndOptions("혼합 스킬",status(h),"마검사 상태","그림자 밟기","총포술사","사선 확보","성전사 기술","피의 서약 "+(state(h).bloodOath?"끄기":"켜기"),"닫기"){
+        GameScene.show(new WndOptions("혼합 스킬",status(h),"마검사 상태","그림자 밟기","마탄학자","사선 확보","성전사 기술","피의 서약 "+(state(h).bloodOath?"끄기":"켜기"),"닫기"){
             @Override protected boolean enabled(int i){return i==6||learned(h,ExtractionHybridTrees.PREFIXES[i],0)&&(i!=1||learned(h,"shadow",5))&&(i!=3||learned(h,"storm",7));}
             @Override protected boolean hasInfo(int i){return i<6;}
             @Override protected void onInfo(int i){GameScene.show(new WndMessage(ExtractionGrowth.NODES[ExtractionGrowth.index(ExtractionHybridTrees.PREFIXES[i]+"_0")].description()+"\n\n"+status(h)));}
@@ -261,7 +261,7 @@ public final class ExtractionHybridCombat {
             }
         });
     }
-    private static void coatings(Hero h){GameScene.show(new WndOptions("총포술사","준비 1턴 · 재사용까지 "+Math.max(0,(int)Math.ceil(state(h).coatReadyAt-Actor.now()))+"턴","독","냉기","화염","돌아가기"){
+    private static void coatings(Hero h){GameScene.show(new WndOptions("마탄학자","준비 1턴 · 재사용까지 "+Math.max(0,(int)Math.ceil(state(h).coatReadyAt-Actor.now()))+"턴","독","냉기","화염","돌아가기"){
         @Override protected boolean enabled(int i){return i==3||i==0||i==1&&learned(h,"alchemy",2)||i==2&&learned(h,"alchemy",3);}
         @Override protected void onSelect(int i){if(i==3)open();else if(ready(h)&&coat(h,i+1)){GLog.p("약품 코팅 준비: "+state(h).coatedShots+"회 명중");h.spendAndNext(1);}else GameScene.show(new WndMessage("코팅을 아직 준비할 수 없습니다. 재사용 시간을 확인하세요."));}
     });}

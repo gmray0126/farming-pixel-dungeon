@@ -23,7 +23,7 @@ public class AlchemyFirearm extends Weapon {
     public int range(Hero h){return node(h,9)?8:6;}
     public float reloadTime(Hero h){return node(h,8)?1.5f:2f;}
     @Override public String name(){return "연금 권총";}
-    @Override public String desc(){Hero h=Dungeon.hero;return "종류: 총기 · 총포술사 혼합 계통\n\n총포 입문 노드로 지급되는 장착 가능한 원거리 무기입니다. 주무기 슬롯에 장착하고 적을 누르면 사격합니다. 일반탄은 물리 피해이며 속성탄은 명중할 때 해당 효과를 추가합니다.\n피해 "+min(0)+"~"+max(0)+" · 사거리 "+range(h)+"칸 · 사격 최소 1턴 · 재장전 "+reloadTime(h)+"턴\n탄창 "+loaded+" / "+capacity(h)+" · "+AlchemyBullet.elementName(element)+"탄\n\n탄약을 연금술로 만들고 준비해 가져오세요. 빗나가도 한 발을 소비합니다. 근접 사격은 명중이 불리하며 벽·다른 대상에 막힙니다. 다른 속성으로 바꾸려면 탄창을 비워야 합니다. 총 자체의 강화 대신 총포 노드와 범용·원거리 노드로 성장합니다.\n\n첫 총포 입문 보상: 총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 재지급하지 않습니다.";}
+    @Override public String desc(){Hero h=Dungeon.hero;return "종류: 총기 · 마탄학자 혼합 계통\n\n총포 입문 노드로 지급되는 장착 가능한 원거리 무기입니다. 주무기 슬롯에 장착하고 적을 누르면 사격합니다. 일반탄은 물리 피해이며 속성탄은 명중할 때 해당 효과를 추가합니다.\n피해 "+min(0)+"~"+max(0)+" · 사거리 "+range(h)+"칸 · 사격 최소 1턴 · 재장전 "+reloadTime(h)+"턴\n탄창 "+loaded+" / "+capacity(h)+" · "+AlchemyBullet.elementName(element)+"탄\n\n탄약을 연금술로 만들고 준비해 가져오세요. 빗나가도 한 발을 소비합니다. 근접 사격은 명중이 불리하며 벽·다른 대상에 막힙니다. 다른 속성으로 바꾸려면 탄창을 비워야 합니다. 총 자체의 강화 대신 총포 노드와 범용·원거리 노드로 성장합니다.\n\n첫 총포 입문 보상: 총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 재지급하지 않습니다.";}
     @Override public boolean isUpgradable(){return false;}
     @Override public int value(){return 0;}
     @Override public int energyVal(){return 0;}

@@ -16,6 +16,8 @@ public final class GrowthAtlasLayout {
         for(int b=12;b<19;b++)angles[b]=-90+(b-12)*360f/7;
         for(int b=19;b<25;b++)angles[b]=-90+(b-19)*60;
         for(int b=25;b<angles.length;b++)angles[b]=-60+(b-25)*60;
+        // Arcane ballistics bridges Mage (-30) and Huntress (90).
+        angles[27]=30;
         for(int b=0;b<angles.length;b++){
             double a=Math.toRadians(angles[b]);float radius=b<3?115:b<12?400:b<19?255:b<25?1100:1600;
             GROUP_X[b]=CENTER+(float)Math.cos(a)*radius;GROUP_Y[b]=CENTER+(float)Math.sin(a)*radius;

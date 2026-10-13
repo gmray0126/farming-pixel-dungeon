@@ -11,7 +11,7 @@ import java.util.*;
 public final class ExtractionGrowth {
     private ExtractionGrowth() {}
     public static final int MAGIC = 11, FIST = 9;
-    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술","마검사","그림자술사","총포술사","폭풍 유격수","성전사","혈기사"};
+    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술","마검사","그림자술사","마탄학자","폭풍 유격수","성전사","혈기사"};
     public enum Stat {
         KNOW_HEALING("회복 물약 식별",false), KNOW_STRENGTH("힘 물약 식별",false), KNOW_EXPERIENCE("경험 물약 식별",false),
         KNOW_MINDVISION("심안 물약 식별",false), KNOW_LEVITATION("부유 물약 식별",false), KNOW_INVISIBILITY("투명 물약 식별",false),
@@ -289,7 +289,7 @@ public final class ExtractionGrowth {
         }
         for(int b=0;b<ExtractionHybridTrees.PREFIXES.length;b++)for(Node n:list){
             String prefix=ExtractionHybridTrees.PREFIXES[b];
-            if(n.id.equals(prefix+"_0"))n.required=new String[]{ExtractionClassUtilities.ROOTS[b],ExtractionClassUtilities.ROOTS[(b+1)%6]};
+            if(n.id.equals(prefix+"_0"))n.required=new String[]{ExtractionClassUtilities.ROOTS[b==2?1:b],ExtractionClassUtilities.ROOTS[(b+1)%6]};
             if(n.id.equals(prefix+"_13"))n.required=new String[]{prefix+"_4",prefix+"_8",prefix+"_12"};
         }
         NODES=list.toArray(new Node[0]);
