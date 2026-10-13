@@ -214,7 +214,23 @@ try {
     Start-Sleep -Milliseconds 500
     Capture $p '07-portrait-alchemy'
     Close-Game $p
-    @{portrait_window=$true;black_growth_map=$true;full_height_growth_viewport=$true;clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
+    # Enter the native training scene and verify it never changes the real profile.
+    $profile=Read-Bundle "$saveDir/extraction-profile.dat"
+    $profile.active=$false; $profile.escrow=@()
+    $profile.nodes=@($profile.nodes)+@('alchemy_0','alchemy_5','alchemy_6','spell_0')
+    $profile | Add-Member -NotePropertyName firearm_awarded -NotePropertyValue $true -Force
+    $profile.prepared=@(@{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm';quantity=1;level=0;gun_loaded=4;gun_element=0},@{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyBullet';quantity=8;bullet_element=0})
+    Write-Bundle "$saveDir/extraction-profile.dat" $profile
+    $p=Start-Game
+    $before=(Get-FileHash "$saveDir/extraction-profile.dat").Hash
+    Click-Client $p ([int](($left+$hubWidth-15)*$zoom)) ([int](29*$zoom))
+    Start-Sleep -Seconds 3
+    Capture $p '08-native-training'
+    $p.Refresh();if($p.MainWindowTitle -match 'Crashed|Error'){throw 'Training scene crashed'}
+    if((Get-Content pc-evidence/stdout.txt -Raw) -notmatch 'Farming training scene ready'){throw 'Training scene did not open'}
+    Close-Game $p
+    if((Get-FileHash "$saveDir/extraction-profile.dat").Hash -ne $before){throw 'Training changed the real profile'}
+    @{native_training=$true;training_profile_unchanged=$true;portrait_window=$true;black_growth_map=$true;full_height_growth_viewport=$true;clothing_glyph_resume=$true;clothing_resume=$true;mobile_equipment_render=$true;shoe_shop_render=$true;windows_launch=$true;native_start=$true;native_resume=$true;test_graphics='Mesa llvmpipe'} | ConvertTo-Json | Set-Content pc-evidence/result.json
 } finally {
     if ($p) { $p.Refresh(); if (!$p.HasExited) { $p.Kill() } }
 }

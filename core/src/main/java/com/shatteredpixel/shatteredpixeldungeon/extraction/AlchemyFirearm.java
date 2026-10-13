@@ -79,7 +79,7 @@ public class AlchemyFirearm extends Weapon {
         @Override public int STRReq(int level){return 10;}
         @Override public int damageRoll(Char owner){return gun==null?0:gun.damageRoll(owner);}
         @Override public float delayFactor(Char owner){return Math.max(1,gun==null?1:gun.delayFactor(owner));}
-        @Override public int proc(Char owner,Char target,int damage){if(owner instanceof Hero){elemental((Hero)owner,target,kind);if(node((Hero)owner,4)&&kind!=0)damage+=2;}return gun==null?damage:gun.proc(owner,target,damage);}
+        @Override public int proc(Char owner,Char target,int damage){if(owner instanceof Hero){if(target.alignment==Char.Alignment.ENEMY){ExtractionHybridCombat.HybridTag tag=Buff.prolong(target,ExtractionHybridCombat.HybridTag.class,12);if(tag!=null)tag.mask|=4;}elemental((Hero)owner,target,kind);if(node((Hero)owner,4)&&kind!=0)damage+=2;}return gun==null?damage:gun.proc(owner,target,damage);}
         @Override protected void rangedHit(Char target,int cell){}
         @Override protected void rangedMiss(int cell){}
     }

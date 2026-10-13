@@ -79,6 +79,8 @@ public class AntiMagic extends Armor.Glyph {
 	
 	public static final HashSet<Class> RESISTS = new HashSet<>();
 	static {
+        RESISTS.add(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.SwordWaveDamage.class);
+        RESISTS.add(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm.ElementDamage.class);
 		RESISTS.add( MagicalSleep.class );
 		RESISTS.add( Charm.class );
 		RESISTS.add( Weakness.class );

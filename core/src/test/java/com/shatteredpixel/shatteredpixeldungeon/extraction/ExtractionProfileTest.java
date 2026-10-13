@@ -379,11 +379,11 @@ public class ExtractionProfileTest {
         profile.nodes.clear();hero.extractionSkills.armor.charge=100;skill.execute(hero);assertEquals(100,hero.extractionSkills.armor.charge,0.001f);hero.sprite=null;
     }
     @Test public void skillCatalogIncludesHybridSpellAndIndividualMonkActions(){
-        profile.nodes.add("skill_stealth");profile.nodes.add("skill_prayer");profile.nodes.add("subclass_monk");profile.nodes.add("alchemy_0");profile.nodes.add("alchemy_2");profile.nodes.add("holy_0");profile.nodes.add("holy_2");profile.nodes.add("blood_0");
+        profile.nodes.add("skill_stealth");profile.nodes.add("skill_prayer");profile.nodes.add("subclass_monk");profile.nodes.add("alchemy_0");profile.nodes.add("alchemy_5");profile.nodes.add("alchemy_2");profile.nodes.add("holy_0");profile.nodes.add("holy_2");profile.nodes.add("blood_0");
         Hero hero=new Hero();hero.extractionRaidID=1;Dungeon.hero=hero;
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
         assertNotNull(ExtractionSkillQuickslots.find(hero,"stealth"));assertNotNull(ExtractionSkillQuickslots.find(hero,"spell_GuidingLight"));assertNotNull(ExtractionSkillQuickslots.find(hero,"monk_0"));
-        assertNotNull(ExtractionSkillQuickslots.find(hero,"coat_2"));assertNull(ExtractionSkillQuickslots.find(hero,"coat_3"));assertNotNull(ExtractionSkillQuickslots.find(hero,"holy_judge"));assertNotNull(ExtractionSkillQuickslots.find(hero,"blood_oath"));
+        assertNotNull(ExtractionSkillQuickslots.find(hero,"gun_roll"));assertNull(ExtractionSkillQuickslots.find(hero,"coat_3"));assertNotNull(ExtractionSkillQuickslots.find(hero,"holy_judge"));assertNotNull(ExtractionSkillQuickslots.find(hero,"blood_oath"));
     }
     @Test public void bagNodesReplaceAutomaticBagsAndOldContentsSurviveRemoval(){
         profile.begin();Hero hero=new Hero();hero.extractionRaidID=profile.raidID;Dungeon.hero=hero;profile.initialize(hero);

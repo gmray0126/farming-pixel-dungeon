@@ -18,13 +18,16 @@ public final class ExtractionTraining {
     public static void finish(){if(running){running=false;Dungeon.hero=null;Dungeon.level=null;Actor.clear();}}
     public static void enter(){
         if(ExtractionProfile.get().active)return;
-        running=true;
         try{
-            Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.depth=1;Dungeon.branch=0;Dungeon.challenges=0;
-            Room level=new Room();level.create();Dungeon.switchLevel(level,level.width()*9+7);
-            for(Buff b:Dungeon.hero.buffs(Hunger.class))b.detach();
+            prepare();
             ShatteredPixelDungeon.switchScene(GameScene.class);
         }catch(RuntimeException e){finish();Game.scene().add(new WndMessage("훈련장을 열지 못했습니다: "+e.getMessage()));}
+    }
+    public static Room prepare(){
+        if(ExtractionProfile.get().active)throw new IllegalStateException("원정을 마친 뒤 훈련장을 이용하세요.");
+        running=true;Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.depth=1;Dungeon.branch=0;Dungeon.challenges=0;
+        Room level=new Room();level.create();Dungeon.switchLevel(level,9*level.width()+7);
+        for(Buff b:Dungeon.hero.buffs(Hunger.class))b.detach();return level;
     }
     public static void report(){
         if(!running||!(Dungeon.level instanceof Room))return;

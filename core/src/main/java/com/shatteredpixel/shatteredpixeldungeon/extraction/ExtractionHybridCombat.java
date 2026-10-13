@@ -41,7 +41,7 @@ public final class ExtractionHybridCombat {
     public static float rollCooldown(Hero h){return learned(h,"alchemy",14)?5:learned(h,"alchemy",8)?6:8;}
     public static boolean roll(Hero h,int cell){
         if(!learned(h,"alchemy",5)||Actor.now()<state(h).rollReadyAt||h.rooted||h.paralysed>0||Dungeon.level==null||!Dungeon.level.insideMap(cell)||!Dungeon.level.heroFOV[cell]||Dungeon.level.distance(h.pos,cell)!=1||!safeCell(h,cell))return false;
-        state(h).rollReadyAt=Actor.now()+rollCooldown(h);h.move(cell);
+        state(h).rollReadyAt=Actor.now()+rollCooldown(h);h.move(cell,false);
         if(learned(h,"alchemy",6)){AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null)gun.reload(h,gun.element);}
         if(learned(h,"alchemy",7))Buff.prolong(h,RollAfterimage.class,2);
         return true;
@@ -54,6 +54,7 @@ public final class ExtractionHybridCombat {
         if(!swordWave(h)||!target(h,enemy,physicalDamage))return;
         int extra=Math.max(1,Math.round(physicalDamage*(learned(h,"spell",1)?.2f:.15f)));
         enemy.damage(extra,new SwordWaveDamage());
+        if(h.sprite!=null&&h.sprite.parent!=null&&Dungeon.level!=null&&Dungeon.level.distance(h.pos,enemy.pos)>1)com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile.boltFromChar(h.sprite.parent,com.shatteredpixel.shatteredpixeldungeon.effects.MagicMissile.MAGIC_MISSILE,h.sprite,enemy.pos,()->{});
     }
     public static State state(Hero h){if(h.extractionHybrid==null)h.extractionHybrid=new State();return h.extractionHybrid;}
     public static boolean learned(Hero h,String tree,int node){return h!=null&&h.extractionRaidID!=0&&ExtractionProfile.get().nodes.contains(tree+"_"+node);}
@@ -223,7 +224,7 @@ public final class ExtractionHybridCombat {
     public static String status(Hero h){
         State s=state(h);float now=Actor.now();
         return "마검 준비: 주문 "+(s.spellReady&&now<=s.spellUntil?"강화":"대기")+" · 검기 "+(s.bladeReady&&now<=s.bladeUntil?"강화":"대기")
-            +"\n혈기사 서약: "+(s.bloodOath?"켜짐 · 5턴마다 체력 -1":"꺼짐")+"\n코팅: "+(s.coating==1?"독":s.coating==2?"냉기":s.coating==3?"화염":"없음")+" · 남은 명중 "+s.coatedShots
+            +"\n혈기사 서약: "+(s.bloodOath?"켜짐 · 5턴마다 체력 -1":"꺼짐")+"\n권총: "+(AlchemyFirearm.find(h)==null?"가져오지 않음":AlchemyFirearm.find(h).status()+" · "+AlchemyBullet.elementName(AlchemyFirearm.find(h).element)+"탄")+" · 구르기 대기 "+Math.max(0,(int)Math.ceil(s.rollReadyAt-now))+"턴"
             +"\n성력 "+s.faith+" / "+faithCap(h)+"\n행동 버튼 옆 정보에서 조건과 재사용 시간을 확인하세요.";
     }
     public static java.util.ArrayList<ExtractionClassSkills.Action> shortcuts(Hero h){

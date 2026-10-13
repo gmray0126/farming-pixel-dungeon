@@ -638,6 +638,7 @@ public class GameScene extends PixelScene {
             com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionSkillQuickslots.restore(Dungeon.hero);
         }
         com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.sceneReady(Dungeon.hero);
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active())System.out.println("Farming training scene ready");
         com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionContracts.floor(Dungeon.hero);
 
 		// Foresight searches immediately when attached, including discovery particles.
