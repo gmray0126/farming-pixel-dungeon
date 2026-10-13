@@ -20,6 +20,19 @@ import java.lang.reflect.*;
 import static org.junit.Assert.*;
 
 public class ExtractionHybridTest {
+    @Test public void arcaneBallisticsBridgesMageAndHuntress(){
+        ExtractionGrowth.Node root=ExtractionGrowth.NODES[ExtractionGrowth.index("alchemy_0")];
+        assertEquals("마탄학자",ExtractionGrowth.BRANCHES[root.branch]);
+        assertArrayEquals(new String[]{"skill_beacon","skill_hawk"},root.required);
+        java.util.HashSet<String> learned=new java.util.HashSet<>();
+        learned.add("skill_stealth");learned.add("skill_hawk");
+        assertFalse(ExtractionGrowth.unlocked(root,learned));
+        learned.add("skill_beacon");assertTrue(ExtractionGrowth.unlocked(root,learned));
+        assertTrue(GrowthAtlasLayout.GROUP_X[27]>GrowthAtlasLayout.GROUP_X[20]);
+        assertTrue(GrowthAtlasLayout.GROUP_Y[27]>GrowthAtlasLayout.GROUP_Y[20]);
+        assertTrue(GrowthAtlasLayout.GROUP_Y[27]<GrowthAtlasLayout.GROUP_Y[22]);
+    }
+
     @Rule public TemporaryFolder folder=new TemporaryFolder();
     private ExtractionProfile p;private Hero h;
     @Before public void setup() throws Exception{
