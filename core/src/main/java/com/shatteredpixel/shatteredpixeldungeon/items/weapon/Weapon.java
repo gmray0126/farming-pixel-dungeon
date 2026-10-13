@@ -333,6 +333,7 @@ abstract public class Weapon extends KindOfWeapon {
 	@Override
 	public int reachFactor(Char owner) {
 		int reach = RCH;
+        if(owner instanceof Hero)reach=Math.max(reach,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.waveReach((Hero)owner));
 		if(owner instanceof Hero && ((Hero)owner).extractionRaidID != 0 && !RingOfForce.fightingUnarmed((Hero)owner))
 			reach += com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().reachBonus(this);
 		if (owner instanceof Hero && RingOfForce.fightingUnarmed((Hero) owner)){

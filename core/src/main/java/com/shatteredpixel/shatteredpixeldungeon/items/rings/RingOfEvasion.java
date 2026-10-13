@@ -33,32 +33,27 @@ public class RingOfEvasion extends Ring {
 		buffClass = Evasion.class;
 	}
 
-	public String statsInfo() {
-		if (isIdentified()){
-			String info = Messages.get(this, "stats",
-					Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, soloBuffedBonus()) - 1f)));
-			if (isEquipped(Dungeon.hero) && soloBuffedBonus() != combinedBuffedBonus(Dungeon.hero)){
-				info += "\n\n" + Messages.get(this, "combined_stats",
-						Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, combinedBuffedBonus(Dungeon.hero)) - 1f)));
-			}
-			return info;
-		} else {
-			return Messages.get(this, "typical_stats", Messages.decimalFormat("#.##", 12.5f));
-		}
-	}
+    public String statsInfo() {
+        String info=isIdentified()?"이 반지의 회피 수치 배율: ×"+Messages.decimalFormat("#.##",com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.ringMultiplier(soloBuffedBonus())):"일반적인 회피 수치 배율: ×1.13";
+        if(isIdentified()&&Dungeon.hero!=null&&isEquipped(Dungeon.hero)&&soloBuffedBonus()!=combinedBuffedBonus(Dungeon.hero))
+            info+="\n\n장착한 회피 반지 합산 배율: ×"+Messages.decimalFormat("#.##",com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.ringMultiplier(combinedBuffedBonus(Dungeon.hero)));
+        return info+"\n\n회피 확률은 적의 명중과 버프에 따라 달라지며 원정에서는 최대 80%입니다. 반지 배율은 확률이 아닙니다. 일시적인 회피 기술에도 같은 상한을 적용합니다.";
+    }
+    public String upgradeStat1(int level){
+        if(cursed&&cursedKnown)level=Math.min(-1,level-3);
+        return "×"+Messages.decimalFormat("#.##",com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.ringMultiplier(level+1));
+    }
 
-	public String upgradeStat1(int level){
-		if (cursed && cursedKnown) level = Math.min(-1, level-3);
-		return Messages.decimalFormat("#.##", 100f * (Math.pow(1.125f, level+1)-1f)) + "%";
-	}
-	
 	@Override
 	protected RingBuff buff( ) {
 		return new Evasion();
 	}
 	
 	public static float evasionMultiplier( Char target ){
-		return (float) Math.pow( 1.125, getBuffedBonus(target, Evasion.class));
+		int bonus=getBuffedBonus(target,Evasion.class);
+        if(target instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero&&((com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)target).extractionRaidID!=0)
+            return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.ringMultiplier(bonus);
+        return (float)Math.pow(1.125,bonus);
 	}
 
 	public class Evasion extends RingBuff {

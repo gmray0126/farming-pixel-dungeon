@@ -76,12 +76,22 @@ public class ExtractionHybridTest {
         assertEquals(17,ExtractionHybridCombat.magic(h,e,10));assertNull(e.buff(ExtractionHybridCombat.ShadowMark.class));
         assertEquals(10,ExtractionHybridCombat.magic(h,e,10));
     }
-    @Test public void coatingHasChargesAndCooldownAndOnlyRangedHitsConsumeIt(){
-        learn("alchemy",0,2,5,14);assertTrue(ExtractionHybridCombat.coat(h,2));assertEquals(7,ExtractionHybridCombat.state(h).coatedShots);
-        assertFalse(ExtractionHybridCombat.coat(h,2));assertFalse(ExtractionHybridCombat.coat(h,3));
-        Mob e=enemy();ExtractionHybridCombat.physical(h,e,10);assertEquals(7,ExtractionHybridCombat.state(h).coatedShots);
-        h.belongings.weapon=new ThrowingKnife();ExtractionHybridCombat.physical(h,e,10);assertEquals(6,ExtractionHybridCombat.state(h).coatedShots);assertNotNull(e.buff(Chill.class));
-        assertEquals(10,ExtractionHybridCombat.physical(h,new Hero(),10));assertEquals(6,ExtractionHybridCombat.state(h).coatedShots);
+    @Test public void gunReloadConsumesRealAmmunitionAndNeverCreatesRounds(){
+        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();gun.collect(h.belongings.backpack);AlchemyBullet ammo=(AlchemyBullet)new AlchemyBullet().quantity(10);ammo.collect(h.belongings.backpack);
+        assertEquals(4,gun.reload(h,0));assertEquals(6,ammo.quantity());assertEquals(0,gun.reload(h,0));gun.loaded=1;assertEquals(3,gun.reload(h,0));assertEquals(3,ammo.quantity());
+        assertEquals(0,gun.reload(h,AlchemyBullet.FIRE));Bundle b=new Bundle();b.put("gun",gun);AlchemyFirearm copy=(AlchemyFirearm)b.get("gun");assertEquals(4,copy.loaded);assertEquals(0,copy.element);
+    }
+    @Test public void ammunitionRecipesConsumeSeedsAndHaveDistinctElementStacks(){
+        java.util.ArrayList<Item> seed=picks(new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed());AlchemyBullet.BasicRecipe base=new AlchemyBullet.BasicRecipe();assertTrue(base.testIngredients(seed));assertEquals(6,base.brew(seed).quantity());assertEquals(0,seed.get(0).quantity());
+        java.util.ArrayList<Item> ingredients=picks(new AlchemyBullet(),new com.shatteredpixel.shatteredpixeldungeon.plants.Icecap.Seed());AlchemyBullet.ElementRecipe recipe=new AlchemyBullet.ElementRecipe();assertTrue(recipe.testIngredients(ingredients));AlchemyBullet result=(AlchemyBullet)recipe.brew(ingredients);assertEquals(AlchemyBullet.FROST,result.element);assertEquals(0,ingredients.get(0).quantity());assertEquals(0,ingredients.get(1).quantity());assertFalse(result.isSimilar(new AlchemyBullet()));
+    }
+    @Test public void evasionCapAndRingScalingRemainBounded(){
+        assertEquals(5,ExtractionEvasion.ringMultiplier(32),.00001f);
+        for(float accuracy:new float[]{1,5,20,100})for(float defense:new float[]{0,1,10,100,10000,Float.POSITIVE_INFINITY})assertTrue(ExtractionEvasion.chance(accuracy,defense)<=.80001f);
+        assertEquals(.8f,ExtractionEvasion.chance(20,10000),.00001f);assertEquals(0,ExtractionEvasion.chance(20,0),0);assertEquals(.25f,ExtractionEvasion.chance(20,10),.00001f);
+    }
+    @Test public void swordWaveAddsRangeAndSeparateMagicWithoutEnablingRangedWeapons(){
+        learn("spell",0);assertEquals(3,((com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon)h.belongings.weapon).reachFactor(h));Mob e=enemy();ExtractionHybridCombat.waveMagic(h,e,20);assertEquals(97,e.HP);learn("spell",1,9);ExtractionHybridCombat.waveMagic(h,e,20);assertEquals(93,e.HP);assertEquals(4,ExtractionHybridCombat.waveReach(h));h.belongings.weapon=new ThrowingKnife();assertEquals(0,ExtractionHybridCombat.waveReach(h));
     }
     @Test public void stormRequiresSwitchingDistanceFamilies(){
         learn("storm",0);Mob e=enemy();h.belongings.weapon=new ThrowingKnife();assertEquals(10,ExtractionHybridCombat.physical(h,e,10));

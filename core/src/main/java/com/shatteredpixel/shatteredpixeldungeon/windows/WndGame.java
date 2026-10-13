@@ -54,7 +54,11 @@ public class WndGame extends Window {
             addButton(new RedButton("원정 스킬"){@Override protected void onClick(){hide();com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionClassSkills.open();}});
         }
 
-		//settings
+		if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active()){
+            addButton(new RedButton("훈련 결과 / 초기화"){@Override protected void onClick(){hide();com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.report();}});
+            addButton(new RedButton("훈련 종료 · 로비"){@Override protected void onClick(){hide();ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class);}});
+        }
+        //settings
 		RedButton curBtn;
 		addButton( curBtn = new RedButton( Messages.get(this, "settings") ) {
 			@Override

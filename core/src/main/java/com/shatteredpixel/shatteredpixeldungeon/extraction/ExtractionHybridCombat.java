@@ -18,25 +18,42 @@ import com.watabou.utils.*;
 public final class ExtractionHybridCombat {
     public static class State implements Bundlable {
         public boolean spellReady,bladeReady,bloodOath;
-        public float spellUntil,bladeUntil,rangeUntil,coatReadyAt,stepReadyAt,shadowReadyAt;
+        public float spellUntil,bladeUntil,rangeUntil,coatReadyAt,stepReadyAt,shadowReadyAt,rollReadyAt;
         public int spellChain,lastSpellKind,rangeChain,lastRangeKind,coating,coatedShots,faith,oathTurns;
         public transient boolean castEmpowered,castHit,castExtraCharge;
         public transient float castMultiplier=1;
         @Override public void storeInBundle(Bundle b){
-            b.put("spell_ready",spellReady);b.put("blade_ready",bladeReady);b.put("blood_oath",bloodOath);
+            b.put("roll_ready",rollReadyAt);b.put("spell_ready",spellReady);b.put("blade_ready",bladeReady);b.put("blood_oath",bloodOath);
             b.put("spell_until",spellUntil);b.put("blade_until",bladeUntil);b.put("range_until",rangeUntil);
             b.put("coat_ready",coatReadyAt);b.put("step_ready",stepReadyAt);b.put("shadow_ready",shadowReadyAt);
             b.put("spell_chain",spellChain);b.put("spell_kind",lastSpellKind);b.put("range_chain",rangeChain);b.put("range_kind",lastRangeKind);
             b.put("coating",coating);b.put("shots",coatedShots);b.put("faith",faith);b.put("oath_turns",oathTurns);
         }
         @Override public void restoreFromBundle(Bundle b){
-            spellReady=b.getBoolean("spell_ready");bladeReady=b.getBoolean("blade_ready");bloodOath=b.getBoolean("blood_oath");
+            rollReadyAt=b.getFloat("roll_ready");spellReady=b.getBoolean("spell_ready");bladeReady=b.getBoolean("blade_ready");bloodOath=b.getBoolean("blood_oath");
             spellUntil=b.getFloat("spell_until");bladeUntil=b.getFloat("blade_until");rangeUntil=b.getFloat("range_until");
             coatReadyAt=b.getFloat("coat_ready");stepReadyAt=b.getFloat("step_ready");shadowReadyAt=b.getFloat("shadow_ready");
             spellChain=b.getInt("spell_chain");lastSpellKind=b.getInt("spell_kind");rangeChain=b.getInt("range_chain");lastRangeKind=b.getInt("range_kind");
             coating=b.getInt("coating");coatedShots=Math.max(0,b.getInt("shots"));faith=Math.max(0,b.getInt("faith"));oathTurns=Math.max(0,b.getInt("oath_turns"))%5;
             castEmpowered=castHit=castExtraCharge=false;castMultiplier=1;
         }
+    }
+    public static float rollCooldown(Hero h){return learned(h,"alchemy",14)?5:learned(h,"alchemy",8)?6:8;}
+    public static boolean roll(Hero h,int cell){
+        if(!learned(h,"alchemy",5)||Actor.now()<state(h).rollReadyAt||h.rooted||h.paralysed>0||Dungeon.level==null||!Dungeon.level.insideMap(cell)||!Dungeon.level.heroFOV[cell]||Dungeon.level.distance(h.pos,cell)!=1||!safeCell(h,cell))return false;
+        state(h).rollReadyAt=Actor.now()+rollCooldown(h);h.move(cell);
+        if(learned(h,"alchemy",6)){AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null)gun.reload(h,gun.element);}
+        if(learned(h,"alchemy",7))Buff.prolong(h,RollAfterimage.class,2);
+        return true;
+    }
+    public static class RollAfterimage extends FlavourBuff { @Override public String name(){return "구르기 잔상";} }
+    public static boolean swordWave(Hero h){if(!learned(h,"spell",0)||h.buff(MagicImmune.class)!=null)return false;int family=ExtractionGrowth.family(h.growthWeapon());return family==3||family==4||family==ExtractionGrowth.MAGIC;}
+    public static int waveReach(Hero h){return swordWave(h)?learned(h,"spell",9)?4:3:0;}
+    public static class SwordWaveDamage{}
+    public static void waveMagic(Hero h,Char enemy,int physicalDamage){
+        if(!swordWave(h)||!target(h,enemy,physicalDamage))return;
+        int extra=Math.max(1,Math.round(physicalDamage*(learned(h,"spell",1)?.2f:.15f)));
+        enemy.damage(extra,new SwordWaveDamage());
     }
     public static State state(Hero h){if(h.extractionHybrid==null)h.extractionHybrid=new State();return h.extractionHybrid;}
     public static boolean learned(Hero h,String tree,int node){return h!=null&&h.extractionRaidID!=0&&ExtractionProfile.get().nodes.contains(tree+"_"+node);}
@@ -61,13 +78,13 @@ public final class ExtractionHybridCombat {
         if(!target(h,enemy,damage))return damage;
         State s=state(h);int family=ExtractionGrowth.family(h.belongings.attackingWeapon());boolean ranged=family==10;
         float now=Actor.now();boolean empowered=false;
-        if(!ranged&&learned(h,"spell",0)){
+        if(!ranged&&swordWave(h)){
             if(s.bladeReady&&now<=s.bladeUntil){
                 s.spellChain=s.lastSpellKind==2?Math.min(3,s.spellChain+1):0;
                 damage=Math.round(damage*(learned(h,"spell",12)?1.4f:1.2f)*(1+(learned(h,"spell",13)?s.spellChain*.05f:0)));
                 if(learned(h,"spell",1))damage+=2;
                 if(learned(h,"spell",6))shield(h,learned(h,"spell",8)?6:3);
-                if(learned(h,"spell",9))Buff.prolong(h,Haste.class,2);
+
                 if(learned(h,"spell",11))Buff.prolong(h,Recharging.class,3);
                 s.bladeReady=false;empowered=true;tag(enemy,0);
             }else s.spellChain=0;
@@ -89,20 +106,6 @@ public final class ExtractionHybridCombat {
                 tag(enemy,3);
             }else s.rangeChain=0;
             s.lastRangeKind=kind;s.rangeUntil=now+(learned(h,"storm",11)?10:6);
-        }
-        if(ranged&&learned(h,"alchemy",0)&&s.coatedShots>0){
-            boolean poison=enemy.buff(Poison.class)!=null,chill=enemy.buff(Chill.class)!=null,burn=enemy.buff(Burning.class)!=null;
-            boolean reacting=(s.coating==1&&(chill||burn))||(s.coating==2&&(poison||burn))||(s.coating==3&&(poison||chill));
-            if(learned(h,"alchemy",13)&&(poison||chill||burn))damage=Math.round(damage*1.2f);
-            if(reacting&&learned(h,"alchemy",4))damage+=4;
-            if(s.coating==2&&poison&&learned(h,"alchemy",9))Buff.prolong(enemy,Cripple.class,2);
-            if(s.coating==3&&chill&&learned(h,"alchemy",10))damage+=4;
-            if(reacting&&learned(h,"alchemy",11))shield(h,4);
-            if(poison&&learned(h,"alchemy",12))Buff.detach(h,Poison.class);
-            if(s.coating==1){Poison p=Buff.affect(enemy,Poison.class);if(p!=null)p.set(learned(h,"alchemy",1)?5:3);}
-            else if(s.coating==2)Buff.prolong(enemy,Chill.class,4);
-            else if(s.coating==3){Burning b=Buff.affect(enemy,Burning.class);if(b!=null)b.reignite(enemy);}
-            s.coatedShots--;tag(enemy,2);
         }
         if(!ranged&&learned(h,"holy",0)){
             int cap=faithCap(h);s.faith=Math.min(cap,s.faith+1);
@@ -173,7 +176,7 @@ public final class ExtractionHybridCombat {
     }
     public static int incoming(Hero h,int damage,Object source){
         if(h==null||h.extractionRaidID==0)return damage;
-        if(learned(h,"alchemy",7)&&state(h).coatedShots>0&&(source instanceof Poison||source instanceof Burning))damage=(int)Math.ceil(damage*.75f);
+
         if(learned(h,"holy",11)&&state(h).faith>=3&&source instanceof Char)damage=(int)Math.ceil(damage*.9f);
         return damage;
     }
@@ -219,7 +222,7 @@ public final class ExtractionHybridCombat {
     private static boolean ready(Hero h){return ExtractionClassSkills.ready(h)&&h.buff(MagicImmune.class)==null;}
     public static String status(Hero h){
         State s=state(h);float now=Actor.now();
-        return "마검 준비: 주문 "+(s.spellReady&&now<=s.spellUntil?"강화":"대기")+" · 근접 "+(s.bladeReady&&now<=s.bladeUntil?"강화":"대기")
+        return "마검 준비: 주문 "+(s.spellReady&&now<=s.spellUntil?"강화":"대기")+" · 검기 "+(s.bladeReady&&now<=s.bladeUntil?"강화":"대기")
             +"\n혈기사 서약: "+(s.bloodOath?"켜짐 · 5턴마다 체력 -1":"꺼짐")+"\n코팅: "+(s.coating==1?"독":s.coating==2?"냉기":s.coating==3?"화염":"없음")+" · 남은 명중 "+s.coatedShots
             +"\n성력 "+s.faith+" / "+faithCap(h)+"\n행동 버튼 옆 정보에서 조건과 재사용 시간을 확인하세요.";
     }
@@ -227,11 +230,11 @@ public final class ExtractionHybridCombat {
         java.util.ArrayList<ExtractionClassSkills.Action> out=new java.util.ArrayList<>();
         if(h==null||h.extractionRaidID==0)return out;
         if(learned(h,"shadow",5))out.add(new ExtractionClassSkills.Action("hybrid_shadow","그림자 밟기","표식한 적 옆 안전한 칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).shadowReadyAt&&!h.rooted,()->shadowStep(h)));
-        if(learned(h,"alchemy",0))for(int e=1;e<=3;e++){
-            if(e==2&&!learned(h,"alchemy",2)||e==3&&!learned(h,"alchemy",3))continue;
-            final int element=e;String name=e==1?"독":e==2?"냉기":"화염";
-            out.add(new ExtractionClassSkills.Action("coat_"+e,name+" 코팅","투척 공격에 코팅을 준비합니다. 준비 1턴.\n"+status(h),Actor.now()>=state(h).coatReadyAt,()->{if(ready(h)&&coat(h,element)){GLog.p("약품 코팅 준비: "+state(h).coatedShots+"회 명중");h.spendAndNext(1);}}));
-        }
+        if(learned(h,"alchemy",0))out.add(new ExtractionClassSkills.Action("gun_reload","권총 재장전","탄약을 소비하여 재장전합니다.",AlchemyFirearm.find(h)!=null,()->{AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null&&ready(h))gun.reloadMenu(h);}));
+        if(learned(h,"alchemy",5))out.add(new ExtractionClassSkills.Action("gun_roll","전술 구르기","한 칸 즉시 이동 · 행동 턴 0 · 재사용 "+rollCooldown(h)+"턴. 구르기 장전 노드가 있으면 가진 탄약으로 재장전합니다.",Actor.now()>=state(h).rollReadyAt&&!h.rooted,()->GameScene.selectCell(new CellSelector.Listener(){
+            @Override public String prompt(){return "구를 한 칸의 안전한 빈칸을 선택하세요.";}
+            @Override public void onSelect(Integer cell){if(cell==null)return;if(!ready(h)||!roll(h,cell)){GLog.w("한 칸 거리·안전한 빈칸·재사용 시간을 확인하세요.");return;}h.sprite.place(h.pos);Dungeon.observe();GameScene.updateFog();h.spendAndNext(0);}
+        })));
         if(learned(h,"storm",7))out.add(new ExtractionClassSkills.Action("hybrid_storm","사선 확보","안전한 빈칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).stepReadyAt&&!h.rooted,()->windStep(h)));
         if(learned(h,"holy",0))out.add(new ExtractionClassSkills.Action("holy_mend","성력 회복","성력을 소모해 체력을 회복합니다.\n"+status(h),state(h).faith>=faithCost(h)&&h.HP<h.HT,()->{if(ready(h)&&mend(h))h.spendAndNext(1);}));
         if(learned(h,"holy",2))out.add(new ExtractionClassSkills.Action("holy_judge","심판","보이는 적을 심판합니다.\n"+status(h),state(h).faith>=faithCost(h),()->GameScene.selectCell(new CellSelector.Listener(){
@@ -243,21 +246,21 @@ public final class ExtractionHybridCombat {
     }
     public static void open(){
         Hero h=Dungeon.hero;if(!ready(h)){GameScene.show(new WndMessage("자신의 차례에 혼합 스킬을 사용할 수 있습니다. 마법 면역 중에는 사용할 수 없습니다."));return;}
-        GameScene.show(new WndOptions("혼합 스킬",status(h),"마검사 상태","그림자 밟기","약품 코팅","사선 확보","성전사 기술","피의 서약 "+(state(h).bloodOath?"끄기":"켜기"),"닫기"){
+        GameScene.show(new WndOptions("혼합 스킬",status(h),"마검사 상태","그림자 밟기","총포술사","사선 확보","성전사 기술","피의 서약 "+(state(h).bloodOath?"끄기":"켜기"),"닫기"){
             @Override protected boolean enabled(int i){return i==6||learned(h,ExtractionHybridTrees.PREFIXES[i],0)&&(i!=1||learned(h,"shadow",5))&&(i!=3||learned(h,"storm",7));}
             @Override protected boolean hasInfo(int i){return i<6;}
             @Override protected void onInfo(int i){GameScene.show(new WndMessage(ExtractionGrowth.NODES[ExtractionGrowth.index(ExtractionHybridTrees.PREFIXES[i]+"_0")].description()+"\n\n"+status(h)));}
             @Override protected void onSelect(int i){
                 if(i==0)GameScene.show(new WndMessage(status(h)));
                 else if(i==1)shadowStep(h);
-                else if(i==2)coatings(h);
+                else if(i==2){AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null)gun.reloadMenu(h);else GLog.w("연금 권총을 준비해 가져오세요.");}
                 else if(i==3)windStep(h);
                 else if(i==4)holyMenu(h);
                 else if(i==5&&ready(h)&&learned(h,"blood",0)){state(h).bloodOath=!state(h).bloodOath;GLog.i("피의 서약 "+(state(h).bloodOath?"활성화":"해제"));h.spendAndNext(1);}
             }
         });
     }
-    private static void coatings(Hero h){GameScene.show(new WndOptions("약품 코팅","준비 1턴 · 재사용까지 "+Math.max(0,(int)Math.ceil(state(h).coatReadyAt-Actor.now()))+"턴","독","냉기","화염","돌아가기"){
+    private static void coatings(Hero h){GameScene.show(new WndOptions("총포술사","준비 1턴 · 재사용까지 "+Math.max(0,(int)Math.ceil(state(h).coatReadyAt-Actor.now()))+"턴","독","냉기","화염","돌아가기"){
         @Override protected boolean enabled(int i){return i==3||i==0||i==1&&learned(h,"alchemy",2)||i==2&&learned(h,"alchemy",3);}
         @Override protected void onSelect(int i){if(i==3)open();else if(ready(h)&&coat(h,i+1)){GLog.p("약품 코팅 준비: "+state(h).coatedShots+"회 명중");h.spendAndNext(1);}else GameScene.show(new WndMessage("코팅을 아직 준비할 수 없습니다. 재사용 시간을 확인하세요."));}
     });}

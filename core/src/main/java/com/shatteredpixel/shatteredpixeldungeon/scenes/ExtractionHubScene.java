@@ -29,6 +29,7 @@ public class ExtractionHubScene extends PixelScene {
 
     @Override public void create() {
         super.create();uiCamera.visible=false;
+        com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.finish();
         // The hub replaces TitleScene, including its global badge initialization.
         Badges.loadGlobal();
         SPDSettings.intro(false);SPDSettings.version(ShatteredPixelDungeon.versionCode);
@@ -58,8 +59,8 @@ public class ExtractionHubScene extends PixelScene {
         }};secret.setRect(left,top,width-66,16);body.add(secret);
         button("기록",left+width-63,top,30,15,()->ShatteredPixelDungeon.switchNoFade(RankingsScene.class),false);
         button("설정",left+width-30,top,30,15,()->add(new WndSettings()),false);
-        label(p.gold+" G · 남음 "+p.points+" P · 사용 "+p.spentPoints()+" P",6,left,top+20,p.debugEnabled?width-43:width,TEXT);
-        if(p.debugEnabled)button("디버그",left+width-40,top+18,40,13,this::debugMenu,false);
+        label(p.gold+" G · 남음 "+p.points+" P · 사용 "+p.spentPoints()+" P",6,left,top+20,width-(p.debugEnabled?77:34),TEXT);
+        if(p.debugEnabled)button("디버그",left+width-74,top+18,40,13,this::debugMenu,false);
         label(p.growthDisplay()+" · 출격 힘 "+p.startingStrength(),6,left,top+29,width,GREEN);
         float tw=(width-10)/6f;
         String[] titles={"준비","성장","원정","상점","의뢰","연금술"};
@@ -70,6 +71,7 @@ public class ExtractionHubScene extends PixelScene {
         }
         float y=top+65;
         if(tab==0)equipment(y);else if(tab==1)growth(y);else if(tab==2)expedition(y);else if(tab==3)shop(y);else if(tab==4)contracts(y);else alchemy(y);
+        if(!p.active)button("훈련장",left+width-30,top+17,30,12,()->com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.enter(),false);
         button(p.active?"원정 이어하기":com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.chapterName(p.selectedChapter)+" 출격",left,bottom-22,p.active?width-51:width,22,this::depart,true);
         if(p.active)button("포기하기",left+width-48,bottom-22,48,22,this::abandon,false);
     }

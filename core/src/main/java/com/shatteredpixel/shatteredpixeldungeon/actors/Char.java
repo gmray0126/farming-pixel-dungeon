@@ -513,6 +513,7 @@ public abstract class Char extends Actor {
 			}
 
 			enemy.damage( effectiveDamage, this );
+            if(this instanceof Hero&&effectiveDamage>=0)com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.waveMagic((Hero)this,enemy,Math.round(dmg));
 
 			if (buff(FireImbue.class) != null)  buff(FireImbue.class).proc(enemy);
 			if (buff(FrostImbue.class) != null) buff(FrostImbue.class).proc(enemy);
@@ -638,7 +639,7 @@ public abstract class Char extends Actor {
 
 		//if accuracy or evasion are large enough, treat them as infinite.
 		//note that infinite evasion beats infinite accuracy
-		if (defStat >= INFINITE_EVASION){
+		if (defStat >= INFINITE_EVASION && !(defender instanceof Hero && ((Hero)defender).extractionRaidID != 0)){
 			hitMissIcon = FloatingText.getMissReasonIcon(attacker, acuStat, defender, INFINITE_EVASION);
 			return false;
 		} else if (acuStat >= INFINITE_ACCURACY){
@@ -646,40 +647,46 @@ public abstract class Char extends Actor {
 			return true;
 		}
 
-		float acuRoll = Random.Float( acuStat );
-		if (attacker.buff(Bless.class) != null) acuRoll *= 1.25f;
-		if (attacker.buff(  Hex.class) != null) acuRoll *= 0.8f;
-		if (attacker.buff( Daze.class) != null) acuRoll *= 0.5f;
+		float acuScale = acuStat;
+		if (attacker.buff(Bless.class) != null) acuScale *= 1.25f;
+		if (attacker.buff(  Hex.class) != null) acuScale *= 0.8f;
+		if (attacker.buff( Daze.class) != null) acuScale *= 0.5f;
 		for (ChampionEnemy buff : attacker.buffs(ChampionEnemy.class)){
-			acuRoll *= buff.evasionAndAccuracyFactor();
+			acuScale *= buff.evasionAndAccuracyFactor();
 		}
-		acuRoll *= AscensionChallenge.statModifier(attacker);
+		acuScale *= AscensionChallenge.statModifier(attacker);
 		if (Dungeon.hero.heroClass != HeroClass.CLERIC
 				&& Dungeon.hero.hasTalent(Talent.BLESS)
 				&& attacker.alignment == Alignment.ALLY){
 			// + 3%/5%
-			acuRoll *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
+			acuScale *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
 		}
-		acuRoll *= accMulti;
-        if(attacker instanceof Mob&&((Mob)attacker).extractionScaled)acuRoll*=1+.05f*(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-1);
+		acuScale *= accMulti;
+        if(attacker instanceof Mob&&((Mob)attacker).extractionScaled)acuScale*=1+.05f*(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-1);
 
-		float defRoll = Random.Float( defStat );
-		if (defender.buff(Bless.class) != null) defRoll *= 1.25f;
-		if (defender.buff(  Hex.class) != null) defRoll *= 0.8f;
-		if (defender.buff( Daze.class) != null) defRoll *= 0.5f;
+		float defScale = defStat;
+		if (defender.buff(Bless.class) != null) defScale *= 1.25f;
+		if (defender.buff(  Hex.class) != null) defScale *= 0.8f;
+		if (defender.buff( Daze.class) != null) defScale *= 0.5f;
 		for (ChampionEnemy buff : defender.buffs(ChampionEnemy.class)){
-			defRoll *= buff.evasionAndAccuracyFactor();
+			defScale *= buff.evasionAndAccuracyFactor();
 		}
-		defRoll *= AscensionChallenge.statModifier(defender);
+		defScale *= AscensionChallenge.statModifier(defender);
 		if (Dungeon.hero.heroClass != HeroClass.CLERIC
 				&& Dungeon.hero.hasTalent(Talent.BLESS)
 				&& defender.alignment == Alignment.ALLY){
 			// + 3%/5%
-			defRoll *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
+			defScale *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
 		}
-		defRoll *= FerretTuft.evasionMultiplier();
+		defScale *= FerretTuft.evasionMultiplier();
 
-		if (acuRoll >= defRoll){
+		if(defender instanceof Hero && ((Hero)defender).extractionRaidID!=0){
+            acuScale=Math.max(1f,acuScale);
+            defScale=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.cappedDefense(acuScale,defScale);
+        }
+        float acuRoll=Random.Float(acuScale),defRoll=Random.Float(defScale);
+
+        if (acuRoll >= defRoll){
 			hitMissIcon = FloatingText.getHitReasonIcon(attacker, acuRoll, defender, defRoll);
 			return true;
 		} else {

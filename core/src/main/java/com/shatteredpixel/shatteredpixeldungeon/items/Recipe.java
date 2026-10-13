@@ -222,6 +222,8 @@ public abstract class Recipe {
 	public static ArrayList<Recipe> findRecipes(ArrayList<Item> ingredients){
 
 		ArrayList<Recipe> result = new ArrayList<>();
+        Recipe[] ammunition={new com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyBullet.BasicRecipe(),new com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyBullet.ElementRecipe()};
+        for(Recipe recipe:ammunition)if(recipe.testIngredients(ingredients))result.add(recipe);
 
 		for (Recipe recipe : variableRecipes){
 			if (recipe.testIngredients(ingredients)){

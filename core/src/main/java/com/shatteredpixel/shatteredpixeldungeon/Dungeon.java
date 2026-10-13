@@ -286,9 +286,9 @@ public class Dungeon {
 		GamesInProgress.selectedClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
 		hero.heroClass = GamesInProgress.selectedClass;
 		com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile profile = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get();
-		hero.extractionRaidID = profile.raidID;
+		hero.extractionRaidID = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active()?-2:profile.raidID;
 		com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(hero);
-		profile.initialize(hero);
+		if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active())profile.initializeTraining(hero);else profile.initialize(hero);
         depth=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.startDepth(profile.raidChapter);
         int completedChapters=profile.raidChapter-1;
         LimitedDrops.STRENGTH_POTIONS.count=2*completedChapters;
@@ -637,6 +637,7 @@ public class Dungeon {
 	private static final String BADGES		= "badges";
 	
 	public static void saveGame( int save ) {
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active())return;
 		try {
 			Bundle bundle = new Bundle();
 
@@ -712,6 +713,7 @@ public class Dungeon {
 	}
 	
 	public static void saveLevel( int save ) throws IOException {
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active())return;
 		Bundle bundle = new Bundle();
 		bundle.put( LEVEL, level );
 		
@@ -719,6 +721,7 @@ public class Dungeon {
 	}
 	
 	public static void saveAll() throws IOException {
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active())return;
 		if (hero != null && (hero.isAlive() || WndResurrect.instance != null)) {
 			
 			Actor.fixTime();

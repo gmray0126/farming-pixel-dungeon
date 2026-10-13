@@ -247,6 +247,8 @@ public class ItemSprite extends MovieClip {
 	}
 
 	public void frame( int image ){
+        if(image==11001||image==11002){texture(com.shatteredpixel.shatteredpixeldungeon.extraction.CombatPixelIcons.get(image));perspectiveRaise=5/16f;return;}
+        texture(Assets.Sprites.ITEMS);
 		frame( ItemSpriteSheet.film.get( image ));
 
 		float height = ItemSpriteSheet.film.height( image );

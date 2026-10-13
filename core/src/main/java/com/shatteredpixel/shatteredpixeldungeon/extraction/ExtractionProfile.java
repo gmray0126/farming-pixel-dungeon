@@ -27,6 +27,7 @@ public final class ExtractionProfile {
     public static final String WARRIOR_SEAL_NODE="skill_endure";
     private boolean warriorSealAwarded;
     private boolean roseAwakened;
+    private boolean firearmAwarded;
     private int roseProgressVersion=1;
     public final String[] skillQuickslots=new String[com.shatteredpixel.shatteredpixeldungeon.QuickSlot.SIZE];
     private final String[][] presets=new String[PRESET_SLOTS][];
@@ -66,6 +67,7 @@ public final class ExtractionProfile {
             p.recoverMonkEquipmentReward();
             p.recoverWarriorSealReward();
             p.recoverRoseProgress();
+            p.recoverFirearmReward();
             instance = p;
         }
         return instance;
@@ -75,7 +77,7 @@ public final class ExtractionProfile {
         b.put("alchemy_energy",alchemyEnergy);
         b.put("monk_equipment_awarded",monkEquipmentAwarded);
         b.put("warrior_seal_awarded",warriorSealAwarded);
-        b.put("rose_awakened",roseAwakened);b.put("rose_progress_version",roseProgressVersion);
+        b.put("firearm_awarded",firearmAwarded);b.put("rose_awakened",roseAwakened);b.put("rose_progress_version",roseProgressVersion);
         b.put("nodes", nodes.toArray(new String[0])); b.put("gold", gold); b.put("xp", xp); b.put("points", points);
         b.put("active", active); b.put("raid", raidID); b.put("next", nextRaid); b.put("raid_xp", raidXP); b.put("result", result);
         b.put("chapter",selectedChapter);b.put("difficulty",selectedDifficulty);b.put("raid_chapter",raidChapter);b.put("raid_difficulty",raidDifficulty);
@@ -99,7 +101,7 @@ public final class ExtractionProfile {
         alchemyEnergy=Math.max(0,b.getInt("alchemy_energy"));
         monkEquipmentAwarded=b.getBoolean("monk_equipment_awarded");
         warriorSealAwarded=b.getBoolean("warrior_seal_awarded");
-        roseAwakened=b.getBoolean("rose_awakened");roseProgressVersion=b.getInt("rose_progress_version");
+        firearmAwarded=b.getBoolean("firearm_awarded");roseAwakened=b.getBoolean("rose_awakened");roseProgressVersion=b.getInt("rose_progress_version");
         gold=b.getInt("gold"); xp=b.getInt("xp"); points=b.getInt("points"); active=b.getBoolean("active");
         raidID=b.getInt("raid"); nextRaid=b.getInt("next"); raidXP=b.getInt("raid_xp"); result=b.getString("result");
         selectedChapter=b.contains("chapter")?b.getInt("chapter"):1;
@@ -122,6 +124,7 @@ public final class ExtractionProfile {
     }
     private void save() throws IOException { FileUtils.bundleToFile(FILE, bundle()); }
     public void bindSkill(int slot,String key){
+        if(ExtractionTraining.active())return;
         if(slot<0||slot>=skillQuickslots.length)throw new IllegalArgumentException("퀵슬롯 범위 오류");
         if(java.util.Objects.equals(skillQuickslots[slot],key))return;
         change(()->{if(key!=null)for(int i=0;i<skillQuickslots.length;i++)if(key.equals(skillQuickslots[i]))skillQuickslots[i]=null;skillQuickslots[slot]=key;});
@@ -205,14 +208,16 @@ public final class ExtractionProfile {
         return item instanceof VelvetPouch || item instanceof ScrollHolder
                 || item instanceof PotionBandolier || item instanceof MagicalHolster;
     }
-    public void initialize(Hero h) {
+    public void initialize(Hero h) { initializeLoadout(h,escrow); }
+    public void initializeTraining(Hero h){initializeLoadout(h,prepared);}
+    private void initializeLoadout(Hero h,java.util.List<Item> loadout) {
         h.belongings.clear();
         Dungeon.quickslot.reset();
         h.extractionContracts=new ExtractionContracts.Run();h.extractionContracts.ids=contracts.toArray(new String[0]);h.extractionContracts.progress=new int[contracts.size()];
         h.extractionHybrid=new ExtractionHybridCombat.State();
         ensureBags(h);
         // Reconstruct escrow items so equipped mutations cannot alter the persistent escrow.
-        Bundle copy = new Bundle(); copy.put("items", escrow);
+        Bundle copy = new Bundle(); copy.put("items", loadout);
         for (Bundlable value : copy.getCollection("items")) {
             Item i=(Item)value;
             resetRoseForExpedition(i,roseAwakened);
@@ -242,6 +247,7 @@ public final class ExtractionProfile {
         if(nodes.contains("ranged_0")&&h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow.class)==null
                 &&!new NodeSpiritBow().identify(false).collect(h.belongings.backpack))
             throw new IllegalStateException("기본 영혼의 활을 가방에 넣지 못했습니다.");
+        if(nodes.contains("alchemy_0")&&h.belongings.getItem(AlchemyFirearm.class)==null&&!new AlchemyFirearm().collect(h.belongings.backpack))throw new IllegalStateException("기본 권총을 가방에 넣지 못했습니다.");
         ExtractionPotionKnowledge.apply(this);
         for(Item i:h.belongings)if(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)com.shatteredpixel.shatteredpixeldungeon.items.Generator.removeArtifact((Class<? extends com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact>)i.getClass());
         h.HTBoost += Math.round(bonus(ExtractionGrowth.Stat.HEALTH)); h.updateHT(true); h.HP=h.HT;
@@ -343,8 +349,14 @@ public final class ExtractionProfile {
         if (!unlocked(index)) throw new IllegalStateException("표시된 선행 노드를 모두 배워 주세요.");
         if (spentPoints()+COSTS[index]>MAX_GROWTH_POINTS) throw new IllegalStateException("성장 배분 한도는 총 300 P입니다. 다른 노드를 초기화하거나 프리셋을 바꿔 주세요.");
         if (points<COSTS[index]) throw new IllegalStateException("성장 포인트가 부족합니다.");
-        change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); grantMonkEquipmentReward(); grantWarriorSealReward(); });
+        change(() -> { points-=COSTS[index]; nodes.add(IDS[index]); grantMonkEquipmentReward(); grantWarriorSealReward(); grantFirearmReward(); });
     }
+    public boolean firearmAwarded(){return firearmAwarded;}
+    private void grantFirearmReward(){if(firearmAwarded||!nodes.contains("alchemy_0"))return;
+        boolean owned=false;for(java.util.List<Item> items:java.util.Arrays.asList(stash,prepared,escrow))for(Item i:items)if(i instanceof AlchemyFirearm)owned=true;
+        if(!owned)stash.add(new AlchemyFirearm());stash.add(new AlchemyBullet().quantity(12));firearmAwarded=true;
+    }
+    private void recoverFirearmReward(){if(!firearmAwarded&&nodes.contains("alchemy_0"))change(this::grantFirearmReward);}
     public boolean monkEquipmentAwarded(){return monkEquipmentAwarded;}
     // A permanent, one-time reward, separate from the allocation: refunds and
     // preset switching must never recreate sellable equipment.
@@ -525,7 +537,7 @@ public final class ExtractionProfile {
         HashSet<String> valid=new HashSet<>();boolean progress;
         do{progress=false;for(String id:target)if(!valid.contains(id)&&ExtractionGrowth.unlocked(ExtractionGrowth.NODES[ExtractionGrowth.index(id)],valid)){valid.add(id);progress=true;}}while(progress);
         if(valid.size()!=target.size())throw new IllegalStateException("프리셋의 선행 노드가 부족합니다.");
-        change(()->{nodes.clear();nodes.addAll(target);points=budget-cost;trimPrepared();grantMonkEquipmentReward();grantWarriorSealReward();});
+        change(()->{nodes.clear();nodes.addAll(target);points=budget-cost;trimPrepared();grantMonkEquipmentReward();grantWarriorSealReward();grantFirearmReward();});
     }
     public void buyPotion() {
         buy(0);

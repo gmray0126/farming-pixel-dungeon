@@ -11,7 +11,7 @@ import java.util.*;
 public final class ExtractionGrowth {
     private ExtractionGrowth() {}
     public static final int MAGIC = 11, FIST = 9;
-    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술","마검사","그림자술사","연금 사냥꾼","폭풍 유격수","성전사","혈기사"};
+    public static final String[] BRANCHES = {"전투","생존","탐사","검","대검","단검·쌍검","창","도끼","둔기·방패","격투","활·투척","마도","정찰","야전 치료","식량 활용","잠행","기세","위기 대응","물약 지식","수호 기술","비전 기술","그림자 기술","자연 기술","기동 기술","기도 기술","마검사","그림자술사","총포술사","폭풍 유격수","성전사","혈기사"};
     public enum Stat {
         KNOW_HEALING("회복 물약 식별",false), KNOW_STRENGTH("힘 물약 식별",false), KNOW_EXPERIENCE("경험 물약 식별",false),
         KNOW_MINDVISION("심안 물약 식별",false), KNOW_LEVITATION("부유 물약 식별",false), KNOW_INVISIBILITY("투명 물약 식별",false),
@@ -22,7 +22,7 @@ public final class ExtractionGrowth {
         CRIT_CHANCE("치명타 확률", true), CRIT_POWER("치명타 배율", true),
         PIERCE("방어 관통", false), REACH("근접 사거리", false),
         HEALTH("출격 최대 체력", false), DEFENSE("피해 감소", false),
-        EVASION("회피", true), MOVE_SPEED("이동 속도", true),
+        EVASION("회피 수치", true), MOVE_SPEED("이동 속도", true),
         CAPACITY("가방 칸", false), STRENGTH("출격 힘", false), GOLD("탈출 전리품 골드", true),
         WAND_DAMAGE("마법 막대 직접 피해", false), WAND_POWER("마법 막대 직접 피해", true), WAND_CHARGE("마법 막대 충전 속도", true),
         VISION("시야 거리",false), SEARCH_RANGE("탐색 반경",false), SEARCH_CHANCE("자동 탐색 발견 확률",true), SEARCH_SPEED("수동 탐색 시간 감소",true),
@@ -66,6 +66,7 @@ public final class ExtractionGrowth {
             if(id.equals("ranged_0"))text.append("\n\n영혼의 활 해금: 매 출격 때 활을 가방에 기본 지급합니다. 상점 구매가 필요하지 않으며 사망 후에도 다시 지급됩니다. 초기화하면 지급과 사용이 잠깁니다.");
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
             if(effects.containsKey(Stat.SECOND_WIND))text.append("\n두 생존 최종 특성은 원정당 한 번의 발동 횟수를 공유합니다.");
+            if(effects.containsKey(Stat.EVASION)||effects.containsKey(Stat.LOW_HP_EVASION))text.append("\n실제 회피 확률은 적의 명중과 버프를 반영하며 최대 80%입니다.");
             if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
             if(effects.containsKey(Stat.STRENGTH))text.append("\n\n범용 영구 힘 보너스입니다. 무기·직업과 관계없이 적용됩니다. 사망·탈출 후에도 유지되며 매 새 출격에 적용됩니다. 힘 물약으로 얻은 힘은 해당 원정에서만 유지됩니다.");
             if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
@@ -347,7 +348,7 @@ public final class ExtractionGrowth {
     public static int family(KindOfWeapon weapon){
         if(weapon==null||weapon instanceof Gloves||weapon instanceof Gauntlet)return FIST;
         if(weapon instanceof MagesStaff)return MAGIC;
-        if(weapon instanceof MissileWeapon||weapon instanceof SpiritBow||weapon instanceof Crossbow)return 10;
+        if(weapon instanceof AlchemyFirearm||weapon instanceof MissileWeapon||weapon instanceof SpiritBow||weapon instanceof Crossbow)return 10;
         if(weapon instanceof Greatsword)return 4;
         if(weapon instanceof Dagger||weapon instanceof Dirk||weapon instanceof AssassinsBlade||weapon instanceof Sai)return 5;
         if(weapon instanceof Spear||weapon instanceof Glaive||weapon instanceof Whip)return 6;

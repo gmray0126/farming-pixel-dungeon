@@ -621,6 +621,7 @@ public class Hero extends Char {
 		}
 		
 		float evasion = defenseSkill;
+        if(buff(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.RollAfterimage.class)!=null)evasion*=1.25f;
 		if(extractionRaidID != 0)evasion *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().evasionMultiplier(growthWeapon())*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_EVASION);
 		
 		evasion *= RingOfEvasion.evasionMultiplier( this );
@@ -823,6 +824,10 @@ public class Hero extends Char {
 		KindOfWeapon wep = Dungeon.hero.belongings.attackingWeapon();
 
 		if (wep != null){
+            if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.swordWave(this)){
+                com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica ray=new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(pos,enemy.pos,com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.PROJECTILE);
+                if(ray.collisionPos!=enemy.pos)return false;
+            }
 			return wep.canReach(this, enemy.pos);
 		} else if (buff(AscendedForm.AscendBuff.class) != null) {
 			boolean[] passable = BArray.not(Dungeon.level.solid, null);
@@ -1695,6 +1700,7 @@ public class Hero extends Char {
 
 	@Override
 	public void damage( int dmg, Object src ) {
+        if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active()&&this==Dungeon.hero)return;
 		if(extractionRaidID!=0&&extractionDebugInvulnerable&&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().debugEnabled)return;
 		if (buff(TimekeepersHourglass.timeStasis.class) != null
 				|| buff(TimeStasis.class) != null) {
