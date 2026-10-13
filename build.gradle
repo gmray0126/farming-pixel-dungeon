@@ -16,8 +16,8 @@ allprojects {
         appPackageName = 'com.kwrousagi.echoextraction'
 
         //Full releases gets +2 on version code, needed for an F-Droid quirk
-        appVersionCode = 984
-        appVersionName = '0.57.0-farming'
+        appVersionCode = 985
+        appVersionName = '0.57.1-farming'
 
         appJavaCompatibility = JavaVersion.VERSION_11
 

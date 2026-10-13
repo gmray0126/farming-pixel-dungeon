@@ -31,6 +31,11 @@ public class AlchemyFirearm extends Weapon {
     @Override public int min(int level){return 4+(node(Dungeon.hero,1)?2:0)+(node(Dungeon.hero,13)?2:0);}
     @Override public int max(int level){return 10+(node(Dungeon.hero,1)?3:0)+(node(Dungeon.hero,13)?3:0);}
     @Override public String status(){return loaded+"/"+capacity(Dungeon.hero);}
+    @Override public String actionName(String action,Hero hero){
+        if(SHOOT.equals(action))return "사격하기";
+        if(RELOAD.equals(action))return "장전하기";
+        return super.actionName(action,hero);
+    }
     @Override public ArrayList<String> actions(Hero h){ArrayList<String> a=super.actions(h);if(unlocked(h)){a.add(SHOOT);a.add(RELOAD);}return a;}
     @Override public int reachFactor(Char owner){return owner instanceof Hero?range((Hero)owner):6;}
     @Override public boolean canReach(Char owner,int cell){if(!(owner instanceof Hero)||Dungeon.level==null||Dungeon.level.distance(owner.pos,cell)>range((Hero)owner))return false;return new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(owner.pos,cell,com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.PROJECTILE).collisionPos==cell;}
