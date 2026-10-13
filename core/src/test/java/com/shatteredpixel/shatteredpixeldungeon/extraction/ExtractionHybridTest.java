@@ -148,7 +148,7 @@ public class ExtractionHybridTest {
         ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;int start=trainee.pos,mid=start+1,end=start+2;
         room.solid[mid]=true;room.passable[mid]=false;assertFalse(ExtractionHybridCombat.roll(trainee,end));
         room.solid[mid]=false;room.passable[mid]=true;
-        room.traps.put(mid,new com.shatteredpixel.shatteredpixeldungeon.levels.traps.FireTrap());assertFalse(ExtractionHybridCombat.roll(trainee,end));room.traps.remove(mid);
+        room.traps.put(mid,new com.shatteredpixel.shatteredpixeldungeon.levels.traps.BurningTrap());assertFalse(ExtractionHybridCombat.roll(trainee,end));room.traps.remove(mid);
         Mob blocker=enemy();blocker.pos=mid;Actor.add(blocker);assertFalse(ExtractionHybridCombat.roll(trainee,end));Actor.remove(blocker);
         assertEquals(start,trainee.pos);assertEquals(0,trainee.extractionHybrid.rollReadyAt,0);assertTrue(ExtractionHybridCombat.roll(trainee,end));
     }
