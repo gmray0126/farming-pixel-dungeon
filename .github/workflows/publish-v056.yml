@@ -1,0 +1,86 @@
+name: Publish Farming Pixel Dungeon v0.56.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v056.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v056
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38370346243
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38370346180
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.56.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.56.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.56.0 / Farming Pixel Dungeon v0.56.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **실제 회피 확률 상한 80%:** 적의 명중·버프·상태 이상을 반영한 명중 판정에서 영웅의 회피 확률을 최대 80%로 제한합니다. 일시적인 확정 회피 기술에도 원정 상한을 적용합니다. 회피 반지의 지수 중첩을 선형 합산으로 바꾸고, 설명은 회피 수치 배율과 확률 상한을 구분해 표시합니다.
+          - **로비 훈련장:** 로비 상단 훈련장 버튼으로 준비한 장비와 성장 노드를 시험합니다. 일반·회피·중갑 허수아비를 실제 평타와 주문으로 공격하고, 게임 메뉴의 훈련 결과에서 누적·최근·최고 피해를 확인하고 초기화할 수 있습니다. 메뉴의 훈련 종료로 로비로 돌아갑니다. 장비와 소모품은 복사본이며 훈련 저장·전리품·경험치가 실제 원정에 반영되지 않습니다.
+          - **총포술사와 연금 권총:** 기존 연금 사냥꾼의 15개 노드를 총기 중심으로 개편했습니다. 노드 ID와 배분·프리셋은 유지합니다. 최초 입문 보상으로 권총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 직접 제작합니다.
+          - 권총을 **주무기에 장착**하고 적을 누르면 원거리 사격합니다. 가방·퀵슬롯의 사격 기능도 사용할 수 있습니다. 탄창 4발(노드로 6발), 사거리 6칸(노드로 8칸), 사격 최소 1턴, 재장전 2턴(노드로 1.5턴). 빗나가도 한 발을 소비하며 빈 탄창은 재장전해야 합니다. 근접 사격에는 명중 불이익이 있습니다. 총 자체의 강화 대신 총포·범용·원거리 노드로 성장합니다.
+          - **씨앗 탄약 연금술:** 씨앗 1개와 에너지 1로 일반탄 6발을 제작합니다. 일반탄 1발·대응 씨앗 1개·에너지 2로 속성탄 1발을 제작합니다. 화염·냉기·독·전격·섬광 효과를 지원합니다. 로비와 원정의 기존 연금술 제작법에 연결했습니다.
+          - **전술 구르기와 구르기 장전:** 보이는 안전한 빈칸으로 한 칸 즉시 이동하며 행동 턴을 소모하지 않습니다. 기본 재사용 8턴, 노드로 6턴·5턴까지 줄어듭니다. 구르기 장전 노드는 가진 현재 속성 탄약을 소비하여 탄창을 채우며 탄약을 생성하지 않습니다. 구르기·재장전은 스킬 퀵슬롯에 등록할 수 있습니다.
+          - **마검사 검기:** 검·대검·마법사의 지팡이 평타가 기본 사거리 3칸(노드로 4칸)의 검기가 됩니다. 물리 피해와 별도 마법 피해 15%(노드로 20%)를 적용하고 벽·다른 적에 막히도록 처리했습니다. 평타 후 주문 강화·주문 후 다음 검기 강화 연계를 유지합니다. 추가 마법 피해는 마법 저항을 따릅니다.
+          
+          ## English changes
+          - **Actual dodge chance capped at 80%.** The cap is applied after attacker accuracy and combat modifiers, including temporary guaranteed-dodge skills in expeditions. Evasion-ring stacking is linear instead of exponential; descriptions distinguish rating multipliers from dodge chance.
+          - **Native hub training room.** Test prepared gear and learned nodes against standard, evasive, and armored dummies with real attacks and spells. The game menu provides damage records, reset, and exit. Training uses copies and cannot overwrite expedition saves or award real loot/experience.
+          - **Gunner and Alchemy Pistol.** Reworked the 15 Alchemical Hunter nodes, preserving IDs, allocations, and presets. The first unlock grants a pistol and 12 ordinary rounds to the stash. A lost pistol is reissued, but ammunition is not.
+          - Equip the pistol in the **primary weapon slot** and click enemies to shoot; inventory and quickslot shooting remain available. Four-round magazine, six-cell range, minimum one-turn firing and two-turn reloading; nodes improve capacity/range/reload to six/eight/1.5. Misses consume rounds. Point-blank shots suffer an accuracy penalty. Growth comes from nodes rather than scroll upgrades.
+          - **Seed ammunition recipes.** One seed plus one energy makes six ordinary rounds. One ordinary round, one corresponding seed, and two energy make one elemental round. Fire, frost, poison, shock, and flash effects are supported in hub and dungeon alchemy.
+          - **Tactical Roll and Rolling Reload.** Instantly move one cell to visible safe space without spending an action turn. Eight-turn cooldown improves to six/five through nodes. Rolling Reload consumes existing ammunition of the loaded type; it never creates rounds. Both abilities support skill quickslots.
+          - **Spellblade sword waves.** Sword, greatsword, and Mage's Staff basic attacks gain three-cell range, improving to four through a node, plus separate magic damage of 15%, improving to 20%. Walls and other characters block the wave. Physical/magic alternation remains; the additional damage respects magic resistance.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          213 core tests and the Android build passed. Regressions cover actual hit rolls, ammunition consumption/recipes, primary-slot gun attacks, force-ring interaction, rolling reload and saved cooldowns, sword-wave range/magic damage, copied training equipment, invulnerability and save isolation. Native Windows launch, departure, resume, portrait UI, training entry, and unchanged training profile checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/097edefa2a932215494e698d0a18abc0b8dbf8c9)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.56.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.56.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
