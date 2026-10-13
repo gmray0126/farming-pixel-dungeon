@@ -98,6 +98,20 @@ public class DriedRose extends Artifact {
 
 	private boolean talkedTo = false;
 	private boolean firstSummon = false;
+	private boolean awakened = false;
+
+	public boolean isAwakened(Hero hero){
+		return hasAwakeningRecord() || Ghost.Quest.completed()
+				|| (hero != null && hero.extractionRaidID != 0
+				&& com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().roseAwakened());
+	}
+	public boolean hasAwakeningRecord(){return awakened||firstSummon||talkedTo||weapon!=null||armor!=null;}
+	public void awaken(){awakened=true;}
+	/** Actor IDs belong to one dungeon only. Equipment, petals and charge carry over. */
+	public void startNewExpedition(boolean questUnlocked){
+		awakened=hasAwakeningRecord()||questUnlocked;
+		ghost=null;ghostID=0;
+	}
 	
 	private GhostHero ghost = null;
 	private int ghostID = 0;
@@ -114,7 +128,7 @@ public class DriedRose extends Artifact {
 	@Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
-		if (!Ghost.Quest.completed()){
+		if (!isAwakened(hero)){
 			return actions;
 		}
 		if (isEquipped( hero )
@@ -153,7 +167,7 @@ public class DriedRose extends Artifact {
 
 			if (hero.buff(MagicImmune.class) != null) return;
 
-			if (!Ghost.Quest.completed())   GameScene.show(new WndUseItem(null, this));
+			if (!isAwakened(hero))          GameScene.show(new WndUseItem(null, this));
 			else if (ghost != null)         GLog.i( Messages.get(this, "spawned") );
 			else if (!isEquipped( hero ))   GLog.i( Messages.get(Artifact.class, "need_to_equip") );
 			else if (charge != chargeCap)   GLog.i( Messages.get(this, "no_charge") );
@@ -238,7 +252,7 @@ public class DriedRose extends Artifact {
 
 	@Override
 	public String desc() {
-		if (!Ghost.Quest.completed()
+		if (!isAwakened(Dungeon.hero)
 				&& (ShatteredPixelDungeon.scene() instanceof GameScene || ShatteredPixelDungeon.scene() instanceof AlchemyScene)){
 			return Messages.get(this, "desc_no_quest");
 		}
@@ -271,6 +285,10 @@ public class DriedRose extends Artifact {
 
 		}
 		
+		if (Dungeon.hero != null && Dungeon.hero.extractionRaidID != 0)
+			desc += "\n\n" + (isAwakened(Dungeon.hero)
+					? "유령의 인연이 깨어 있습니다. 새 원정과 다른 챕터에서도 유지되며 유령 퀘스트를 다시 완료할 필요가 없습니다."
+					: "하수도에서 슬픈 유령의 퀘스트 보상을 받으면 영구히 활성화됩니다. 이후 다른 챕터에서도 사용할 수 있습니다.");
 		return desc;
 	}
 	
@@ -376,6 +394,7 @@ public class DriedRose extends Artifact {
 
 		bundle.put( TALKEDTO, talkedTo );
 		bundle.put( FIRSTSUMMON, firstSummon );
+		bundle.put( "awakened", hasAwakeningRecord() );
 		bundle.put( GHOSTID, ghostID );
 		bundle.put( PETALS, droppedPetals );
 		
@@ -389,6 +408,7 @@ public class DriedRose extends Artifact {
 
 		talkedTo = bundle.getBoolean( TALKEDTO );
 		firstSummon = bundle.getBoolean( FIRSTSUMMON );
+		awakened = bundle.getBoolean("awakened");
 		ghostID = bundle.getInt( GHOSTID );
 		droppedPetals = bundle.getInt( PETALS );
 		

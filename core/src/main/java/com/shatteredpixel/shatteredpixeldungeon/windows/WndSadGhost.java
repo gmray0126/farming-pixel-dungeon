@@ -109,6 +109,10 @@ public class WndSadGhost extends Window {
 		hide();
 		
 		if (reward == null) return;
+		// Save the permanent bond before giving the reward or removing the NPC.
+		if(Dungeon.hero.extractionRaidID!=0)try{
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().recordGhostQuestCompletion(Dungeon.hero.extractionRaidID);
+		}catch(RuntimeException error){GameScene.show(new WndMessage(error.getMessage()));return;}
 
 		if (reward instanceof Weapon && Ghost.Quest.enchant != null){
 			((Weapon) reward).enchant(Ghost.Quest.enchant);

@@ -26,6 +26,8 @@ public final class ExtractionProfile {
     private boolean monkEquipmentAwarded;
     public static final String WARRIOR_SEAL_NODE="skill_endure";
     private boolean warriorSealAwarded;
+    private boolean roseAwakened;
+    private int roseProgressVersion=1;
     public final String[] skillQuickslots=new String[com.shatteredpixel.shatteredpixeldungeon.QuickSlot.SIZE];
     private final String[][] presets=new String[PRESET_SLOTS][];
     public final ArrayList<Item> stash = new ArrayList<>();
@@ -63,6 +65,7 @@ public final class ExtractionProfile {
             p.migrateGrowthCap();
             p.recoverMonkEquipmentReward();
             p.recoverWarriorSealReward();
+            p.recoverRoseProgress();
             instance = p;
         }
         return instance;
@@ -72,6 +75,7 @@ public final class ExtractionProfile {
         b.put("alchemy_energy",alchemyEnergy);
         b.put("monk_equipment_awarded",monkEquipmentAwarded);
         b.put("warrior_seal_awarded",warriorSealAwarded);
+        b.put("rose_awakened",roseAwakened);b.put("rose_progress_version",roseProgressVersion);
         b.put("nodes", nodes.toArray(new String[0])); b.put("gold", gold); b.put("xp", xp); b.put("points", points);
         b.put("active", active); b.put("raid", raidID); b.put("next", nextRaid); b.put("raid_xp", raidXP); b.put("result", result);
         b.put("chapter",selectedChapter);b.put("difficulty",selectedDifficulty);b.put("raid_chapter",raidChapter);b.put("raid_difficulty",raidDifficulty);
@@ -95,6 +99,7 @@ public final class ExtractionProfile {
         alchemyEnergy=Math.max(0,b.getInt("alchemy_energy"));
         monkEquipmentAwarded=b.getBoolean("monk_equipment_awarded");
         warriorSealAwarded=b.getBoolean("warrior_seal_awarded");
+        roseAwakened=b.getBoolean("rose_awakened");roseProgressVersion=b.getInt("rose_progress_version");
         gold=b.getInt("gold"); xp=b.getInt("xp"); points=b.getInt("points"); active=b.getBoolean("active");
         raidID=b.getInt("raid"); nextRaid=b.getInt("next"); raidXP=b.getInt("raid_xp"); result=b.getString("result");
         selectedChapter=b.contains("chapter")?b.getInt("chapter"):1;
@@ -210,6 +215,7 @@ public final class ExtractionProfile {
         Bundle copy = new Bundle(); copy.put("items", escrow);
         for (Bundlable value : copy.getCollection("items")) {
             Item i=(Item)value;
+            resetRoseForExpedition(i,roseAwakened);
             if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow){if(!i.collect(h.belongings.backpack))throw new IllegalStateException("영혼의 활을 가방에 넣지 못했습니다.");}
             else if (i instanceof KindOfWeapon && h.belongings.weapon == null) { h.belongings.weapon=(KindOfWeapon)i; h.belongings.weapon.activate(h); }
             else if (i instanceof Armor && h.belongings.armor == null) { h.belongings.armor=(Armor)i; h.belongings.armor.activate(h); }
@@ -378,6 +384,34 @@ public final class ExtractionProfile {
             if(stash.size()>before)result+="\n전사 입문 보상 복구: 부러진 인장을 창고에 지급했습니다. 준비 탭에서 챙긴 뒤 몸통 갑옷에 붙여 주세요.";
         });
     }
+    public boolean roseAwakened(){return roseAwakened;}
+    public void recordGhostQuestCompletion(int id){
+        if(!active||id!=raidID)throw new IllegalStateException("현재 원정의 유령 퀘스트가 아닙니다.");
+        if(!roseAwakened)change(()->roseAwakened=true);
+    }
+    private static void resetRoseForExpedition(Item item,boolean unlocked){
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose)
+            ((com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose)item).startNewExpedition(unlocked);
+        if(item instanceof Bag)for(Item child:((Bag)item).items)resetRoseForExpedition(child,unlocked);
+    }
+    private static boolean containsRose(Item item){
+        if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose)return true;
+        if(item instanceof Bag)for(Item child:((Bag)item).items)if(containsRose(child))return true;
+        return false;
+    }
+    private void recoverRoseProgress(){
+        if(roseProgressVersion>=1)return;
+        // Old profiles did not record quest completion, so a never-summoned rose
+        // cannot reliably be distinguished from one whose activation was lost.
+        // One-time compatibility recovery covers only roses already owned.
+        change(()->{
+            boolean owned=false;
+            for(java.util.List<Item> items:java.util.Arrays.asList(stash,prepared,escrow))
+                for(Item item:items)if(containsRose(item))owned=true;
+            if(owned){roseAwakened=true;result+="\n메마른 장미 활성화 복구: 유령 퀘스트의 인연을 영구 저장했습니다.";}
+            roseProgressVersion=1;
+        });
+    }
     /** High-water credit prevents replaying an older run save from awarding the same XP twice. */
     public int growthLevel(){return 1+Math.min(MAX_GROWTH_XP,Math.max(0,xp))/25;}
     public int growthExperience(){return growthLevel()==MAX_GROWTH_LEVEL?0:Math.max(0,xp)%25;}
@@ -398,6 +432,7 @@ public final class ExtractionProfile {
     private void settle(final int id, final boolean success, final boolean emergency) {
         if (!active || id!=raidID) return;
         change(() -> {
+            if(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost.Quest.completed())roseAwakened=true;
             if (success) {
                 if(!emergency){
                     ExtractionContracts.extracted(this,Dungeon.hero);
@@ -426,7 +461,7 @@ public final class ExtractionProfile {
                 loot.removeIf(i -> i instanceof com.shatteredpixel.shatteredpixeldungeon.items.Waterskin
                         && ((com.shatteredpixel.shatteredpixeldungeon.items.Waterskin)i).isEmpty());
                 loot.removeIf(i -> i instanceof NodeSpiritBow && ((NodeSpiritBow)i).enchantment==null && ((NodeSpiritBow)i).augment==com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Augment.NONE);
-                for(Item item:loot)ExtractionStash.identifyEquipment(item);
+                for(Item item:loot){ExtractionStash.identifyEquipment(item);resetRoseForExpedition(item,roseAwakened);}
                 stash.addAll(loot);
                 gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty)*(raidHard&&raidRules>=5?1.5f:1));
                 gold+=redeemed.gold;

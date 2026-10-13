@@ -10,6 +10,9 @@ import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
 import com.shatteredpixel.shatteredpixeldungeon.GamesInProgress;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.items.Item;
+import com.shatteredpixel.shatteredpixeldungeon.items.artifacts.DriedRose;
+import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Ghost;
+import com.watabou.utils.Bundle;
 import com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor;
 import com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon;
 import com.shatteredpixel.shatteredpixeldungeon.items.bags.Bag;
@@ -24,6 +27,63 @@ import java.lang.reflect.Field;
 import static org.junit.Assert.*;
 
 public class ExtractionProfileTest {
+    private Hero roseHero(){
+        Hero h=new Hero();h.extractionRaidID=profile.raidID;Dungeon.hero=h;
+        com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);profile.initialize(h);return h;
+    }
+    private DriedRose outfittedRose(){
+        DriedRose rose=new DriedRose();rose.identify(false);rose.level(6);
+        Bundle b=new Bundle();rose.storeInBundle(b);b.put("awakened",true);b.put("petals",7);b.put("charge",73);b.put("ghostID",321);
+        b.put("weapon",new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.WornShortsword().level(2));
+        b.put("armor",new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor().level(1));rose.restoreFromBundle(b);return rose;
+    }
+    private void assertRoseEquipment(DriedRose rose,int ghostID){
+        Bundle b=new Bundle();rose.storeInBundle(b);assertEquals(6,rose.level());assertEquals(7,rose.droppedPetals);
+        assertEquals(73,b.getInt("charge"));assertEquals(ghostID,b.getInt("ghostID"));assertEquals(2,((Item)b.get("weapon")).level());assertEquals(1,((Item)b.get("armor")).level());
+    }
+    @Test public void ghostQuestPermanentlyUnlocksNewRosesAcrossDeathAndLaterChapters() throws Exception {
+        DriedRose locked=new DriedRose();assertFalse(profile.roseAwakened());assertFalse(locked.isAwakened(null));
+        profile.begin();Hero h=roseHero();h.belongings.artifact=locked;assertFalse(locked.actions(h).contains(DriedRose.AC_SUMMON));
+        profile.recordGhostQuestCompletion(profile.raidID);assertTrue(locked.actions(h).contains(DriedRose.AC_SUMMON));
+        profile.settle(profile.raidID,false);Ghost.Quest.reset();forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.roseAwakened());
+        profile.unlockedDifficulty[1]=1;profile.selectRaid(2);DriedRose fresh=new DriedRose();profile.stash.add(fresh);profile.prepare(fresh,true);profile.begin();h=roseHero();
+        DriedRose equipped=(DriedRose)h.belongings.artifact;assertFalse(Ghost.Quest.completed());assertTrue(equipped.isAwakened(h));assertTrue(equipped.actions(h).contains(DriedRose.AC_SUMMON));
+        Bundle saved=new Bundle();h.storeInBundle(saved);Hero restored=new Hero();Dungeon.hero=restored;restored.restoreFromBundle(saved);
+        assertTrue(((DriedRose)restored.belongings.artifact).actions(restored).contains(DriedRose.AC_SUMMON));profile.abandon();forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.roseAwakened());
+    }
+    @Test public void roseExtractionPreservesEquipmentAndClearsOnlyPreviousExpeditionActorIDs(){
+        for(boolean emergency:new boolean[]{false,true}){
+            DriedRose live=outfittedRose();profile.begin();Hero h=roseHero();h.belongings.artifact=live;Dungeon.gold=0;
+            Bundle saved=new Bundle();live.storeInBundle(saved);DriedRose resumed=new DriedRose();resumed.restoreFromBundle(saved);assertRoseEquipment(resumed,321);assertTrue(resumed.isAwakened(null));
+            if(emergency)profile.emergencyExtract(profile.raidID);else profile.settle(profile.raidID,true);
+            DriedRose stored=(DriedRose)profile.stash.stream().filter(i->i instanceof DriedRose).findFirst().get();assertRoseEquipment(stored,0);assertRoseEquipment(live,321);
+            profile.prepare(stored,true);profile.begin();h=roseHero();assertRoseEquipment((DriedRose)h.belongings.artifact,0);assertTrue(((DriedRose)h.belongings.artifact).isAwakened(h));profile.abandon();
+        }
+    }
+    @Test public void roseQuestAndExtractionSaveFailuresAreAtomic() throws Exception {
+        profile.begin();Hero h=roseHero();DriedRose live=outfittedRose();h.belongings.artifact=live;Dungeon.gold=0;int stash=profile.stash.size();
+        java.io.File blocker=folder.newFile("rose-blocker");FileUtils.setDefaultFileProperties(Files.FileType.Absolute,blocker.getAbsolutePath()+"/");
+        try{profile.recordGhostQuestCompletion(profile.raidID);fail("Quest save must fail");}catch(IllegalStateException expected){}assertFalse(profile.roseAwakened());assertTrue(profile.active);
+        try{profile.emergencyExtract(profile.raidID);fail("Extraction save must fail");}catch(IllegalStateException expected){}assertTrue(profile.active);assertEquals(stash,profile.stash.size());assertRoseEquipment(live,321);
+        FileUtils.setDefaultFileProperties(Files.FileType.Absolute,folder.getRoot().getAbsolutePath()+"/");
+        try{profile.recordGhostQuestCompletion(profile.raidID+1);fail("Wrong expedition");}catch(IllegalStateException expected){}assertFalse(profile.roseAwakened());
+        profile.recordGhostQuestCompletion(profile.raidID);profile.abandon();assertTrue(profile.roseAwakened());
+        try{profile.recordGhostQuestCompletion(profile.raidID);fail("Inactive expedition");}catch(IllegalStateException expected){}
+    }
+    @Test public void legacyOwnedRoseGetsOneTimeActivationRecoveryWithoutChangingLiveEquipment() throws Exception {
+        DriedRose oldRose=new DriedRose();profile.stash.add(oldRose);profile.prepare(oldRose,true);profile.begin();Hero h=roseHero();DriedRose live=(DriedRose)h.belongings.artifact;assertFalse(live.isAwakened(h));
+        Bundle old=FileUtils.bundleFromFile(ExtractionProfile.FILE);old.put("rose_progress_version",0);FileUtils.bundleToFile(ExtractionProfile.FILE,old);
+        forgetProfile();profile=ExtractionProfile.get();assertTrue(profile.roseAwakened());assertSame(live,h.belongings.artifact);assertTrue(live.isAwakened(h));assertTrue(live.actions(h).contains(DriedRose.AC_SUMMON));
+        String recovery=profile.result;forgetProfile();profile=ExtractionProfile.get();assertEquals(recovery,profile.result);assertTrue(profile.active);
+    }
+    @Test public void legacyProfilesWithoutRosesDoNotUnlockFutureDropsAndItemEvidencePersists() throws Exception {
+        Bundle old=FileUtils.bundleFromFile(ExtractionProfile.FILE);old.put("rose_progress_version",0);FileUtils.bundleToFile(ExtractionProfile.FILE,old);
+        forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.roseAwakened());DriedRose fresh=new DriedRose();profile.stash.add(fresh);profile.prepare(fresh,true);
+        forgetProfile();profile=ExtractionProfile.get();assertFalse(profile.roseAwakened());profile.begin();Hero h=roseHero();assertFalse(((DriedRose)h.belongings.artifact).actions(h).contains(DriedRose.AC_SUMMON));
+        DriedRose priorSummon=new DriedRose();Bundle saved=new Bundle();priorSummon.storeInBundle(saved);saved.put("firstsummon",true);saved.put("awakened",false);priorSummon.restoreFromBundle(saved);
+        assertTrue(priorSummon.isAwakened(null));Bundle again=new Bundle();priorSummon.storeInBundle(again);assertTrue(again.getBoolean("awakened"));
+    }
+
     @Test public void warriorFirstNodeGrantsOneSealAndRefundsAndPresetsCannotDuplicateIt() throws Exception {
         profile.points=300;int before=profile.stash.size();learnPath(ExtractionProfile.WARRIOR_SEAL_NODE);
         assertTrue(profile.warriorSealAwarded());assertEquals(before+1,profile.stash.size());
@@ -1249,7 +1309,7 @@ public class ExtractionProfileTest {
         SPDSettings.set(new HeadlessPreferences("test-preferences.xml", folder.getRoot().getAbsolutePath()));
         FileUtils.setDefaultFileProperties(Files.FileType.Absolute, folder.getRoot().getAbsolutePath()+"/");
         com.shatteredpixel.shatteredpixeldungeon.Badges.reset();
-        Dungeon.hero = null;Dungeon.level=null;Dungeon.quickslot.reset();com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton.reset();
+        Ghost.Quest.reset();Dungeon.hero = null;Dungeon.level=null;Dungeon.quickslot.reset();com.shatteredpixel.shatteredpixeldungeon.ui.QuickSlotButton.reset();
         GamesInProgress.curSlot = 1;
         forgetProfile();
         profile = ExtractionProfile.get();
