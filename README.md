@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.56.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.56.0-farming)
+[v0.56.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.56.1-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.0-farming/Farming_Pixel_Dungeon_v0.56.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.0-farming/Farming_Pixel_Dungeon_PC_v0.56.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.1-farming/Farming_Pixel_Dungeon_v0.56.1.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.1-farming/Farming_Pixel_Dungeon_PC_v0.56.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -49,11 +49,17 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
 
-## v0.56.0 — 회피 상한·훈련장·총포술사·검기 / Dodge cap, training, Gunner, and sword waves
+## v0.56.1 — 마탄학자 계통 수정 / Arcane Ballistician path correction
+
+총포술사 이름을 마탄학자로 바꾸고 트리를 마법사·궁수 사이로 옮겼습니다. 새 입문에는 마법사와 궁수 양쪽 첫 노드가 필요하며 기존 배분·프리셋은 유지합니다. APK와 윈도우 ZIP 모두 반영했습니다.
+
+Renamed the gun hybrid path to Arcane Ballistician (마탄학자), moved it between Mage and Huntress, and connected both first nodes as unlock prerequisites. Existing allocations and presets are preserved. Available in both Android and Windows builds.
+
+## v0.56.0 — 회피 상한·훈련장·마탄학자·검기 / Dodge cap, training, Gunner, and sword waves
 
 실제 회피 확률을 최대 80%로 제한하고 회피 반지의 지수 중첩을 선형 합산으로 바꿨습니다. 로비 상단 훈련장에서 준비 장비의 복사본으로 일반·회피·중갑 허수아비를 공격하고 메뉴에서 피해 기록을 확인합니다. 훈련은 실제 원정 저장·장비·경험치를 변경하지 않습니다.
 
-총포술사의 연금 권총은 주무기로 장착해 적을 클릭하여 사격할 수 있습니다. 첫 입문 보상은 권총과 일반탄 12발입니다. 씨앗 1개 + 에너지 1 = 일반탄 6발, 일반탄 1발 + 대응 씨앗 1개 + 에너지 2 = 속성탄 1발입니다. 탄창·탄 소모·재장전 비용이 적용됩니다. 전술 구르기는 한 칸 즉시 이동하며 행동 턴을 소모하지 않고, 구르기 장전 퍽은 가진 탄약으로 재장전합니다. 재사용 시간은 기본 8턴이며 노드로 6턴·5턴까지 줄어듭니다.
+마탄학자의 연금 권총은 주무기로 장착해 적을 클릭하여 사격할 수 있습니다. 첫 입문 보상은 권총과 일반탄 12발입니다. 씨앗 1개 + 에너지 1 = 일반탄 6발, 일반탄 1발 + 대응 씨앗 1개 + 에너지 2 = 속성탄 1발입니다. 탄창·탄 소모·재장전 비용이 적용됩니다. 전술 구르기는 한 칸 즉시 이동하며 행동 턴을 소모하지 않고, 구르기 장전 퍽은 가진 탄약으로 재장전합니다. 재사용 시간은 기본 8턴이며 노드로 6턴·5턴까지 줄어듭니다.
 
 마검사는 검·대검·마법사의 지팡이 평타에 3칸(노드로 4칸) 검기와 별도 마법 피해 15%(노드로 20%)를 적용합니다. 벽을 관통하지 않으며 평타와 주문의 교대 강화 연계를 유지합니다. 기존 혼합 노드 ID와 프리셋은 보존합니다.
 
