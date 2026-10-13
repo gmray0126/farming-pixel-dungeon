@@ -22,7 +22,8 @@ public class WndHubAlchemy extends Window {
         label("로비 연금술",9,0,1,w-27,0xE4C583);button("닫기",w-25,0,25,13,this::hide);
         label(p.gold+" G · 연금 에너지 "+p.alchemyEnergy,6,0,17,w,0x83C9B5);
         button("에너지 구매",0,29,(w-2)/2f,16,this::energyMenu);button("재료 분해",(w+2)/2f,29,(w-2)/2f,16,()->chooseItem(true,0));
-        button("창고 재료 넣기 ("+selected.size()+" / 3)",0,50,w,17,()->{if(selected.size()<3)chooseItem(false,0);});
+        button("재료 넣기 ("+selected.size()+" / 3)",0,50,w-58,17,()->{if(selected.size()<3)chooseItem(false,0);});
+        button("총탄 제작법",w-56,50,56,17,()->Game.scene().add(new WndBulletRecipes()));
         float sw=(w-4)/3f;
         for(int i=0;i<3;i++){final int slotIndex=i;ItemButton cell=new ItemButton(){@Override protected void onClick(){run(()->{if(slotIndex<selected.size()){selected.remove(slotIndex);page=0;refresh();}else chooseItem(false,0);});}};
             cell.setRect(i*(sw+2),71,sw,26);if(i<selected.size())cell.item(selected.get(i));body.add(cell);

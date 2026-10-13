@@ -127,7 +127,11 @@ public class ExtractionHubScene extends PixelScene {
         label("로비 연금술",9,left,y,width,GOLD);
         label("연금 에너지  "+p.alchemyEnergy+" E",7,left,y+19,width,GREEN);
         label(p.active?"원정 중에는 연금술을 이용할 수 없습니다.\n탈출하거나 원정을 포기한 뒤 이용하세요.":"창고 재료로 제작하고 불필요한 재료를 분해합니다.\n에너지 1 E 구매: "+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionAlchemy.ENERGY_PRICE+" G",7,left,y+36,width,TEXT);
-        if(!p.active)button("연금술 열기",left,y+76,width,27,()->add(new WndHubAlchemy(this::refresh)),true);
+        if(!p.active){
+            float openWidth=(width-3)*.55f;
+            button("연금술 열기",left,y+76,openWidth,27,()->add(new WndHubAlchemy(this::refresh)),true);
+            button("총탄 제작법",left+openWidth+3,y+76,width-openWidth-3,27,()->add(new WndBulletRecipes()),false);
+        }else button("총탄 제작법",left,y+76,width,27,()->add(new WndBulletRecipes()),false);
     }
     private void debugMenu(){new com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDebugMenu(this::add,this::refresh,false).open();}
     private void grid(ArrayList<Item> items,int offset,int rows,float y,boolean bag){

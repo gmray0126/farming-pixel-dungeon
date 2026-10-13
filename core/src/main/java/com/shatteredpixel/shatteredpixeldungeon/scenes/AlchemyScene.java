@@ -532,6 +532,14 @@ public class AlchemyScene extends PixelScene {
 		btnGuide.setPos(centerW - btnGuide.width()/2f, energyAdd.top()- btnGuide.height()-2);
 		align(btnGuide);
 		add(btnGuide);
+        StyledButton ammoGuide=new StyledButton(Chrome.Type.TOAST_TR,"총탄 제작법",6){
+            @Override protected void onClick(){AlchemyScene.this.addToFront(new com.shatteredpixel.shatteredpixeldungeon.windows.WndBulletRecipes());}
+        };
+        ammoGuide.setSize(56,18);
+        btnGuide.setPos(centerW-(btnGuide.width()+60)/2f,btnGuide.top());
+        ammoGuide.setPos(btnGuide.right()+4,btnGuide.top());
+        align(btnGuide);align(ammoGuide);add(ammoGuide);
+
 
 		TrinketCatalyst cata = Dungeon.hero.belongings.getItem(TrinketCatalyst.class);
 		if (cata != null && cata.hasRolledTrinkets()){

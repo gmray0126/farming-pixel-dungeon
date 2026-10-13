@@ -218,6 +218,16 @@ try {
     Click-Client $p ([int](($left+$hubWidth/2)*$zoom)) ([int](159*$zoom))
     Start-Sleep -Milliseconds 500
     Capture $p '07-portrait-alchemy'
+    $virtualHeight=$rect.Bottom/$zoom
+    $alchHeight=[Math]::Min(220,$virtualHeight-26)
+    $alchLeft=($virtualWidth-136)/2; $alchTop=($virtualHeight-$alchHeight)/2
+    Click-Client $p ([int](($alchLeft+108)*$zoom)) ([int](($alchTop+58)*$zoom))
+    Start-Sleep -Milliseconds 500
+    Capture $p '07b-ammo-recipe-guide'
+    if((Get-Content pc-evidence/stdout.txt -Raw) -notmatch 'Farming ammo recipe guide ready'){throw 'Ammo recipe guide did not open'}
+    Drag-Client $p ([int]($rect.Right/2)) ([int](($virtualHeight/2+60)*$zoom)) ([int]($rect.Right/2)) ([int](($virtualHeight/2-50)*$zoom))
+    Start-Sleep -Milliseconds 300
+    Capture $p '07c-ammo-recipe-scroll'
     Close-Game $p
     # Enter the native training scene and verify it never changes the real profile.
     $profile=Read-Bundle "$saveDir/extraction-profile.dat"
