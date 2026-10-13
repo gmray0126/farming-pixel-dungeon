@@ -2472,10 +2472,14 @@ public class Hero extends Char {
 		boolean wasEnemy = attackTarget.alignment == Alignment.ENEMY
 				|| (attackTarget instanceof Mimic && attackTarget.alignment == Alignment.NEUTRAL);
 
+        com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm firedGun=belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm?(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)belongings.attackingWeapon():null;
 		boolean hit = attack(attackTarget);
 		
 		Invisibility.dispel();
-		spend( attackDelay() );
+        if(firedGun!=null){
+            firedGun.firing=true;
+            try{spend(Math.max(1,attackDelay()));}finally{firedGun.firing=false;}
+        }else spend(attackDelay());
 
 		if (hit && hasSubclass(HeroSubClass.GLADIATOR) && wasEnemy){
 			Buff.affect( this, Combo.class ).hit(attackTarget);

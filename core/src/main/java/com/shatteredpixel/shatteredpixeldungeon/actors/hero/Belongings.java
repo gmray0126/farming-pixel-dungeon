@@ -103,7 +103,12 @@ public class Belongings implements Iterable<Item> {
 	public KindOfWeapon attackingWeapon(){
 		if (thrownWeapon != null) return thrownWeapon;
 		if (abilityWeapon != null) return abilityWeapon;
-		return weapon();
+        KindOfWeapon equipped=weapon();
+        if(equipped instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm){
+            com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm gun=(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)equipped;
+            if(gun.loaded<=0&&!gun.firing)return null;
+        }
+		return equipped;
 	}
 
 	//we cache whether belongings are lost to avoid lots of calls to hero.buff(LostInventory.class)

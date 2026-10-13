@@ -371,14 +371,19 @@ public abstract class Char extends Actor {
 		return attack(enemy, 1f, 0f, 1f);
 	}
 	
-	public boolean attack( Char enemy, float dmgMulti, float dmgBonus, float accMulti ) {
-
-		if (enemy == null) return false;
+    public boolean attack(Char enemy,float dmgMulti,float dmgBonus,float accMulti){
+        if(enemy==null)return false;
         if(this instanceof Hero&&((Hero)this).belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm){
             com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm gun=(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)((Hero)this).belongings.attackingWeapon();
-            if(!gun.canReach(this,enemy.pos)||!gun.consumeRound((Hero)this,enemy))return false;
+            if(!gun.canReach(this,enemy.pos))return false;
+            boolean previous=gun.firing;gun.firing=true;
+            try{if(!gun.consumeRound((Hero)this,enemy))return false;return resolveAttack(enemy,dmgMulti,dmgBonus,accMulti);}
+            finally{gun.firing=previous;}
         }
-		
+        return resolveAttack(enemy,dmgMulti,dmgBonus,accMulti);
+    }
+    private boolean resolveAttack(Char enemy,float dmgMulti,float dmgBonus,float accMulti){
+
 		boolean visibleFight = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[enemy.pos];
 
 		if (enemy.isInvulnerable(getClass())) {

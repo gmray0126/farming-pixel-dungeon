@@ -135,7 +135,7 @@ public class ExtractionHybridTest {
         Bundle saved=new Bundle();saved.put("gun",gun);AlchemyFirearm copy=(AlchemyFirearm)saved.get("gun");assertEquals(15,copy.trueLevel());assertEquals(gun.min(),copy.min());
     }
     @Test public void elementalRoundsAddSeparateResistibleMagicDamageInBothShotModes(){
-        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();h.belongings.weapon=gun;gun.element=AlchemyBullet.FROST;
+        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();h.belongings.weapon=gun;gun.loaded=1;gun.element=AlchemyBullet.FROST;
         Mob target=enemy();int before=target.HP,magic=gun.magicDamage(h);
         assertEquals(10,gun.proc(h,target,10));assertEquals(before-magic,target.HP);
         AlchemyFirearm.Shot shot=new AlchemyFirearm.Shot(gun,AlchemyBullet.FROST);h.belongings.thrownWeapon=shot;
@@ -200,12 +200,23 @@ public class ExtractionHybridTest {
     }
     @Test public void equippedGunCanReachDistantTargetsAndConsumesRoundsEvenOnMiss() throws Exception {
         learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();p.stash.add(gun);p.prepare(gun,true);ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;AlchemyFirearm equipped=AlchemyFirearm.find(trainee);assertSame(equipped,trainee.belongings.weapon);trainee.pos=7*room.width()+7;
-        ExtractionTraining.Dummy target=room.mobs.stream().filter(v->v.pos==4*room.width()+7).map(v->(ExtractionTraining.Dummy)v).findFirst().get();assertTrue(trainee.canAttack(target));equipped.loaded=2;assertTrue(equipped.consumeRound(trainee,target));assertEquals(1,equipped.loaded);assertTrue(equipped.consumeRound(trainee,target));assertFalse(equipped.consumeRound(trainee,target));assertEquals(0,equipped.loaded);
+        ExtractionTraining.Dummy target=room.mobs.stream().filter(v->v.pos==4*room.width()+7).map(v->(ExtractionTraining.Dummy)v).findFirst().get();equipped.loaded=2;assertTrue(trainee.canAttack(target));assertTrue(equipped.consumeRound(trainee,target));assertEquals(1,equipped.loaded);assertTrue(equipped.consumeRound(trainee,target));assertFalse(equipped.consumeRound(trainee,target));assertEquals(0,equipped.loaded);
         assertTrue(equipped.actions(trainee).contains(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.AC_UNEQUIP));
     }
-    @Test public void equippedGunNeverBecomesAForceRingUnarmedAttack(){
-        AlchemyFirearm gun=new AlchemyFirearm();h.belongings.weapon=gun;com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce();h.belongings.ring=ring;ring.activate(h);Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.BrawlersStance.class).active=true;
+    @Test public void emptyGunUsesFistsAndLastRoundStillUsesGunDamage() throws Exception {
+        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();gun.upgrade(5);p.stash.add(gun);p.prepare(gun,true);
+        ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;AlchemyFirearm equipped=AlchemyFirearm.find(trainee);
+        ExtractionTraining.Dummy dummy=room.mobs.stream().filter(m->m.pos==4*room.width()+7).map(m->(ExtractionTraining.Dummy)m).findFirst().get();
+        trainee.pos=dummy.pos+1;assertSame(equipped,trainee.belongings.weapon);assertNull(trainee.belongings.attackingWeapon());assertEquals(ExtractionGrowth.FIST,ExtractionGrowth.family(trainee.growthWeapon()));assertTrue(trainee.canAttack(dummy));
+        trainee.pos=dummy.pos+2;assertFalse(trainee.canAttack(dummy));
+        java.util.Arrays.fill(room.heroFOV,false);equipped.loaded=1;int before=dummy.total,min=equipped.min();
+        assertTrue(trainee.attack(dummy,1,0,Char.INFINITE_ACCURACY));assertTrue(dummy.total-before>=min);assertEquals(0,equipped.loaded);assertFalse(equipped.firing);assertNull(trainee.belongings.attackingWeapon());
+        new AlchemyBullet().quantity(1).collect(trainee.belongings.backpack);assertEquals(1,equipped.reload(trainee,0));assertSame(equipped,trainee.belongings.attackingWeapon());assertEquals(10,ExtractionGrowth.family(trainee.growthWeapon()));
+    }
+    @Test public void loadedGunDoesNotUseUnarmedStanceAndEmptyGunDoes(){
+        AlchemyFirearm gun=new AlchemyFirearm();gun.loaded=1;h.belongings.weapon=gun;com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce();h.belongings.ring=ring;ring.activate(h);Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.BrawlersStance.class).active=true;
         assertFalse(com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.fightingUnarmed(h));assertSame(gun,h.growthWeapon());assertEquals(10,ExtractionGrowth.family(gun));
+        gun.loaded=0;assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.fightingUnarmed(h));assertEquals(ExtractionGrowth.FIST,ExtractionGrowth.family(h.growthWeapon()));
     }
     @Test public void stormRequiresSwitchingDistanceFamilies(){
         learn("storm",0);Mob e=enemy();h.belongings.weapon=new ThrowingKnife();assertEquals(10,ExtractionHybridCombat.physical(h,e,10));

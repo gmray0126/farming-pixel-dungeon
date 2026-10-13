@@ -16,6 +16,7 @@ import java.util.ArrayList;
 public class AlchemyFirearm extends Weapon {
     public static final String SHOOT="GUN_SHOOT",RELOAD="GUN_RELOAD";
     public int loaded,element;
+    public transient boolean firing;
     {image=11001;unique=true;bones=false;defaultAction=SHOOT;usesTargeting=true;identify(false);}
     public static boolean unlocked(Hero h){return ExtractionHybridCombat.learned(h,"alchemy",0);}
     private static boolean node(Hero h,int n){return ExtractionHybridCombat.learned(h,"alchemy",n);}
@@ -23,7 +24,7 @@ public class AlchemyFirearm extends Weapon {
     public int range(Hero h){return node(h,9)?8:6;}
     public float reloadTime(Hero h){return node(h,8)?1.5f:2f;}
     @Override public String name(){return "연금 권총";}
-    @Override public String desc(){Hero h=Dungeon.hero;return "종류: 총기 · 마탄학자 혼합 계통\n\n총포 입문 노드로 지급되는 장착 가능한 원거리 무기입니다. 주무기 슬롯에 장착하고 적을 누르면 사격합니다. 일반탄은 투척 계열 물리 피해입니다. 속성탄은 명중 시 기본 사격 피해 평균의 30%를 별도 마법 피해로 더하며 마법 저항을 따릅니다.\n피해 "+min()+"~"+max()+" · 사거리 "+range(h)+"칸 · 사격 최소 1턴 · 재장전 "+reloadTime(h)+"턴\n탄창 "+loaded+" / "+capacity(h)+" · "+AlchemyBullet.elementName(element)+"탄\n\n탄약을 연금술로 만들고 준비해 가져오세요. 빗나가도 한 발을 소비합니다. 근접 사격은 명중이 불리하며 벽·다른 대상에 막힙니다. 다른 속성으로 바꾸려면 탄창을 비워야 합니다. 강화 스크롤로 최대 +15까지 강화할 수 있습니다. 투척의 반지 피해 보너스와 총포·범용·원거리 노드가 적용됩니다.\n\n첫 총포 입문 보상: 총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 재지급하지 않습니다.";}
+    @Override public String desc(){Hero h=Dungeon.hero;return "종류: 총기 · 마탄학자 혼합 계통\n\n총포 입문 노드로 지급되는 장착 가능한 원거리 무기입니다. 탄창이 비면 인접한 적에게 맨손으로 공격하며 무투 계열 노드가 적용됩니다. 다시 장전하면 원거리 사격으로 돌아갑니다. 주무기 슬롯에 장착하고 적을 누르면 사격합니다. 일반탄은 투척 계열 물리 피해입니다. 속성탄은 명중 시 기본 사격 피해 평균의 30%를 별도 마법 피해로 더하며 마법 저항을 따릅니다.\n피해 "+min()+"~"+max()+" · 사거리 "+range(h)+"칸 · 사격 최소 1턴 · 재장전 "+reloadTime(h)+"턴\n탄창 "+loaded+" / "+capacity(h)+" · "+AlchemyBullet.elementName(element)+"탄\n\n탄약을 연금술로 만들고 준비해 가져오세요. 빗나가도 한 발을 소비합니다. 근접 사격은 명중이 불리하며 벽·다른 대상에 막힙니다. 다른 속성으로 바꾸려면 탄창을 비워야 합니다. 강화 스크롤로 최대 +15까지 강화할 수 있습니다. 투척의 반지 피해 보너스와 총포·범용·원거리 노드가 적용됩니다.\n\n첫 총포 입문 보상: 총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 재지급하지 않습니다.";}
     @Override public boolean isUpgradable(){return true;}
     @Override public int value(){return 0;}
     @Override public int energyVal(){return 0;}
@@ -69,7 +70,11 @@ public class AlchemyFirearm extends Weapon {
         GameScene.selectCell(new CellSelector.Listener(){
             @Override public String prompt(){return "사격할 대상을 선택하세요.";}
             @Override public void onSelect(Integer cell){if(cell==null||!h.ready||!unlocked(h)||!h.belongings.contains(AlchemyFirearm.this))return;
-                if(loaded<=0){GLog.w("탄창이 비었습니다. 재장전하세요.");return;}
+                if(loaded<=0){
+                    Char target=Actor.findChar(cell);
+                    if(h.belongings.weapon()==AlchemyFirearm.this&&target!=null&&target.alignment==Char.Alignment.ENEMY&&Dungeon.level.adjacent(h.pos,cell)&&Dungeon.level.heroFOV[cell]){if(h.handle(cell))h.next();}
+                    else GLog.w("탄창이 비었습니다. 총을 장착한 상태에서 인접한 적에게 맨손 공격하거나 재장전하세요.");return;
+                }
                 if(!Dungeon.level.heroFOV[cell]||Dungeon.level.distance(h.pos,cell)>range(h)){GLog.w("사거리와 시야를 확인하세요.");return;}
                 int kind=element;loaded--;Item.updateQuickslot();new Shot(AlchemyFirearm.this,kind).cast(h,cell);
             }
