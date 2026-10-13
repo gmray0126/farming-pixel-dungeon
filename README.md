@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.56.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.56.0-farming)
+[v0.56.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.56.1-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.0-farming/Farming_Pixel_Dungeon_v0.56.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.0-farming/Farming_Pixel_Dungeon_PC_v0.56.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.1-farming/Farming_Pixel_Dungeon_v0.56.1.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.1-farming/Farming_Pixel_Dungeon_PC_v0.56.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.56.1 — 마탄학자 계통 수정 / Arcane Ballistician path correction
+
+총포술사 이름을 마탄학자로 바꾸고 트리를 마법사·궁수 사이로 옮겼습니다. 새 입문에는 마법사와 궁수 양쪽 첫 노드가 필요하며 기존 배분·프리셋은 유지합니다. APK와 윈도우 ZIP 모두 반영했습니다.
+
+Renamed the gun hybrid path to Arcane Ballistician (마탄학자), moved it between Mage and Huntress, and connected both first nodes as unlock prerequisites. Existing allocations and presets are preserved. Available in both Android and Windows builds.
 
 ## v0.56.0 — 회피 상한·훈련장·마탄학자·검기 / Dodge cap, training, Gunner, and sword waves
 
