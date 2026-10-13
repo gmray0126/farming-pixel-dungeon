@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.58.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.58.0-farming)
+[v0.58.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.58.1-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.0-farming/Farming_Pixel_Dungeon_v0.58.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.0-farming/Farming_Pixel_Dungeon_PC_v0.58.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.1-farming/Farming_Pixel_Dungeon_v0.58.1.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.1-farming/Farming_Pixel_Dungeon_PC_v0.58.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,14 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.58.1 — 총탄 제작법·빈 탄창 무투 / Ammo guide and empty-gun fists
+
+로비와 원정 연금술 화면에 총탄 제작법 버튼을 추가했습니다. 재료가 없어도 일반탄과 화염·냉기·독·전격·섬광탄의 재료·에너지·제작 수량을 확인할 수 있습니다. 스크롤 안내를 열고 닫아도 선택한 재료는 유지됩니다. 탄약 설명의 씨앗 이름도 실제 아이템 이름으로 수정했습니다.
+
+탄창이 빈 총을 장착하면 인접 적에게 맨손 공격을 하며 무투 계열 노드가 적용됩니다. 재장전하면 사격으로 돌아가고 마지막 탄환은 총 피해·사격 속도로 처리됩니다.
+
+Hub and dungeon alchemy now show all six ammunition recipes with ingredients, energy costs, and yields without requiring materials or clearing crafting selections. Empty equipped pistols use adjacent unarmed attacks with fist growth nodes; reload to resume shooting. The last round retains gun damage and firing delay.
 
 ## v0.58.0 — 총 강화·속성탄·두 칸 구르기 / Gun upgrades, elemental shots, and two-cell roll
 
