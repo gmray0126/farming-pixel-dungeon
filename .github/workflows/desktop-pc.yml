@@ -1,3 +1,4 @@
+# Retry v0.58.1 after hosted Windows runner setup stalled.
 name: Farming Pixel Dungeon Windows
 on:
   workflow_dispatch:
