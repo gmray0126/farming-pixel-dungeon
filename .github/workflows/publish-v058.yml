@@ -1,0 +1,80 @@
+name: Publish Farming Pixel Dungeon v0.58.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v058.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v058
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38423085251
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38422547827
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.58.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.58.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.58.0 / Farming Pixel Dungeon v0.58.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **총 강화:** 연금 권총에 강화 스크롤을 사용할 수 있으며 영구 강화는 최대 +15입니다. +1마다 기본 최소 피해 +1, 최대 피해 +2가 적용됩니다. 기존 총도 적용됩니다.
+          - **투척의 반지:** 반지의 피해 보너스를 총에 연결했습니다. 주무기 장착 사격과 가방·퀵슬롯 사격 모두 같은 피해 계산을 사용합니다.
+          - **속성탄 피해:** 일반탄은 투척 계열 물리 피해, 속성탄은 물리 피해에 기본 사격 피해 평균의 30%를 별도 마법 피해로 더합니다. 추가 피해는 마법 저항·마법 면역과 마법 성장 노드를 따릅니다. 기존 속성 상태 효과도 유지합니다.
+          - **두 칸 구르기:** 최대 두 칸 이내의 안전한 빈칸으로 구릅니다. 경로의 벽·적·함정·식물을 통과할 수 없습니다. 약 0.1초의 빠른 이동 연출과 휘릭 효과음을 추가했습니다. 행동 턴은 0이며 기존 재사용 시간·구르기 장전 조건은 유지됩니다.
+          
+          ## English changes
+          - The Alchemy Pistol now accepts upgrade scrolls, capped at permanent +15. Each upgrade adds +1 minimum and +2 maximum base damage.
+          - Ring of Sharpshooting damage bonuses apply to both equipped and inventory/quickslot shooting.
+          - Elemental rounds combine ranged physical damage with a separate magic hit equal to 30% of average base shot damage. Magic growth bonuses, resistance, and immunity apply; elemental status effects remain.
+          - Tactical Roll reaches safe cells up to two cells away, without crossing walls, enemies, traps, or plants. Added a roughly 0.1-second dash and a whoosh sound. Zero action-turn cost, cooldowns, and owned-ammunition rolling reload are preserved.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core regression tests and the Android build passed. Native Windows launch, departure, resume, portrait UI, and training checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/9e41610e78af2796559668799da2b7b62ef1283e)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.58.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.58.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
