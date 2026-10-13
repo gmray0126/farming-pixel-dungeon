@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.56.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.56.1-farming)
+[v0.57.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.57.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.1-farming/Farming_Pixel_Dungeon_v0.56.1.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.56.1-farming/Farming_Pixel_Dungeon_PC_v0.56.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.57.0-farming/Farming_Pixel_Dungeon_v0.57.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.57.0-farming/Farming_Pixel_Dungeon_PC_v0.57.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.57.0 — 영혼의 활·앙크 수정 / Spirit Bow and Ankh fixes
+
+영혼의 활이 영구 성장 레벨 5마다 +1, 최대 +15로 자동 강화되도록 수정했습니다. 레벨 75 이후 기본 피해는 더 증가하지 않으며 일반 강화 스크롤 제한은 유지합니다. 원정 사망 시 앙크를 먼저 확인해 축복 앙크의 즉시 부활과 일반 앙크의 원본 부활 절차가 작동하도록 수정했습니다. 부활 대기 중에는 사망 기록·원정 정산을 확정하지 않습니다.
+
+Spirit Bows now scale with permanent growth level: +1 every five levels, capped at +15, with base damage capped at level 75. Upgrade scrolls remain unavailable. Expeditions process carried Ankhs before final death settlement, restoring blessed instant revival and ordinary item-preservation/lost-backpack resurrection. Pending resurrection does not finalize death records or settle the expedition.
 
 ## v0.56.1 — 마탄학자 계통 수정 / Arcane Ballistician path correction
 
