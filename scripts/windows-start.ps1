@@ -94,11 +94,16 @@ function Drag-Client($p, [int]$x, [int]$y, [int]$toX, [int]$toY) {
     [DesktopInput]::mouse_event(4,0,0,0,[UIntPtr]::Zero)
 }
 function Capture($p, $name) {
+    Write-Output "Capturing $name"
     $p.Refresh()
     $rect = [DesktopInput+Rect]::new()
     [void][DesktopInput]::GetClientRect($p.MainWindowHandle, [ref]$rect)
     $origin = [DesktopInput+Point]::new()
     [void][DesktopInput]::ClientToScreen($p.MainWindowHandle, [ref]$origin)
+    if($rect.Right -le 0 -or $rect.Bottom -le 0){
+        for($retry=0;$retry -lt 5;$retry++){Start-Sleep -Milliseconds 300;$p.Refresh();[void][DesktopInput]::GetClientRect($p.MainWindowHandle,[ref]$rect);if($rect.Right -gt 0 -and $rect.Bottom -gt 0){break}}
+        if($rect.Right -le 0 -or $rect.Bottom -le 0){Get-Content pc-evidence/stdout.txt -Tail 80 -ErrorAction SilentlyContinue | Write-Output;Get-Content pc-evidence/stderr.txt -Tail 80 -ErrorAction SilentlyContinue | Write-Output;throw "Native window unavailable during $name"}
+    }
     $image = [Drawing.Bitmap]::new($rect.Right, $rect.Bottom)
     $graphics = [Drawing.Graphics]::FromImage($image)
     try {
