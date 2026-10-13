@@ -25,7 +25,7 @@ public final class ExtractionTraining {
     }
     public static Room prepare(){
         if(ExtractionProfile.get().active)throw new IllegalStateException("원정을 마친 뒤 훈련장을 이용하세요.");
-        running=true;Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.depth=1;Dungeon.branch=0;Dungeon.challenges=0;
+        InterlevelScene.mode=InterlevelScene.Mode.CONTINUE;running=true;Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();Dungeon.depth=1;Dungeon.branch=0;Dungeon.challenges=0;
         Room level=new Room();level.create();Dungeon.switchLevel(level,9*level.width()+7);
         for(Buff b:Dungeon.hero.buffs(Hunger.class))b.detach();return level;
     }
