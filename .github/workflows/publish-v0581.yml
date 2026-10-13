@@ -1,0 +1,90 @@
+name: Publish Farming Pixel Dungeon v0.58.1
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v0581.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v0581
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38478610154
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38478610141
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.58.1.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.58.1_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.58.1 / Farming Pixel Dungeon v0.58.1
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - 로비 연금술 탭, 로비 제작 창, 원정 연금술 화면에 **총탄 제작법** 버튼을 추가했습니다.
+          - 재료를 보유하지 않아도 일반탄과 속성탄 5종의 재료·에너지·완성 수량을 확인할 수 있습니다. 긴 목록은 스크롤하며 안내를 열고 닫아도 선택한 재료는 유지됩니다.
+          - 일반탄: 아무 씨앗 1개 + 에너지 1 → 6발.
+          - 화염탄: 일반탄 1발 + 화염초의 씨앗 1개 + 에너지 2 → 1발.
+          - 냉기탄: 일반탄 1발 + 눈꽃송이의 씨앗 1개 + 에너지 2 → 1발.
+          - 독탄: 일반탄 1발 + 슬픔이끼의 씨앗 1개 + 에너지 2 → 1발.
+          - 전격탄: 일반탄 1발 + 폭풍덩굴의 씨앗 1개 + 에너지 2 → 1발.
+          - 섬광탄: 일반탄 1발 + 실명초의 씨앗 1개 + 에너지 2 → 1발.
+          - 탄약 설명에 잘못 적힌 씨앗 이름을 실제 아이템 이름으로 수정했습니다. 제작법 창의 비용과 완성 수량은 실제 제작 코드에서 가져옵니다.
+          
+          - 빈 탄창으로 총을 장착하면 인접 적에게 맨손 공격을 합니다. 무투 계열 노드가 적용되며 마지막 탄환은 총 피해·사격 속도로 처리됩니다. 재장전하면 원거리 사격으로 돌아갑니다.
+          
+          ## English changes
+          - Added an ammunition recipe guide to the hub alchemy tab, stash crafting window, and dungeon alchemy screen.
+          - All six recipes are visible without owning their ingredients. The scrollable guide preserves selected crafting ingredients.
+          - Ordinary rounds: any seed + 1 energy → 6 rounds. Elemental rounds: one ordinary round + the corresponding seed + 2 energy → 1 round.
+          - Firebloom creates fire, Icecap frost, Sorrowmoss poison, Stormvine shock, and Blindweed flash ammunition.
+          - Corrected Korean seed names and read recipe costs/yields directly from the crafting implementations.
+          
+          - Empty equipped pistols use adjacent unarmed attacks with fist nodes. Reload to resume shooting. The last round retains gun damage and firing delay.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core regression tests and the Android build passed. Native Windows launch, departure, resume, portrait UI, and training checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/330c99d9a9b9ac4b450c777236e240609f0e8e57)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.58.1-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.58.1 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
