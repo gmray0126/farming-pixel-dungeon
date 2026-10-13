@@ -38,7 +38,7 @@ public class ExtractionProfileTest {
         b.put("armor",new com.shatteredpixel.shatteredpixeldungeon.items.armor.ClothArmor().level(1));rose.restoreFromBundle(b);return rose;
     }
     private void assertRoseEquipment(DriedRose rose,int ghostID){
-        Bundle b=new Bundle();rose.storeInBundle(b);assertEquals(6,rose.level());assertEquals(7,rose.droppedPetals);
+        Bundle b=new Bundle();rose.storeInBundle(b);assertEquals(6,rose.trueLevel());assertEquals(4,rose.level());assertEquals(7,rose.droppedPetals);
         assertEquals(73,b.getInt("charge"));assertEquals(ghostID,b.getInt("ghostID"));assertEquals(2,((Item)b.get("weapon")).level());assertEquals(1,((Item)b.get("armor")).level());
     }
     @Test public void ghostQuestPermanentlyUnlocksNewRosesAcrossDeathAndLaterChapters() throws Exception {
