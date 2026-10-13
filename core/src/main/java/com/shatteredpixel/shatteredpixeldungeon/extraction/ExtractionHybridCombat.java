@@ -231,10 +231,10 @@ public final class ExtractionHybridCombat {
         java.util.ArrayList<ExtractionClassSkills.Action> out=new java.util.ArrayList<>();
         if(h==null||h.extractionRaidID==0)return out;
         if(learned(h,"shadow",5))out.add(new ExtractionClassSkills.Action("hybrid_shadow","그림자 밟기","표식한 적 옆 안전한 칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).shadowReadyAt&&!h.rooted,()->shadowStep(h)));
-        if(learned(h,"alchemy",0))out.add(new ExtractionClassSkills.Action("gun_reload","권총 재장전","탄약을 소비하여 재장전합니다.",AlchemyFirearm.find(h)!=null,()->{AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null&&ready(h))gun.reloadMenu(h);}));
+        if(learned(h,"alchemy",0))out.add(new ExtractionClassSkills.Action("gun_reload","권총 재장전","탄약을 소비하여 재장전합니다.",AlchemyFirearm.find(h)!=null,()->{AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null&&ExtractionClassSkills.ready(h))gun.reloadMenu(h);}));
         if(learned(h,"alchemy",5))out.add(new ExtractionClassSkills.Action("gun_roll","전술 구르기","한 칸 즉시 이동 · 행동 턴 0 · 재사용 "+rollCooldown(h)+"턴. 구르기 장전 노드가 있으면 가진 탄약으로 재장전합니다.",Actor.now()>=state(h).rollReadyAt&&!h.rooted,()->GameScene.selectCell(new CellSelector.Listener(){
             @Override public String prompt(){return "구를 한 칸의 안전한 빈칸을 선택하세요.";}
-            @Override public void onSelect(Integer cell){if(cell==null)return;if(!ready(h)||!roll(h,cell)){GLog.w("한 칸 거리·안전한 빈칸·재사용 시간을 확인하세요.");return;}h.sprite.place(h.pos);Dungeon.observe();GameScene.updateFog();h.spendAndNext(0);}
+            @Override public void onSelect(Integer cell){if(cell==null)return;if(!ExtractionClassSkills.ready(h)||!roll(h,cell)){GLog.w("한 칸 거리·안전한 빈칸·재사용 시간을 확인하세요.");return;}h.sprite.place(h.pos);Dungeon.observe();GameScene.updateFog();h.spendAndNext(0);}
         })));
         if(learned(h,"storm",7))out.add(new ExtractionClassSkills.Action("hybrid_storm","사선 확보","안전한 빈칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).stepReadyAt&&!h.rooted,()->windStep(h)));
         if(learned(h,"holy",0))out.add(new ExtractionClassSkills.Action("holy_mend","성력 회복","성력을 소모해 체력을 회복합니다.\n"+status(h),state(h).faith>=faithCost(h)&&h.HP<h.HT,()->{if(ready(h)&&mend(h))h.spendAndNext(1);}));

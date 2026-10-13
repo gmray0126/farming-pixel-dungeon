@@ -374,6 +374,10 @@ public abstract class Char extends Actor {
 	public boolean attack( Char enemy, float dmgMulti, float dmgBonus, float accMulti ) {
 
 		if (enemy == null) return false;
+        if(this instanceof Hero&&((Hero)this).belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm){
+            com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm gun=(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)((Hero)this).belongings.attackingWeapon();
+            if(!gun.canReach(this,enemy.pos)||!gun.consumeRound((Hero)this,enemy))return false;
+        }
 		
 		boolean visibleFight = Dungeon.level.heroFOV[pos] || Dungeon.level.heroFOV[enemy.pos];
 

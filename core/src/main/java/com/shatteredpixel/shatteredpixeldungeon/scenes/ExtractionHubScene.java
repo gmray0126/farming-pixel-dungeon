@@ -151,7 +151,7 @@ public class ExtractionHubScene extends PixelScene {
     }
     private void itemDetails(final Item i,boolean bag){
         ExtractionProfile p=ExtractionProfile.get();
-        boolean gear=bag&&(!(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)&&!(i instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)&&i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
+        boolean gear=bag&&(!(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)&&i instanceof KindOfWeapon||i instanceof Armor||i instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionClothing||i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc);
         boolean worn=p.preparedEquipment(i);
         ArrayList<String> options=new ArrayList<>();
         options.add(bag?"창고로 빼기":"출격 가방에 넣기");

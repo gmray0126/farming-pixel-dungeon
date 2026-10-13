@@ -23,7 +23,7 @@ public class AlchemyFirearm extends Weapon {
     public int range(Hero h){return node(h,9)?8:6;}
     public float reloadTime(Hero h){return node(h,8)?1.5f:2f;}
     @Override public String name(){return "연금 권총";}
-    @Override public String desc(){Hero h=Dungeon.hero;return "종류: 총기 · 총포술사 혼합 계통\n\n총포 입문 노드로 지급되는 원거리 무기입니다. 일반탄은 물리 피해이며 속성탄은 명중할 때 해당 효과를 추가합니다.\n피해 "+min(0)+"~"+max(0)+" · 사거리 "+range(h)+"칸 · 사격 최소 1턴 · 재장전 "+reloadTime(h)+"턴\n탄창 "+loaded+" / "+capacity(h)+" · "+AlchemyBullet.elementName(element)+"탄\n\n탄약을 연금술로 만들고 준비해 가져오세요. 빗나가도 한 발을 소비합니다. 근접 사격은 명중이 불리하며 벽·다른 대상에 막힙니다. 다른 속성으로 바꾸려면 탄창을 비워야 합니다. 총 자체의 강화 대신 총포 노드와 범용·원거리 노드로 성장합니다.\n\n첫 총포 입문 보상: 총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 재지급하지 않습니다.";}
+    @Override public String desc(){Hero h=Dungeon.hero;return "종류: 총기 · 총포술사 혼합 계통\n\n총포 입문 노드로 지급되는 장착 가능한 원거리 무기입니다. 주무기 슬롯에 장착하고 적을 누르면 사격합니다. 일반탄은 물리 피해이며 속성탄은 명중할 때 해당 효과를 추가합니다.\n피해 "+min(0)+"~"+max(0)+" · 사거리 "+range(h)+"칸 · 사격 최소 1턴 · 재장전 "+reloadTime(h)+"턴\n탄창 "+loaded+" / "+capacity(h)+" · "+AlchemyBullet.elementName(element)+"탄\n\n탄약을 연금술로 만들고 준비해 가져오세요. 빗나가도 한 발을 소비합니다. 근접 사격은 명중이 불리하며 벽·다른 대상에 막힙니다. 다른 속성으로 바꾸려면 탄창을 비워야 합니다. 총 자체의 강화 대신 총포 노드와 범용·원거리 노드로 성장합니다.\n\n첫 총포 입문 보상: 총과 일반탄 12발을 창고에 지급합니다. 사망 후 총은 다시 지급하지만 탄약은 재지급하지 않습니다.";}
     @Override public boolean isUpgradable(){return false;}
     @Override public int value(){return 0;}
     @Override public int energyVal(){return 0;}
@@ -31,7 +31,13 @@ public class AlchemyFirearm extends Weapon {
     @Override public int min(int level){return 4+(node(Dungeon.hero,1)?2:0)+(node(Dungeon.hero,13)?2:0);}
     @Override public int max(int level){return 10+(node(Dungeon.hero,1)?3:0)+(node(Dungeon.hero,13)?3:0);}
     @Override public String status(){return loaded+"/"+capacity(Dungeon.hero);}
-    @Override public ArrayList<String> actions(Hero h){ArrayList<String> a=super.actions(h);a.remove(AC_EQUIP);if(unlocked(h)){a.add(SHOOT);a.add(RELOAD);}return a;}
+    @Override public ArrayList<String> actions(Hero h){ArrayList<String> a=super.actions(h);if(unlocked(h)){a.add(SHOOT);a.add(RELOAD);}return a;}
+    @Override public int reachFactor(Char owner){return owner instanceof Hero?range((Hero)owner):6;}
+    @Override public boolean canReach(Char owner,int cell){if(!(owner instanceof Hero)||Dungeon.level==null||Dungeon.level.distance(owner.pos,cell)>range((Hero)owner))return false;return new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(owner.pos,cell,com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.PROJECTILE).collisionPos==cell;}
+    @Override public float delayFactor(Char owner){return Math.max(1,super.delayFactor(owner));}
+    @Override public float accuracyFactor(Char owner,Char target){float factor=super.accuracyFactor(owner,target);if(Dungeon.level!=null&&Dungeon.level.adjacent(owner.pos,target.pos))factor*=.5f;if(owner instanceof Hero&&node((Hero)owner,12))factor*=1.15f;return factor;}
+    public boolean consumeRound(Hero h,Char target){if(!unlocked(h)||loaded<=0)return false;loaded--;Item.updateQuickslot();if(h.sprite!=null&&h.sprite.parent!=null&&target.sprite!=null)((com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite)h.sprite.parent.recycle(com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite.class)).reset(h.sprite,target.sprite,new AlchemyBullet(element),()->{});return true;}
+    @Override public int proc(Char owner,Char target,int damage){if(owner instanceof Hero&&((Hero)owner).belongings.attackingWeapon()==this){elemental((Hero)owner,target,element);if(target.alignment==Char.Alignment.ENEMY){ExtractionHybridCombat.HybridTag tag=Buff.prolong(target,ExtractionHybridCombat.HybridTag.class,12);if(tag!=null)tag.mask|=4;}if(node((Hero)owner,4)&&element!=0)damage+=2;}return super.proc(owner,target,damage);}
     public static AlchemyFirearm find(Hero h){return h==null?null:h.belongings.getItem(AlchemyFirearm.class);}
     public int reload(Hero h,int kind){
         if(h==null||!unlocked(h)||!h.belongings.contains(this)||kind<0||kind>AlchemyBullet.BLIND||loaded>0&&element!=kind)return 0;

@@ -816,7 +816,8 @@ public class Hero extends Char {
 			return false;
 		}
 
-		//can always attack adjacent enemies
+		if(belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)return belongings.attackingWeapon().canReach(this,enemy.pos);
+        //can always attack adjacent enemies
 		if (Dungeon.level.adjacent(pos, enemy.pos)) {
 			return true;
 		}
@@ -1526,6 +1527,10 @@ public class Hero extends Char {
 	private boolean actAttack( HeroAction.Attack action ) {
 
 		attackTarget = action.target;
+        if(belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm){
+            com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm gun=(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)belongings.attackingWeapon();
+            if(!com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm.unlocked(this)||gun.loaded<=0){GLog.w("총포 입문과 탄창을 확인하세요. 탄창이 비었으면 재장전하세요.");ready();attackTarget=null;return false;}
+        }
 
 		if (isCharmedBy(attackTarget)){
 			GLog.w( Messages.get(Charm.class, "cant_attack"));

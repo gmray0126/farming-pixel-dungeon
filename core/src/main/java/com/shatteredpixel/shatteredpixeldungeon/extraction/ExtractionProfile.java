@@ -175,7 +175,7 @@ public final class ExtractionProfile {
         change(()->{selectedChapter=chapter;selectedDifficulty=ExtractionDifficulty.fixedStage(chapter);});
     }
     public Item preparedWeapon() {
-        for (Item i : prepared) if (i instanceof KindOfWeapon && !(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)&&!(i instanceof AlchemyFirearm)) return i;
+        for (Item i : prepared) if (i instanceof KindOfWeapon && !(i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow)) return i;
         return null;
     }
     public Item preparedArmor() {
@@ -194,7 +194,7 @@ public final class ExtractionProfile {
     /** Selected gear goes first, preserving the existing profile/escrow format. */
     public void selectEquipment(final Item i) {
         if (active) throw new IllegalStateException("원정 중에는 착용 장비를 바꿀 수 없습니다.");
-        if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow||i instanceof AlchemyFirearm) return;
+        if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow) return;
         if (!prepared.contains(i) || !(i instanceof KindOfWeapon || i instanceof Armor || i instanceof ExpeditionClothing || i instanceof com.shatteredpixel.shatteredpixeldungeon.items.KindofMisc)) return;
         change(() -> { prepared.remove(i); prepared.add(0, i); });
     }
@@ -221,7 +221,7 @@ public final class ExtractionProfile {
         for (Bundlable value : copy.getCollection("items")) {
             Item i=(Item)value;
             resetRoseForExpedition(i,roseAwakened);
-            if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow||i instanceof AlchemyFirearm){if(!i.collect(h.belongings.backpack))throw new IllegalStateException("영혼의 활을 가방에 넣지 못했습니다.");}
+            if (i instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow){if(!i.collect(h.belongings.backpack))throw new IllegalStateException("영혼의 활을 가방에 넣지 못했습니다.");}
             else if (i instanceof KindOfWeapon && h.belongings.weapon == null) { h.belongings.weapon=(KindOfWeapon)i; h.belongings.weapon.activate(h); }
             else if (i instanceof Armor && h.belongings.armor == null) { h.belongings.armor=(Armor)i; h.belongings.armor.activate(h); }
             else if(i instanceof ExpeditionClothing.Pants&&h.belongings.pants==null){h.belongings.pants=(ExpeditionClothing)i;}

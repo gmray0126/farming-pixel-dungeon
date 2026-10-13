@@ -98,7 +98,7 @@ public class ExtractionHybridTest {
         learn("alchemy",0,5,6);AlchemyFirearm original=new AlchemyFirearm();p.stash.add(original);p.prepare(original,true);AlchemyBullet ammo=(AlchemyBullet)new AlchemyBullet().quantity(8);p.stash.add(ammo);p.prepare(ammo,true);
         byte[] profileBefore=FileUtils.getFileHandle(ExtractionProfile.FILE).readBytes();int xp=p.xp,gold=p.gold;
         ExtractionTraining.Room level=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;assertEquals(-2,trainee.extractionRaidID);assertFalse(p.active);assertEquals(3,level.mobs.size());
-        AlchemyFirearm copy=AlchemyFirearm.find(trainee);assertNotNull(copy);assertNotSame(original,copy);assertEquals(4,copy.reload(trainee,0));assertEquals(0,original.loaded);assertEquals(8,ammo.quantity());
+        AlchemyFirearm copy=AlchemyFirearm.find(trainee);assertNotNull(copy);assertNotSame(original,copy);assertSame(copy,trainee.belongings.weapon);assertEquals(4,copy.reload(trainee,0));assertEquals(0,original.loaded);assertEquals(8,ammo.quantity());
         Dungeon.saveAll();Dungeon.saveGame(1);Dungeon.saveLevel(1);assertFalse(FileUtils.fileExists(GamesInProgress.gameFile(1)));assertArrayEquals(profileBefore,FileUtils.getFileHandle(ExtractionProfile.FILE).readBytes());assertEquals(xp,p.xp);assertEquals(gold,p.gold);
         int hp=trainee.HP;trainee.damage(100,new Object());assertEquals(hp,trainee.HP);
     }
@@ -121,6 +121,11 @@ public class ExtractionHybridTest {
         Item seed=new com.shatteredpixel.shatteredpixeldungeon.plants.Firebloom.Seed().quantity(2);p.stash.add(seed);p.alchemyEnergy=1;
         Recipe recipe=ExtractionAlchemy.recipes(p,picks(seed)).stream().filter(v->v instanceof AlchemyBullet.BasicRecipe).findFirst().get();ExtractionAlchemy.craft(p,picks(seed),recipe);assertEquals(0,p.alchemyEnergy);assertEquals(1,seed.quantity());assertEquals(6,p.stash.stream().filter(v->v instanceof AlchemyBullet).findFirst().get().quantity());
         int before=p.stash.size();try{ExtractionAlchemy.craft(p,picks(seed),recipe);fail("No energy");}catch(IllegalStateException expected){}assertEquals(before,p.stash.size());assertEquals(1,seed.quantity());
+    }
+    @Test public void equippedGunCanReachDistantTargetsAndConsumesRoundsEvenOnMiss() throws Exception {
+        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();p.stash.add(gun);p.prepare(gun,true);ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;AlchemyFirearm equipped=AlchemyFirearm.find(trainee);assertSame(equipped,trainee.belongings.weapon);trainee.pos=7*room.width()+7;
+        ExtractionTraining.Dummy target=room.mobs.stream().filter(v->v.pos==4*room.width()+7).map(v->(ExtractionTraining.Dummy)v).findFirst().get();assertTrue(trainee.canAttack(target));equipped.loaded=2;assertTrue(equipped.consumeRound(trainee,target));assertEquals(1,equipped.loaded);assertTrue(equipped.consumeRound(trainee,target));assertFalse(equipped.consumeRound(trainee,target));assertEquals(0,equipped.loaded);
+        assertTrue(equipped.actions(trainee).contains(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.AC_EQUIP));
     }
     @Test public void stormRequiresSwitchingDistanceFamilies(){
         learn("storm",0);Mob e=enemy();h.belongings.weapon=new ThrowingKnife();assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
