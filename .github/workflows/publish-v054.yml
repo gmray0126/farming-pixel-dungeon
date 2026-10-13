@@ -1,0 +1,84 @@
+name: Publish Farming Pixel Dungeon v0.54.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v054.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v054
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38321668310
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38321668303
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.54.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.54.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.54.0 / Farming Pixel Dungeon v0.54.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **성장 노드 겹침 수정:** 위기 대응을 포함한 전체 629개 노드를 검사하고, 큰 노드의 바깥 테두리까지 포함해 노드 사이에 여백이 생기도록 재배치합니다.
+          - 원형 갈래와 실제 선행 조건을 유지합니다. 지도 경계와 시작점도 피하며, 계통 확대 범위를 새 위치에 맞춰 갱신합니다. 작은 지도·전체 지도·터치 선택은 같은 좌표를 사용합니다.
+          - 기존 노드 ID, 습득 상태, 포인트와 프리셋은 유지됩니다. 초기화하거나 다시 찍을 필요가 없습니다.
+          - **전사 첫 노드 인내의 부러진 인장 지급:** 최초 습득 시 창고에 하나 지급합니다. 준비 탭에서 출격 물품으로 챙긴 뒤 원정 가방에서 인장을 몸통 갑옷에 붙여 사용합니다.
+          - 이미 인내를 배운 기존 사용자도 보상을 복구합니다. 창고·준비 물품·출격 보관 물품에 인장이 있거나 갑옷에 붙어 있다면 중복 지급하지 않습니다. 진행 중인 원정의 착용 장비는 바꾸지 않습니다.
+          - 수령 기록을 저장하여 노드 취소·초기화·재습득·프리셋 전환으로 반복 지급되지 않습니다. 저장 실패 시 포인트·노드·장비·수령 기록을 함께 되돌립니다. 노드 설명과 보상 안내도 추가했습니다.
+          
+          ## English changes
+          - **Fixed overlapping growth nodes.** All 629 nodes, including Crisis Response, are checked with outer-ring clearance and moved apart where necessary.
+          - Preserves circular branches and actual prerequisites, keeps nodes away from the map boundary and starting point, and updates group focus bounds. Small/full maps and hit testing share the same coordinates.
+          - Existing node IDs, allocations, points, and presets are preserved. No respec is required.
+          - **The first Warrior node, Endure, grants a Broken Seal** to the stash on first acquisition. Prepare it and affix it to body armor from the expedition inventory.
+          - Existing Endure owners receive a missing-reward recovery. Stored, prepared, escrowed, or armor-affixed seals are recognized without duplication. Active raid equipment is not changed.
+          - Persistent reward history prevents repeat grants through refunds, resets, relearning, and preset switching. Failed saves roll back points, nodes, items, and reward history together. Added node descriptions and reward notifications.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core tests and Android build passed. Atlas tests cover clearance between every pair of nodes including outer rings, map bounds, the starting point, and separate selection of Crisis Response and bag nodes. Seal regressions cover first grants, existing active-raid recovery, persistent reward history, refund/reset/preset duplication prevention, already-affixed seals, save rollback, and native armor shielding after save/resume. Windows packaging and native launch/depart/resume checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/77b3b7269d759f0f26d5c049fa8f1c77c4ae1ce1)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.54.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.54.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
