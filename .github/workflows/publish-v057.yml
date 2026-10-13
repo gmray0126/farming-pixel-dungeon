@@ -1,0 +1,78 @@
+name: Publish Farming Pixel Dungeon v0.57.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v057.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v057
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38411277509
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38411277752
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.57.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.57.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.57.0 / Farming Pixel Dungeon v0.57.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - **영혼의 활 자동 강화 복구:** 원정에서 1로 고정된 전투 레벨 대신 영구 성장 레벨을 사용합니다. 성장 레벨 5마다 +1, 최대 +15이며 레벨 75 이후 기본 피해도 더 증가하지 않습니다. 일반 강화 스크롤을 쓸 수 없는 원본 규칙은 유지합니다. 기존 활과 궁수 노드 지급 활 모두 적용됩니다.
+          - **앙크 부활 복구:** 원정 사망 정산 전에 보유 앙크를 먼저 확인합니다. 축복 앙크는 원위치에서 즉시 부활하며, 일반 앙크는 원본의 보존 물품 선택·잃어버린 배낭 회수 방식으로 부활합니다. 부활 선택 대기 중에는 사망 기록을 확정하거나 원정을 정산하지 않습니다. 앙크가 없을 때만 기존 사망·로비 복귀가 진행됩니다.
+          - **재발 테스트:** 영구 성장 레벨에 따른 활 피해·강화와 +15 상한, 축복 앙크의 소모·생존·원정 유지, 일반 앙크의 부활 대기·사망 정산 방지를 검사합니다.
+          
+          ## English changes
+          - **Restored Spirit Bow scaling.** Expeditions now use permanent growth level rather than the fixed combat level of one. The bow gains +1 every five growth levels, capped at +15; base damage stops scaling at level 75. Ordinary upgrade scrolls remain unavailable. Applies to existing and node-issued bows.
+          - **Restored Ankh resurrection.** Expedition deaths now check carried Ankhs before final settlement. Blessed Ankhs revive immediately; ordinary Ankhs use the original item-preservation and lost-backpack flow. Pending resurrection does not submit a final death record or end the expedition.
+          - Added regression coverage for bow growth/caps, blessed-Ankh consumption and survival, and ordinary-Ankh pending resurrection and settlement guards.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          Core regression tests and the Android build passed. Native Windows launch, departure, resume, portrait UI, and training checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/2bb1a216f658749a608cf3566f5eb5c0a9f47c6e)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.57.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.57.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
