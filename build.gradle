@@ -2,9 +2,10 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://repo1.maven.org/maven2' }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:9.2.0'
+        if(!gradle.startParameter.projectProperties.containsKey('desktopOnly'))classpath 'com.android.tools.build:gradle:9.2.0'
     }
 }
 
@@ -33,6 +34,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven { url 'https://repo1.maven.org/maven2' }
         maven { url 'https://central.sonatype.com/repository/maven-snapshots/' }
     }
 

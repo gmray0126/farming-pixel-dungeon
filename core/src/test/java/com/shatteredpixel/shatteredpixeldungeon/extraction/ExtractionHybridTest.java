@@ -127,6 +127,10 @@ public class ExtractionHybridTest {
         ExtractionTraining.Dummy target=room.mobs.stream().filter(v->v.pos==4*room.width()+7).map(v->(ExtractionTraining.Dummy)v).findFirst().get();assertTrue(trainee.canAttack(target));equipped.loaded=2;assertTrue(equipped.consumeRound(trainee,target));assertEquals(1,equipped.loaded);assertTrue(equipped.consumeRound(trainee,target));assertFalse(equipped.consumeRound(trainee,target));assertEquals(0,equipped.loaded);
         assertTrue(equipped.actions(trainee).contains(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.AC_UNEQUIP));
     }
+    @Test public void equippedGunNeverBecomesAForceRingUnarmedAttack(){
+        AlchemyFirearm gun=new AlchemyFirearm();h.belongings.weapon=gun;com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce();h.belongings.ring=ring;ring.activate(h);Buff.affect(h,com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.BrawlersStance.class).active=true;
+        assertFalse(com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.fightingUnarmed(h));assertSame(gun,h.growthWeapon());assertEquals(10,ExtractionGrowth.family(gun));
+    }
     @Test public void stormRequiresSwitchingDistanceFamilies(){
         learn("storm",0);Mob e=enemy();h.belongings.weapon=new ThrowingKnife();assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
         h.belongings.weapon=new Sword();assertEquals(12,ExtractionHybridCombat.physical(h,e,10));assertEquals(10,ExtractionHybridCombat.physical(h,e,10));

@@ -3,8 +3,10 @@ include ':SPD-classes'
 include ':core'
 
 //platform modules
-include ':android'
-include ':ios'
+if(!gradle.startParameter.projectProperties.containsKey('desktopOnly')){
+    include ':android'
+    include ':ios'
+}
 include ':desktop'
 
 //service modules
