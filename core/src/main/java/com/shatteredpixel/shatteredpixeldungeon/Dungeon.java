@@ -891,6 +891,7 @@ public class Dungeon {
 	}
 	
 	public static void fail( Object cause ) {
+        if(WndResurrect.instance!=null)return;
 		boolean expedition = hero != null && hero.extractionRaidID != 0;
 		if (expedition && hero.extractionDeathRecorded) return;
 		if (expedition || WndResurrect.instance == null) {

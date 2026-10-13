@@ -2267,15 +2267,6 @@ public class Hero extends Char {
 
 	@Override
 	public void die( Object cause ) {
-		if (extractionRaidID != 0) {
-			curAction=null;
-			Actor.fixTime();
-			super.die(cause);
-			Dungeon.fail(cause);
-			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(extractionRaidID,false);
-			Game.runOnRenderThread(() -> ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class));
-			return;
-		}
 		
 		curAction = null;
 
@@ -2292,14 +2283,16 @@ public class Hero extends Char {
 			interrupt();
 
 			if (ankh.isBlessed()) {
-				this.HP = HT / 4;
+				this.HP = Math.max(1, HT / 4);
 
 				PotionOfHealing.cure(this);
 				Buff.prolong(this, Invulnerability.class, Invulnerability.DURATION);
 
-				SpellSprite.show(this, SpellSprite.ANKH);
-				GameScene.flash(0x80FFFF40);
-				Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
+                if(sprite!=null){
+                    SpellSprite.show(this, SpellSprite.ANKH);
+                    GameScene.flash(0x80FFFF40);
+                    Sample.INSTANCE.play(Assets.Sounds.TELEPORT);
+                }
 				GLog.w(Messages.get(this, "revive"));
 				Statistics.ankhsUsed++;
 				Catalog.countUse(Ankh.class);
@@ -2340,6 +2333,15 @@ public class Hero extends Char {
 			return;
 		}
 		
+		if (extractionRaidID != 0) {
+			curAction=null;
+			Actor.fixTime();
+			super.die(cause);
+			Dungeon.fail(cause);
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().settle(extractionRaidID,false);
+			Game.runOnRenderThread(() -> ShatteredPixelDungeon.switchScene(com.shatteredpixel.shatteredpixeldungeon.scenes.ExtractionHubScene.class));
+			return;
+		}
 		Actor.fixTime();
 		super.die( cause );
 		reallyDie( cause );

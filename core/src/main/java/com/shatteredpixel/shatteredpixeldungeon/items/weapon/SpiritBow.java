@@ -189,9 +189,16 @@ public class SpiritBow extends Weapon {
 		return STRReq(1, lvl); //tier 1
 	}
 	
+    private static int scalingLevel(){
+        if(Dungeon.hero==null)return 1;
+        if(Dungeon.hero.extractionRaidID!=0)
+            return Math.min(75,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().growthLevel());
+        return Dungeon.hero.combatLevel();
+    }
+
 	@Override
 	public int min(int lvl) {
-		int heroLevel = Dungeon.hero == null ? 1 : Dungeon.hero.combatLevel();
+		int heroLevel = scalingLevel();
 		int dmg = 1 + heroLevel/5
 				+ RingOfSharpshooting.levelDamageBonus(Dungeon.hero)
 				+ (curseInfusionBonus ? 1 + heroLevel/30 : 0);
@@ -200,7 +207,7 @@ public class SpiritBow extends Weapon {
 	
 	@Override
 	public int max(int lvl) {
-		int heroLevel = Dungeon.hero == null ? 1 : Dungeon.hero.combatLevel();
+		int heroLevel = scalingLevel();
 		int dmg = 6 + (int)(heroLevel/2.5f)
 				+ 2*RingOfSharpshooting.levelDamageBonus(Dungeon.hero)
 				+ (curseInfusionBonus ? 2 + heroLevel/15 : 0);
@@ -276,7 +283,7 @@ public class SpiritBow extends Weapon {
 
 	@Override
 	public int level() {
-		int level = Dungeon.hero == null ? 0 : Dungeon.hero.combatLevel()/5;
+		int level = Dungeon.hero == null ? 0 : scalingLevel()/5;
 		if (curseInfusionBonus) level += 1 + level/6;
 		return com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.clamp(this, level);
 	}

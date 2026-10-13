@@ -49,6 +49,39 @@ public class ExtractionHybridTest {
         Actor.clear();Dungeon.hero=null;Dungeon.level=null;Dungeon.depth=1;Dungeon.branch=0;Dungeon.gold=0;GamesInProgress.curSlot=1;Badges.reset();
         p=ExtractionProfile.get();h=new Hero();h.extractionRaidID=1;h.HP=h.HT=20;h.belongings.weapon=new Sword();Dungeon.hero=h;
     }
+    @Test public void spiritBowUsesPermanentGrowthAndStopsAtFifteen(){
+        com.shatteredpixel.shatteredpixeldungeon.items.weapon.SpiritBow bow=new NodeSpiritBow();
+        p.xp=0;assertEquals(0,bow.level());int base=bow.max();
+        p.xp=9*25;assertEquals(2,bow.level());assertTrue(bow.max()>base);
+        p.xp=74*25;assertEquals(15,bow.level());int min=bow.min(),max=bow.max();
+        p.xp=99*25;assertEquals(15,bow.level());assertEquals(min,bow.min());assertEquals(max,bow.max());
+        h.lvl=1;assertEquals(1,h.combatLevel());assertEquals(15,bow.level());
+        assertFalse(bow.isUpgradable());
+    }
+    @Test public void blessedAnkhPreventsExpeditionSettlement(){
+        p.begin();h.extractionRaidID=p.raidID;
+        com.shatteredpixel.shatteredpixeldungeon.items.Ankh ankh=new com.shatteredpixel.shatteredpixeldungeon.items.Ankh();
+        ankh.bless();ankh.collect(h.belongings.backpack);h.HP=0;
+        h.die(null);
+        assertEquals(5,h.HP);assertTrue(h.isAlive());assertTrue(p.active);
+        assertNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Ankh.class));
+        assertNotNull(h.buff(Invulnerability.class));assertFalse(h.extractionDeathRecorded);
+    }
+    @Test public void ordinaryAnkhWaitsForResurrectionWithoutEndingExpedition(){
+        p.begin();h.extractionRaidID=p.raidID;
+        com.shatteredpixel.shatteredpixeldungeon.items.Ankh ankh=new com.shatteredpixel.shatteredpixeldungeon.items.Ankh();ankh.collect(h.belongings.backpack);
+        Application original=Gdx.app;java.util.ArrayList<Runnable> queued=new java.util.ArrayList<>();
+        Gdx.app=(Application)Proxy.newProxyInstance(Application.class.getClassLoader(),new Class[]{Application.class},(o,m,a)->{
+            if(m.getName().equals("postRunnable")){queued.add((Runnable)a[0]);return null;}
+            return m.invoke(original,a);
+        });
+        try{
+            h.HP=0;h.die(null);
+            assertTrue(p.active);assertSame(ankh,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Ankh.class));
+            assertNotNull(com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect.instance);assertEquals(1,queued.size());
+            Dungeon.fail(null);assertFalse(h.extractionDeathRecorded);
+        }finally{Gdx.app=original;com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect.instance=null;}
+    }
     private Mob enemy(){Mob m=new Rat();m.HP=m.HT=100;return m;}
     private void learn(String tree,int... nodes){for(int n:nodes)p.nodes.add(tree+"_"+n);}
     @Test public void sixTreesRequireBothClassNeighboursAndAllThreeConvergingPaths(){
