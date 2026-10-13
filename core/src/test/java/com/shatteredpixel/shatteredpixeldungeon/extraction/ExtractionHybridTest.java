@@ -124,6 +124,34 @@ public class ExtractionHybridTest {
         assertEquals(17,ExtractionHybridCombat.magic(h,e,10));assertNull(e.buff(ExtractionHybridCombat.ShadowMark.class));
         assertEquals(10,ExtractionHybridCombat.magic(h,e,10));
     }
+    @Test public void gunUpgradesToFifteenAndSharpshootingAppliesToBothShotModes(){
+        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();h.belongings.weapon=gun;
+        assertTrue(WeaponUpgradeLimit.eligible(gun));assertEquals(15,WeaponUpgradeLimit.cap(gun));
+        int min=gun.min(),max=gun.max();gun.upgrade();assertEquals(min+1,gun.min());assertEquals(max+2,gun.max());
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting();ring.level(2);h.belongings.ring=ring;ring.activate(h);
+        assertEquals(min+4,gun.min());assertEquals(max+8,gun.max());
+        AlchemyFirearm.Shot shot=new AlchemyFirearm.Shot(gun,0);assertEquals(gun.min(),shot.min());assertEquals(gun.max(),shot.max());
+        gun.upgrade(100);assertEquals(15,gun.trueLevel());assertFalse(WeaponUpgradeLimit.eligible(gun));
+        Bundle saved=new Bundle();saved.put("gun",gun);AlchemyFirearm copy=(AlchemyFirearm)saved.get("gun");assertEquals(15,copy.trueLevel());assertEquals(gun.min(),copy.min());
+    }
+    @Test public void elementalRoundsAddSeparateResistibleMagicDamageInBothShotModes(){
+        learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();h.belongings.weapon=gun;gun.element=AlchemyBullet.FROST;
+        Mob target=enemy();int before=target.HP,magic=gun.magicDamage(h);
+        assertEquals(10,gun.proc(h,target,10));assertEquals(before-magic,target.HP);
+        AlchemyFirearm.Shot shot=new AlchemyFirearm.Shot(gun,AlchemyBullet.FROST);h.belongings.thrownWeapon=shot;
+        before=target.HP;assertEquals(10,shot.proc(h,target,10));assertEquals(before-magic,target.HP);
+        before=target.HP;gun.bulletEffects(h,target,AlchemyBullet.NORMAL);assertEquals(before,target.HP);
+        Buff.affect(target,MagicImmune.class);gun.bulletEffects(h,target,AlchemyBullet.FROST);assertEquals(before,target.HP);
+    }
+    @Test public void rollCannotPassIntermediateWallsTrapsOrEnemies(){
+        learn("alchemy",0,5);
+        ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;int start=trainee.pos,mid=start+1,end=start+2;
+        room.solid[mid]=true;room.passable[mid]=false;assertFalse(ExtractionHybridCombat.roll(trainee,end));
+        room.solid[mid]=false;room.passable[mid]=true;
+        room.traps.put(mid,new com.shatteredpixel.shatteredpixeldungeon.levels.traps.FireTrap());assertFalse(ExtractionHybridCombat.roll(trainee,end));room.traps.remove(mid);
+        Mob blocker=enemy();blocker.pos=mid;Actor.add(blocker);assertFalse(ExtractionHybridCombat.roll(trainee,end));Actor.remove(blocker);
+        assertEquals(start,trainee.pos);assertEquals(0,trainee.extractionHybrid.rollReadyAt,0);assertTrue(ExtractionHybridCombat.roll(trainee,end));
+    }
     @Test public void gunReloadConsumesRealAmmunitionAndNeverCreatesRounds(){
         learn("alchemy",0);AlchemyFirearm gun=new AlchemyFirearm();gun.collect(h.belongings.backpack);AlchemyBullet ammo=(AlchemyBullet)new AlchemyBullet().quantity(10);ammo.collect(h.belongings.backpack);
         assertEquals(4,gun.reload(h,0));assertEquals(6,ammo.quantity());assertEquals(0,gun.reload(h,0));gun.loaded=1;assertEquals(3,gun.reload(h,0));assertEquals(3,ammo.quantity());
@@ -150,10 +178,10 @@ public class ExtractionHybridTest {
         Dungeon.saveAll();Dungeon.saveGame(1);Dungeon.saveLevel(1);assertFalse(FileUtils.fileExists(GamesInProgress.gameFile(1)));assertArrayEquals(profileBefore,FileUtils.getFileHandle(ExtractionProfile.FILE).readBytes());assertEquals(xp,p.xp);assertEquals(gold,p.gold);
         int hp=trainee.HP;trainee.damage(100,new Object());assertEquals(hp,trainee.HP);
     }
-    @Test public void rollMovesOneCellImmediatelyReloadsFromInventoryAndPersistsCooldown() throws Exception {
+    @Test public void rollMovesTwoCellsImmediatelyReloadsFromInventoryAndPersistsCooldown() throws Exception {
         learn("alchemy",0,5,6);AlchemyFirearm gun=new AlchemyFirearm();p.stash.add(gun);p.prepare(gun,true);AlchemyBullet ammo=(AlchemyBullet)new AlchemyBullet().quantity(8);p.stash.add(ammo);p.prepare(ammo,true);
         ExtractionTraining.Room level=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;int pos=trainee.pos;float before=Actor.now();
-        assertFalse(ExtractionHybridCombat.roll(trainee,pos+2));assertEquals(pos,trainee.pos);assertTrue(ExtractionHybridCombat.roll(trainee,pos+1));assertEquals(pos+1,trainee.pos);assertEquals(before,Actor.now(),0);assertEquals(4,AlchemyFirearm.find(trainee).loaded);
+        assertFalse(ExtractionHybridCombat.roll(trainee,pos+3));assertEquals(pos,trainee.pos);assertTrue(ExtractionHybridCombat.roll(trainee,pos+2));assertEquals(pos+2,trainee.pos);assertEquals(before,Actor.now(),0);assertEquals(4,AlchemyFirearm.find(trainee).loaded);
         assertEquals(4,trainee.belongings.getItem(AlchemyBullet.class).quantity());assertFalse(ExtractionHybridCombat.roll(trainee,pos));
         Bundle b=new Bundle();b.put("state",trainee.extractionHybrid);ExtractionHybridCombat.State restored=(ExtractionHybridCombat.State)b.get("state");assertEquals(before+8,restored.rollReadyAt,0);
     }

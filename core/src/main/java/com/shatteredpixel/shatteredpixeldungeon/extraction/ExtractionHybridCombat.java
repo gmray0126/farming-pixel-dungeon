@@ -2,6 +2,7 @@
 package com.shatteredpixel.shatteredpixeldungeon.extraction;
 
 import com.shatteredpixel.shatteredpixeldungeon.Dungeon;
+import com.shatteredpixel.shatteredpixeldungeon.Assets;
 import com.shatteredpixel.shatteredpixeldungeon.actors.*;
 import com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero;
 import com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Mob;
@@ -40,11 +41,27 @@ public final class ExtractionHybridCombat {
     }
     public static float rollCooldown(Hero h){return learned(h,"alchemy",14)?5:learned(h,"alchemy",8)?6:8;}
     public static boolean roll(Hero h,int cell){
-        if(!learned(h,"alchemy",5)||Actor.now()<state(h).rollReadyAt||h.rooted||h.paralysed>0||Dungeon.level==null||!Dungeon.level.insideMap(cell)||!Dungeon.level.heroFOV[cell]||Dungeon.level.distance(h.pos,cell)!=1||!safeCell(h,cell))return false;
+        if(!learned(h,"alchemy",5)||Actor.now()<state(h).rollReadyAt||h.rooted||h.paralysed>0||Dungeon.level==null||!Dungeon.level.insideMap(cell)||!Dungeon.level.heroFOV[cell]||!rollPath(h,cell))return false;
         state(h).rollReadyAt=Actor.now()+rollCooldown(h);h.move(cell,false);
         if(learned(h,"alchemy",6)){AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null)gun.reload(h,gun.element);}
         if(learned(h,"alchemy",7))Buff.prolong(h,RollAfterimage.class,2);
         return true;
+    }
+    private static boolean rollPath(Hero h,int cell){
+        int distance=Dungeon.level.distance(h.pos,cell);if(distance<1||distance>2||!safeCell(h,cell))return false;
+        com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica path=new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(h.pos,cell,com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.PROJECTILE);
+        if(path.collisionPos!=cell)return false;
+        int previous=h.pos;
+        for(int n=1;n<path.path.size();n++){
+            int next=path.path.get(n);if(!safeCell(h,next)||Dungeon.level.plants.get(next)!=null)return false;
+            int width=Dungeon.level.width();
+            if(previous%width!=next%width&&previous/width!=next/width){
+                int sideA=previous/width*width+next%width,sideB=next/width*width+previous%width;
+                if(!Dungeon.level.passable[sideA]&&!Dungeon.level.passable[sideB])return false;
+            }
+            if(next==cell)return true;previous=next;
+        }
+        return false;
     }
     public static class RollAfterimage extends FlavourBuff { @Override public String name(){return "구르기 잔상";} }
     public static boolean swordWave(Hero h){if(!learned(h,"spell",0)||h.buff(MagicImmune.class)!=null)return false;int family=ExtractionGrowth.family(h.growthWeapon());return family==3||family==4||family==ExtractionGrowth.MAGIC;}
@@ -232,9 +249,11 @@ public final class ExtractionHybridCombat {
         if(h==null||h.extractionRaidID==0)return out;
         if(learned(h,"shadow",5))out.add(new ExtractionClassSkills.Action("hybrid_shadow","그림자 밟기","표식한 적 옆 안전한 칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).shadowReadyAt&&!h.rooted,()->shadowStep(h)));
         if(learned(h,"alchemy",0))out.add(new ExtractionClassSkills.Action("gun_reload","권총 재장전","탄약을 소비하여 재장전합니다.",AlchemyFirearm.find(h)!=null,()->{AlchemyFirearm gun=AlchemyFirearm.find(h);if(gun!=null&&ExtractionClassSkills.ready(h))gun.reloadMenu(h);}));
-        if(learned(h,"alchemy",5))out.add(new ExtractionClassSkills.Action("gun_roll","전술 구르기","한 칸 즉시 이동 · 행동 턴 0 · 재사용 "+rollCooldown(h)+"턴. 구르기 장전 노드가 있으면 가진 탄약으로 재장전합니다.",Actor.now()>=state(h).rollReadyAt&&!h.rooted,()->GameScene.selectCell(new CellSelector.Listener(){
-            @Override public String prompt(){return "구를 한 칸의 안전한 빈칸을 선택하세요.";}
-            @Override public void onSelect(Integer cell){if(cell==null)return;if(!ExtractionClassSkills.ready(h)||!roll(h,cell)){GLog.w("한 칸 거리·안전한 빈칸·재사용 시간을 확인하세요.");return;}h.sprite.place(h.pos);Dungeon.observe();GameScene.updateFog();h.spendAndNext(0);}
+        if(learned(h,"alchemy",5))out.add(new ExtractionClassSkills.Action("gun_roll","전술 구르기","최대 두 칸 즉시 이동 · 행동 턴 0 · 재사용 "+rollCooldown(h)+"턴. 구르기 장전 노드가 있으면 가진 탄약으로 재장전합니다.",Actor.now()>=state(h).rollReadyAt&&!h.rooted,()->GameScene.selectCell(new CellSelector.Listener(){
+            @Override public String prompt(){return "구를 두 칸 이내의 안전한 빈칸을 선택하세요.";}
+            @Override public void onSelect(Integer cell){if(cell==null)return;int from=h.pos;if(!ExtractionClassSkills.ready(h)||!roll(h,cell)){GLog.w("두 칸 이내 거리·안전한 경로와 빈칸·재사용 시간을 확인하세요.");return;}Dungeon.observe();GameScene.updateFog();
+                if(h.sprite!=null&&h.sprite.parent!=null){h.busy();com.watabou.noosa.audio.Sample.INSTANCE.play(Assets.Sounds.MISS,1,1.2f);h.sprite.jump(from,h.pos,1,.10f,()->{h.sprite.place(h.pos);h.spendAndNext(0);});}
+                else h.spendAndNext(0);}
         })));
         if(learned(h,"storm",7))out.add(new ExtractionClassSkills.Action("hybrid_storm","사선 확보","안전한 빈칸으로 이동합니다.\n"+status(h),Actor.now()>=state(h).stepReadyAt&&!h.rooted,()->windStep(h)));
         if(learned(h,"holy",0))out.add(new ExtractionClassSkills.Action("holy_mend","성력 회복","성력을 소모해 체력을 회복합니다.\n"+status(h),state(h).faith>=faithCost(h)&&h.HP<h.HT,()->{if(ready(h)&&mend(h))h.spendAndNext(1);}));
