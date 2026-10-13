@@ -37,7 +37,7 @@ public class WndBulletRecipes extends Window {
         }
         RenderedTextBlock note=text(content,"재료는 슬롯마다 1개씩 넣으세요. 연금 에너지는 별도로 소비됩니다. 일반탄은 씨앗만 넣고, 속성탄은 일반탄과 해당 씨앗을 함께 넣어 제작합니다.",6,0,y,w,0xA8B5BD);
         content.setSize(w,note.bottom()+4);
-        ScrollPane scroll=new ScrollPane(content);scroll.setRect(0,22,w,h-22);add(scroll);
+        ScrollPane scroll=new ScrollPane(content);add(scroll);scroll.setRect(0,22,w,h-22);
         com.badlogic.gdx.Gdx.app.log("Farming","Farming ammo recipe guide ready");
     }
     private static RenderedTextBlock text(Component parent,String value,int size,float x,float y,int width,int color){
