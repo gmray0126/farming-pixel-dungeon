@@ -224,7 +224,7 @@ try {
     $profile.active=$false; $profile.escrow=@()
     $profile.nodes=@($profile.nodes)+@('alchemy_0','alchemy_5','alchemy_6','spell_0')
     $profile | Add-Member -NotePropertyName firearm_awarded -NotePropertyValue $true -Force
-    $profile.prepared=@(@{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm';quantity=1;level=0;gun_loaded=4;gun_element=0},@{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyBullet';quantity=8;bullet_element=0})
+    $profile.prepared=@(@{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm';quantity=1;level=0;gun_loaded=4;gun_element=0;augment='NONE';levelKnown=$true;cursedKnown=$true},@{__className='com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyBullet';quantity=8;bullet_element=0})
     Write-Bundle "$saveDir/extraction-profile.dat" $profile
     $p=Start-Game
     $before=(Get-FileHash "$saveDir/extraction-profile.dat").Hash

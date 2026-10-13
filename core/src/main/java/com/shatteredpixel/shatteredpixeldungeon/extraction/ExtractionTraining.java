@@ -45,6 +45,7 @@ public final class ExtractionTraining {
         @Override public Mob createMob(){return null;}
         @Override public int randomRespawnCell(Char ch){return 9*width()+7;}
         @Override public String tilesTex(){return Assets.Environment.TILES_CITY;}
+        @Override public String waterTex(){return Assets.Environment.WATER_HALLS;}
     }
     public static class Dummy extends Mob {
         public int trainingArmor,trainingEvasion,hits,total,last,highest;

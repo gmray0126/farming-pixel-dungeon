@@ -97,7 +97,7 @@ public class ExtractionHybridTest {
     @Test public void trainingUsesCopiesAndCannotSaveOrAwardExpeditionProgress() throws Exception {
         learn("alchemy",0,5,6);AlchemyFirearm original=new AlchemyFirearm();p.stash.add(original);p.prepare(original,true);AlchemyBullet ammo=(AlchemyBullet)new AlchemyBullet().quantity(8);p.stash.add(ammo);p.prepare(ammo,true);
         byte[] profileBefore=FileUtils.getFileHandle(ExtractionProfile.FILE).readBytes();int xp=p.xp,gold=p.gold;
-        ExtractionTraining.Room level=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;assertEquals(-2,trainee.extractionRaidID);assertFalse(p.active);assertEquals(3,level.mobs.size());
+        ExtractionTraining.Room level=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;assertEquals(-2,trainee.extractionRaidID);assertFalse(p.active);assertEquals(3,level.mobs.size());assertNotNull(level.tilesTex());assertNotNull(level.waterTex());
         AlchemyFirearm copy=AlchemyFirearm.find(trainee);assertNotNull(copy);assertNotSame(original,copy);assertSame(copy,trainee.belongings.weapon);assertEquals(4,copy.reload(trainee,0));assertEquals(0,original.loaded);assertEquals(8,ammo.quantity());
         Dungeon.saveAll();Dungeon.saveGame(1);Dungeon.saveLevel(1);assertFalse(FileUtils.fileExists(GamesInProgress.gameFile(1)));assertArrayEquals(profileBefore,FileUtils.getFileHandle(ExtractionProfile.FILE).readBytes());assertEquals(xp,p.xp);assertEquals(gold,p.gold);
         int hp=trainee.HP;trainee.damage(100,new Object());assertEquals(hp,trainee.HP);
