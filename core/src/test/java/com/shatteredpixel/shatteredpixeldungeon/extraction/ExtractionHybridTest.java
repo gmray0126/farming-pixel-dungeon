@@ -23,7 +23,7 @@ public class ExtractionHybridTest {
     @Test public void arcaneBallisticsBridgesMageAndHuntress(){
         ExtractionGrowth.Node root=ExtractionGrowth.NODES[ExtractionGrowth.index("alchemy_0")];
         assertEquals("마탄학자",ExtractionGrowth.BRANCHES[root.branch]);
-        assertArrayEquals(new String[]{"skill_beacon","skill_hawk"},root.required);
+        assertArrayEquals(new int[]{ExtractionGrowth.index("skill_beacon"),ExtractionGrowth.index("skill_hawk")},root.parents);
         java.util.HashSet<String> learned=new java.util.HashSet<>();
         learned.add("skill_stealth");learned.add("skill_hawk");
         assertFalse(ExtractionGrowth.unlocked(root,learned));
