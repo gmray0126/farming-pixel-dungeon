@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.53.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.53.0-farming)
+[v0.54.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.54.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.53.0-farming/Farming_Pixel_Dungeon_v0.53.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.53.0-farming/Farming_Pixel_Dungeon_PC_v0.53.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.54.0-farming/Farming_Pixel_Dungeon_v0.54.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.54.0-farming/Farming_Pixel_Dungeon_PC_v0.54.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,16 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.54.0 — 노드 배치와 전사 인장 / Atlas spacing and Warrior seal
+
+629개 성장 노드의 바깥 테두리와 선택 영역을 고려해 겹치는 위치를 보정했습니다. 원형 갈래와 선행 조건을 유지하며 작은 지도와 전체 지도에서 같은 좌표를 사용합니다. 노드 ID·습득 상태·포인트·프리셋은 유지됩니다.
+
+전사 첫 노드 **인내**를 처음 배울 때 부러진 인장을 창고에 하나 지급합니다. 준비 탭에서 챙긴 뒤 원정 가방에서 몸통 갑옷에 붙여 사용하세요. 기존 습득자에게도 누락 보상을 복구하며 이미 보관 중이거나 갑옷에 붙은 인장이 있으면 중복 지급하지 않습니다. 수령 기록을 저장하여 초기화·취소·재습득·프리셋 변경으로 반복 지급되지 않습니다.
+
+The atlas now separates all 629 growth nodes while accounting for outer rings and selection space, preserving circular branches and prerequisites. Small and full maps share coordinates. Learned nodes, IDs, points, and presets remain unchanged.
+
+The first Warrior node, **Endure**, grants one Broken Seal to the stash on first acquisition. Prepare it and affix it to body armor during an expedition. Existing owners receive a missing-reward recovery; already stored or affixed seals are not duplicated. Persistent reward history prevents repeated grants through refunds, resets, relearning, or presets.
 
 ## v0.53.0 — 수도사 에너지 합산 / Monk energy stacking
 
