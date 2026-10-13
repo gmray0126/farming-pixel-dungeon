@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.54.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.54.0-farming)
+[v0.55.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.55.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.54.0-farming/Farming_Pixel_Dungeon_v0.54.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.54.0-farming/Farming_Pixel_Dungeon_PC_v0.54.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.55.0-farming/Farming_Pixel_Dungeon_v0.55.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.55.0-farming/Farming_Pixel_Dungeon_PC_v0.55.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.55.0 — 메마른 장미 활성화 유지 / Permanent Dried Rose awakening
+
+슬픈 유령 퀘스트 보상을 한 번 받으면 장미 활성화를 영구 저장합니다. 원정을 다시 시작하거나 감옥 등 다른 챕터로 출격해도 NPC를 다시 만날 필요가 없습니다. 강화·꽃잎·유령 장비·충전량은 유지하고 새 원정의 이전 소환 정보만 초기화합니다. 기존에 보유한 장미는 업데이트 시 한 번 복구합니다. 신규 프로필과 장미를 보유하지 않았던 기존 프로필은 처음 퀘스트를 완료해야 합니다.
+
+Claim the Sad Ghost quest reward once to permanently awaken the Dried Rose across expeditions, deaths, restarts, and chapters. Preserve upgrades, petals, ghost equipment, and charge while clearing stale summon IDs only for fresh expeditions. Existing owned roses receive one compatibility recovery; new profiles and older profiles without an owned rose still require the first quest.
 
 ## v0.54.0 — 노드 배치와 전사 인장 / Atlas spacing and Warrior seal
 
