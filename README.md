@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.57.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.57.1-farming)
+[v0.58.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.58.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.57.1-farming/Farming_Pixel_Dungeon_v0.57.1.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.57.1-farming/Farming_Pixel_Dungeon_PC_v0.57.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.0-farming/Farming_Pixel_Dungeon_v0.58.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.0-farming/Farming_Pixel_Dungeon_PC_v0.58.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.58.0 — 총 강화·속성탄·두 칸 구르기 / Gun upgrades, elemental shots, and two-cell roll
+
+연금 권총은 강화 스크롤로 최대 +15까지 강화되고 투척의 반지 피해 보너스를 받습니다. 장착 사격과 가방·퀵슬롯 사격에 동일하게 적용됩니다. 속성탄은 투척 계열 물리 피해와 별도 마법 피해(기본 사격 피해 평균의 30%)를 함께 입힙니다. 구르기는 최대 두 칸으로 늘어나며 벽·적·함정·식물을 통과하지 않습니다. 0.1초 이동 연출과 휘릭 효과음을 추가했고 행동 턴 0·재사용 시간·탄약을 소비하는 구르기 장전은 유지합니다.
+
+The pistol accepts upgrade scrolls up to permanent +15 and benefits from Ring of Sharpshooting in both shooting modes. Elemental rounds add a separate magic hit equal to 30% of average base shot damage. Tactical Roll moves up to two safe cells with a 0.1-second dash and whoosh; walls, enemies, traps, and plants block its path. Zero action-turn cost, cooldowns, and ammunition-based rolling reload remain.
 
 ## v0.57.1 — 총기 버튼 표시 수정 / Gun action label fix
 
