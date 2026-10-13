@@ -59,6 +59,7 @@ public class ExtractionHybridTest {
         assertFalse(bow.isUpgradable());
     }
     @Test public void blessedAnkhPreventsExpeditionSettlement(){
+        h=new Hero(){@Override public void interrupt(){curAction=null;}};h.HP=h.HT=20;Dungeon.hero=h;
         p.begin();h.extractionRaidID=p.raidID;
         com.shatteredpixel.shatteredpixeldungeon.items.Ankh ankh=new com.shatteredpixel.shatteredpixeldungeon.items.Ankh();
         ankh.bless();ankh.collect(h.belongings.backpack);h.HP=0;
@@ -68,6 +69,7 @@ public class ExtractionHybridTest {
         assertNotNull(h.buff(Invulnerability.class));assertFalse(h.extractionDeathRecorded);
     }
     @Test public void ordinaryAnkhWaitsForResurrectionWithoutEndingExpedition(){
+        h=new Hero(){@Override public void interrupt(){curAction=null;}};h.HP=h.HT=20;Dungeon.hero=h;
         p.begin();h.extractionRaidID=p.raidID;
         com.shatteredpixel.shatteredpixeldungeon.items.Ankh ankh=new com.shatteredpixel.shatteredpixeldungeon.items.Ankh();ankh.collect(h.belongings.backpack);
         Application original=Gdx.app;java.util.ArrayList<Runnable> queued=new java.util.ArrayList<>();
