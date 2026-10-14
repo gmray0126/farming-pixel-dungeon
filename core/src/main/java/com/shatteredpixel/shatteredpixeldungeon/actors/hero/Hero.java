@@ -1581,7 +1581,7 @@ public class Hero extends Char {
 
 			if (belongings.attackingWeapon() instanceof MissileWeapon) {
 				MissileWeapon missile = (MissileWeapon) belongings.attackingWeapon();
-				if (missile.quantity() == 1 && missile.cursed && buff(MagicImmune.class) == null
+				if (missile.quantity() == 1 && missile.cursed && buff(com.shatteredpixel.shatteredpixeldungeon.actors.buffs.MagicImmune.class) == null
 						&& (!belongings.lostInventory() || missile.keptThroughLostInventory())) {
 					GLog.w(Messages.get(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.class, "unequip_cursed"));
 					ready();
