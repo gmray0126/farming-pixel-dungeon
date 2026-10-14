@@ -176,12 +176,59 @@ abstract public class MissileWeapon extends Weapon {
 	@Override
 	public ArrayList<String> actions( Hero hero ) {
 		ArrayList<String> actions = super.actions( hero );
-		actions.remove( AC_EQUIP );
+		if (spawnedForEffect) {
+			actions.remove(AC_EQUIP);
+			actions.remove(AC_UNEQUIP);
+		}
 		return actions;
+	}
+
+	@Override
+	public boolean canReach(Char owner, int target) {
+		return owner instanceof Hero && quantity() > 0 && Dungeon.level != null
+				&& throwPos((Hero) owner, target) == target;
+	}
+
+	// Throwing the final equipped projectile empties the slot, without an extra swap turn.
+	private transient boolean throwingEquipped;
+	@Override
+	protected float timeToEquip(Hero hero) {
+		return throwingEquipped ? 0 : super.timeToEquip(hero);
+	}
+
+	@Override
+	public void cast(Hero hero, int target) {
+		boolean previous = throwingEquipped;
+		throwingEquipped = isEquipped(hero);
+		try {
+			super.cast(hero, target);
+		} finally {
+			throwingEquipped = previous;
+		}
+	}
+
+	public void throwEquipped(Hero hero, int target) {
+		setCurrent(hero);
+		confirmThrow(hero, () -> cast(hero, target));
 	}
 	
 	@Override
 	public boolean collect(Bag container) {
+		// Recovered members of the equipped set return to that stack, even with a full bag.
+		if (container.owner instanceof Hero && quantity() > 0) {
+			Hero hero = (Hero) container.owner;
+			if (!isEquipped(hero)) {
+				for (com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon weapon :
+						new com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon[]{hero.belongings.weapon(), hero.belongings.secondWep()}) {
+					if (weapon instanceof MissileWeapon && weapon != this && isSimilar(weapon)) {
+						weapon.merge(this);
+						Talent.onItemCollected(hero, weapon);
+						updateQuickslot();
+						return true;
+					}
+				}
+			}
+		}
 		if (container instanceof MagicalHolster) holster = true;
 		return super.collect(container);
 	}
@@ -236,6 +283,10 @@ abstract public class MissileWeapon extends Weapon {
 
 	@Override
 	public void doThrow(Hero hero) {
+		confirmThrow(hero, () -> MissileWeapon.super.doThrow(hero));
+	}
+
+	private void confirmThrow(Hero hero, Runnable action) {
 		parent = null; //reset parent before throwing, just in case
 		if (((levelKnown && level() > 0) || hasGoodEnchant() || masteryPotionBonus || enchantHardened)
 				&& !extraThrownLeft && quantity() == 1 && durabilityLeft() <= durabilityPerUse()){
@@ -246,10 +297,12 @@ abstract public class MissileWeapon extends Weapon {
 				@Override
 				protected void onSelect(int index) {
 					if (index == 0){
-						MissileWeapon.super.doThrow(hero);
+						action.run();
 					} else {
 						QuickSlotButton.cancel();
 						InventoryPane.cancelTargeting();
+						hero.curAction = null;
+						hero.next();
 					}
 				}
 
@@ -258,11 +311,13 @@ abstract public class MissileWeapon extends Weapon {
 					super.onBackPressed();
 					QuickSlotButton.cancel();
 					InventoryPane.cancelTargeting();
+					hero.curAction = null;
+					hero.next();
 				}
 			});
 
 		} else {
-			super.doThrow(hero);
+			action.run();
 		}
 	}
 
@@ -658,6 +713,7 @@ abstract public class MissileWeapon extends Weapon {
 	public String info() {
 
 		String info = super.info() + com.shatteredpixel.shatteredpixeldungeon.extraction.WeaponUpgradeLimit.description(this);
+		if (!spawnedForEffect) info += "\n\n" + Messages.get(MissileWeapon.class, "equipped_throw");
 
 		if (levelKnown) {
 			info += "\n\n" + Messages.get(MissileWeapon.class, "stats_known", tier, augment.damageFactor(min()), augment.damageFactor(max()), STRReq());

@@ -836,7 +836,8 @@ public class Hero extends Char {
 			return false;
 		}
 
-		if(belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)return belongings.attackingWeapon().canReach(this,enemy.pos);
+		if(belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm
+				|| belongings.attackingWeapon() instanceof MissileWeapon)return belongings.attackingWeapon().canReach(this,enemy.pos);
         //can always attack adjacent enemies
 		if (Dungeon.level.adjacent(pos, enemy.pos)) {
 			return true;
@@ -1577,6 +1578,19 @@ public class Hero extends Char {
 		}
 
 		if (attackTarget.isAlive() && canAttack(attackTarget) && attackTarget.invisible == 0) {
+
+			if (belongings.attackingWeapon() instanceof MissileWeapon) {
+				MissileWeapon missile = (MissileWeapon) belongings.attackingWeapon();
+				if (missile.quantity() == 1 && missile.cursed && buff(MagicImmune.class) == null
+						&& (!belongings.lostInventory() || missile.keptThroughLostInventory())) {
+					GLog.w(Messages.get(com.shatteredpixel.shatteredpixeldungeon.items.EquipableItem.class, "unequip_cursed"));
+					ready();
+				} else {
+					missile.throwEquipped(this, attackTarget.pos);
+				}
+				attackTarget = null;
+				return false;
+			}
 
 			if (!hasWeaponAbilities()
 					&& hasTalent(Talent.AGGRESSIVE_BARRIER)

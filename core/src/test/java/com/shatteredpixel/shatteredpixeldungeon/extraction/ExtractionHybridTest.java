@@ -33,6 +33,54 @@ public class ExtractionHybridTest {
         assertTrue(GrowthAtlasLayout.GROUP_Y[27]<GrowthAtlasLayout.GROUP_Y[22]);
     }
 
+    @Test public void missilesEquipSwapUnequipAndPersistTheirWholeStack(){
+        h=new Hero(){@Override public void spendAndNext(float time){spend(time);}};
+        Dungeon.hero=h;h.belongings.weapon=null;
+        MissileWeapon[] weapons={new ThrowingStone(),new ThrowingKnife(),new Shuriken(),new FishingSpear(),new ThrowingClub(),new Bolas(),new ThrowingSpear(),new Kunai(),new Javelin(),new Tomahawk(),new HeavyBoomerang(),new Trident(),new ThrowingHammer(),new ForceCube(),new com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart()};
+        for(MissileWeapon weapon:weapons){
+            assertTrue(weapon.actions(h).contains(EquipableItem.AC_EQUIP));
+            int count=weapon.quantity();long set=weapon.setID;assertTrue(weapon.collect(h.belongings.backpack));
+            assertTrue(weapon.doEquip(h));assertSame(weapon,h.belongings.weapon);assertFalse(h.belongings.backpack.contains(weapon));
+            assertTrue(weapon.actions(h).contains(EquipableItem.AC_UNEQUIP));assertEquals(count,weapon.quantity());
+            Bundle saved=new Bundle();h.belongings.storeInBundle(saved);com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings copy=new com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings(new Hero());copy.restoreFromBundle(saved);
+            assertEquals(count,copy.weapon.quantity());assertEquals(set,((MissileWeapon)copy.weapon).setID);
+        }
+        MissileWeapon last=(MissileWeapon)h.belongings.weapon;assertTrue(last.doUnequip(h,true));assertNull(h.belongings.weapon);assertTrue(h.belongings.backpack.contains(last));
+        assertFalse(new AlchemyFirearm.Shot().actions(h).contains(EquipableItem.AC_EQUIP));
+    }
+
+    @Test public void recoveredProjectilesRefillEquippedSetWithoutUsingBagSpace(){
+        ThrowingStone stack=new ThrowingStone();h.belongings.weapon=stack;
+        MissileWeapon thrown=(MissileWeapon)stack.detach(h.belongings.backpack);
+        assertEquals(2,stack.quantity());assertSame(stack,h.belongings.weapon);
+        while(h.belongings.backpack.items.size()<h.belongings.backpack.capacity())h.belongings.backpack.items.add(new Sword());
+        int slots=h.belongings.backpack.items.size();assertTrue(thrown.collect(h.belongings.backpack));assertEquals(3,stack.quantity());assertEquals(0,thrown.quantity());assertEquals(slots,h.belongings.backpack.items.size());
+        assertFalse(new ThrowingStone().collect(h.belongings.backpack));assertEquals(3,stack.quantity());
+    }
+
+    public static class ClickStone extends ThrowingStone {
+        int target=-1;
+        @Override public void throwEquipped(Hero hero,int cell){target=cell;}
+    }
+    @Test public void equippedMissileClickUsesThrowAndRespectsProjectileObstacles() throws Exception {
+        ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;ClickStone stack=new ClickStone();trainee.belongings.weapon=stack;
+        ExtractionTraining.Dummy dummy=(ExtractionTraining.Dummy)room.mobs.stream().filter(m->m.pos==4*room.width()+7).findFirst().get();
+        trainee.pos=dummy.pos+3;assertTrue(trainee.canAttack(dummy));
+        int middle=dummy.pos+1;room.solid[middle]=true;room.passable[middle]=false;assertFalse(trainee.canAttack(dummy));room.solid[middle]=false;room.passable[middle]=true;
+        Method attack=Hero.class.getDeclaredMethod("actAttack",com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction.Attack.class);attack.setAccessible(true);
+        assertEquals(false,attack.invoke(trainee,new com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction.Attack(dummy)));assertEquals(dummy.pos,stack.target);assertEquals(3,stack.quantity());assertNull(trainee.attackTarget());
+    }
+
+    public static class RefuseLastStone extends ThrowingStone {
+        float releaseCost;
+        @Override public boolean doUnequip(Hero hero,boolean collect,boolean single){releaseCost=timeToEquip(hero);return false;}
+        float swapCost(Hero hero){return timeToEquip(hero);}
+    }
+    @Test public void finalEquippedThrowDoesNotChargeAnExtraSwapTurnOrLeakItsScope(){
+        RefuseLastStone stone=new RefuseLastStone();stone.quantity(1);h.belongings.weapon=stone;
+        stone.cast(h,5);assertEquals(0,stone.releaseCost,0);assertEquals(1,stone.swapCost(h),0);assertSame(stone,h.belongings.weapon);assertEquals(1,stone.quantity());
+    }
+
     @Rule public TemporaryFolder folder=new TemporaryFolder();
     private ExtractionProfile p;private Hero h;
     @Before public void setup() throws Exception{
