@@ -120,7 +120,7 @@ public class Endure extends ArmorAbility {
 			}
 
 			enduring = false;
-			damageBonus *= 1f + 0.15f*Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
+			float bonusFactor=1f+0.15f*Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
 
 			int nearby = 0;
 			for (Char ch : Actor.chars()){
@@ -128,7 +128,8 @@ public class Endure extends ArmorAbility {
 					nearby ++;
 				}
 			}
-			damageBonus *= 1f + (nearby*0.05f*Dungeon.hero.pointsInTalent(Talent.EVEN_THE_ODDS));
+			bonusFactor+=nearby*0.05f*Dungeon.hero.pointsInTalent(Talent.EVEN_THE_ODDS);
+            damageBonus=Math.round(damageBonus*bonusFactor);
 
 			hitsLeft = 1+Dungeon.hero.pointsInTalent(Talent.SUSTAINED_RETRIBUTION);
 			damageBonus /= hitsLeft;

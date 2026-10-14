@@ -812,8 +812,8 @@ public class Hero extends Char {
 		
 		if(extractionRaidID != 0)speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.sum(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier(),com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_SPEED)));
         if(extractionRaidID!=0){
-            if(belongings.pants()!=null)speed*=belongings.pants().movementFactor(this);
-            if(belongings.boots()!=null)speed*=belongings.boots().movementFactor(this);
+            if(belongings.pants()!=null)speed=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,belongings.pants().movementFactor(this));
+            if(belongings.boots()!=null)speed=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,belongings.boots().movementFactor(this));
         }
 
 		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this));
