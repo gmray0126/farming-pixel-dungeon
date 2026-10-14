@@ -330,9 +330,10 @@ public class ExtractionHybridTest {
         gun.loaded=0;assertTrue(com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfForce.fightingUnarmed(h));assertEquals(ExtractionGrowth.FIST,ExtractionGrowth.family(h.growthWeapon()));
     }
     @Test public void stormRequiresSwitchingDistanceFamilies(){
-        learn("storm",0);Mob e=enemy();h.belongings.weapon=new ThrowingKnife();assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
-        h.belongings.weapon=new Sword();assertEquals(12,ExtractionHybridCombat.physical(h,e,10));assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
-        h.belongings.weapon=new ThrowingKnife();assertEquals(12,ExtractionHybridCombat.physical(h,e,10));
+        learn("storm",0);Mob e=enemy();h.belongings.weapon=new ThrowingKnife();h.belongings.thrownWeapon=h.belongings.weapon;assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
+        h.belongings.thrownWeapon=null;h.belongings.weapon=new Sword();assertEquals(12,ExtractionHybridCombat.physical(h,e,10));assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
+        h.belongings.weapon=new ThrowingKnife();assertEquals(10,ExtractionHybridCombat.physical(h,e,10));
+        h.belongings.thrownWeapon=h.belongings.weapon;assertEquals(12,ExtractionHybridCombat.physical(h,e,10));h.belongings.thrownWeapon=null;
     }
     @Test public void crusaderFaithCapsAndCannotHealAtFullHealth(){
         learn("holy",0,5,9,13);Mob e=enemy();for(int i=0;i<20;i++)ExtractionHybridCombat.physical(h,e,5);
