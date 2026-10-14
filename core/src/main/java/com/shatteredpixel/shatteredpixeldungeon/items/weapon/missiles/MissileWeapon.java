@@ -201,16 +201,6 @@ abstract public class MissileWeapon extends Weapon {
         return 8;
     }
 
-    @Override
-    public int damageRoll(Char owner) {
-        int damage = super.damageRoll(owner);
-        if (meleeUse(owner)) {
-            damage = Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.weapon(owner, damage, augment.damageFactor(1000)/1000f));
-            int extraStrength = ((Hero) owner).STR() - STRReq();
-            if (extraStrength > 0) damage += Hero.heroDamageIntRange(0, extraStrength);
-        }
-        return damage;
-    }
 
 	// Throwing the final equipped projectile empties the slot, without an extra swap turn.
 	private transient boolean throwingEquipped;
@@ -409,7 +399,7 @@ abstract public class MissileWeapon extends Weapon {
 			parent.identify();
 		}
 
-		if (attacker == Dungeon.hero && !isIdentified() && ShardOfOblivion.passiveIDDisabled()){
+		if (isRangedAttack(attacker, this) && attacker == Dungeon.hero && !isIdentified() && ShardOfOblivion.passiveIDDisabled()){
 			Buff.prolong(Dungeon.hero, ShardOfOblivion.ThrownUseTracker.class, 50f);
 		}
 
@@ -611,7 +601,7 @@ abstract public class MissileWeapon extends Weapon {
 			if (exStr > 0) {
 				damage += Hero.heroDamageIntRange( 0, exStr );
 			}
-			if (owner.buff(Momentum.class) != null && owner.buff(Momentum.class).freerunning()) {
+			if (!meleeUse(owner) && owner.buff(Momentum.class) != null && owner.buff(Momentum.class).freerunning()) {
 				damage = Math.round(damage * (1f + 0.15f * ((Hero) owner).pointsInTalent(Talent.PROJECTILE_MOMENTUM)));
 			}
 		}
