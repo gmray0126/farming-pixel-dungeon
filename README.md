@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.59.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.59.0-farming)
+[v0.60.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.60.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.59.0-farming/Farming_Pixel_Dungeon_v0.59.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.59.0-farming/Farming_Pixel_Dungeon_PC_v0.59.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.60.0-farming/Farming_Pixel_Dungeon_v0.60.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.60.0-farming/Farming_Pixel_Dungeon_PC_v0.60.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.60.0 — 투척무기 장착 / Equipped thrown weapons
+
+일반 투척무기에 장착·해제 메뉴를 추가했습니다. 주무기로 장착하고 적을 누르면 실제 투척으로 한 개씩 소비하며 기존 투척의 강화·반지·성장 노드·명중·내구도 규칙을 따릅니다. 같은 묶음의 무기를 회수하면 장착한 묶음에 합쳐지고 가방 공간을 추가로 쓰지 않습니다. 마지막 한 개를 던지면 무기 칸이 비어 맨손 공격으로 전환하며 추가 교체 턴은 없습니다. 벽·중간의 적, 강화 무기의 마지막 파손 경고, 저주 장비 제한을 유지합니다. 투척무기만 준비했을 때의 기존 자동 장착과 가방·퀵슬롯 투척도 사용할 수 있습니다.
+
+Ordinary thrown weapons now offer Equip/Unequip. Select an enemy with a stack equipped to throw one real projectile using normal upgrade, ring, growth, accuracy, and durability rules. Recoveries from the same set refill the equipped stack without consuming backpack space. The final throw empties the weapon slot and returns to unarmed attacks without an extra swap turn. Obstacles, upgraded-last-projectile warnings, cursed-equipment restrictions, expedition auto-equipping, and inventory/quickslot throws remain supported. All 232 regression tests and Android/Windows build checks passed.
 
 ## v0.59.0 — 전투 보너스 합연산 / Additive combat bonuses
 
