@@ -887,7 +887,7 @@ public enum Talent {
 		}
 
 		if (hero.hasTalent(Talent.FOLLOWUP_STRIKE) && enemy.isAlive() && enemy.alignment == Char.Alignment.ENEMY) {
-			if (hero.belongings.attackingWeapon() instanceof MissileWeapon) {
+			if (MissileWeapon.isRangedAttack(hero, hero.belongings.attackingWeapon())) {
 				Buff.prolong(hero, FollowupStrikeTracker.class, 5f).object = enemy.id();
 			} else if (hero.buff(FollowupStrikeTracker.class) != null
 					&& hero.buff(FollowupStrikeTracker.class).object == enemy.id()){
@@ -905,14 +905,14 @@ public enum Talent {
 
 		if (hero.hasTalent(PATIENT_STRIKE)){
 			if (hero.buff(PatientStrikeTracker.class) != null
-					&& !(hero.belongings.attackingWeapon() instanceof MissileWeapon)){
+					&& !(MissileWeapon.isRangedAttack(hero, hero.belongings.attackingWeapon()))){
 				hero.buff(PatientStrikeTracker.class).detach();
 				dmg += Random.IntRange(hero.pointsInTalent(Talent.PATIENT_STRIKE), 2);
 			}
 		}
 
 		if (hero.hasTalent(DEADLY_FOLLOWUP) && enemy.alignment == Char.Alignment.ENEMY) {
-			if (hero.belongings.attackingWeapon() instanceof MissileWeapon) {
+			if (MissileWeapon.isRangedAttack(hero, hero.belongings.attackingWeapon())) {
 				if (!(hero.belongings.attackingWeapon() instanceof SpiritBow.SpiritArrow)) {
 					Buff.prolong(hero, DeadlyFollowupTracker.class, 5f).object = enemy.id();
 				}

@@ -408,7 +408,7 @@ public abstract class Char extends Actor {
 			if (this instanceof Hero){
 				Hero h = (Hero)this;
 				if(h.extractionRaidID != 0)dr=Math.max(0,dr-com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().armorPierce(h.growthWeapon()));
-				if (h.belongings.attackingWeapon() instanceof MissileWeapon
+				if (MissileWeapon.isRangedAttack(h, h.belongings.attackingWeapon())
 						&& h.hasSubclass(HeroSubClass.SNIPER)
 						&& !Dungeon.level.adjacent(h.pos, enemy.pos)){
 					dr = 0;
@@ -1059,7 +1059,7 @@ public abstract class Char extends Actor {
 			if (src == Dungeon.hero
 					&& Dungeon.hero.hasSubclass(HeroSubClass.SNIPER)
 					&& !Dungeon.level.adjacent(Dungeon.hero.pos, pos)
-					&& Dungeon.hero.belongings.attackingWeapon() instanceof MissileWeapon){
+					&& MissileWeapon.isRangedAttack(Dungeon.hero, Dungeon.hero.belongings.attackingWeapon())){
 				icon = FloatingText.PHYS_DMG_NO_BLOCK;
 			}
 

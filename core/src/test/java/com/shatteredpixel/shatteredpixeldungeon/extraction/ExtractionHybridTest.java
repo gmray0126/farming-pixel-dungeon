@@ -58,17 +58,28 @@ public class ExtractionHybridTest {
         assertFalse(new ThrowingStone().collect(h.belongings.backpack));assertEquals(3,stack.quantity());
     }
 
-    public static class ClickStone extends ThrowingStone {
-        int target=-1;
-        @Override public void throwEquipped(Hero hero,int cell){target=cell;}
-    }
-    @Test public void equippedMissileClickUsesThrowAndRespectsProjectileObstacles() throws Exception {
-        ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;ClickStone stack=new ClickStone();trainee.belongings.weapon=stack;
+    @Test public void equippedMissileClickUsesMeleeWithoutConsumingQuantityOrDurability() throws Exception {
+        ExtractionTraining.Room room=ExtractionTraining.prepare();Hero trainee=Dungeon.hero;ThrowingKnife stack=new ThrowingKnife();trainee.belongings.weapon=stack;
         ExtractionTraining.Dummy dummy=(ExtractionTraining.Dummy)room.mobs.stream().filter(m->m.pos==4*room.width()+7).findFirst().get();
-        trainee.pos=dummy.pos+3;assertTrue(trainee.canAttack(dummy));
-        int middle=dummy.pos+1;room.solid[middle]=true;room.passable[middle]=false;assertFalse(trainee.canAttack(dummy));room.solid[middle]=false;room.passable[middle]=true;
+        trainee.pos=dummy.pos+3;assertFalse(trainee.canAttack(dummy));trainee.pos=dummy.pos+1;assertTrue(trainee.canAttack(dummy));
+        final int[] swing={-1};trainee.sprite=new com.shatteredpixel.shatteredpixeldungeon.sprites.CharSprite(){@Override public void attack(int cell){swing[0]=cell;}};
         Method attack=Hero.class.getDeclaredMethod("actAttack",com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction.Attack.class);attack.setAccessible(true);
-        assertEquals(false,attack.invoke(trainee,new com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction.Attack(dummy)));assertEquals(dummy.pos,stack.target);assertEquals(3,stack.quantity());assertNull(trainee.attackTarget());
+        assertEquals(false,attack.invoke(trainee,new com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroAction.Attack(dummy)));assertEquals(dummy.pos,swing[0]);assertSame(dummy,trainee.attackTarget());
+        float durability=stack.durabilityLeft();int count=stack.quantity();java.util.Arrays.fill(room.heroFOV,false);
+        for(int i=0;i<3;i++)assertTrue(trainee.attack(dummy,1,0,Char.INFINITE_ACCURACY));
+        assertTrue(dummy.total>0);assertEquals(count,stack.quantity());assertEquals(durability,stack.durabilityLeft(),0);assertSame(stack,trainee.belongings.weapon);
+        assertEquals(1,stack.accuracyFactor(trainee,dummy),0);assertEquals(5,ExtractionGrowth.family(trainee.growthWeapon()));
+        stack.quantity(1);assertTrue(trainee.attack(dummy,1,0,Char.INFINITE_ACCURACY));assertEquals(1,stack.quantity());assertSame(stack,trainee.belongings.weapon);
+    }
+
+    @Test public void equippedMissilesUseMeleeFamiliesAndThrownCopiesUseRangedBonuses(){
+        assertEquals(5,new Kunai().meleeFamily());assertEquals(6,new Javelin().meleeFamily());assertEquals(7,new Tomahawk().meleeFamily());assertEquals(8,new ThrowingHammer().meleeFamily());
+        ThrowingKnife stack=new ThrowingKnife();h.belongings.weapon=stack;
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfSharpshooting();ring.level(3);h.belongings.ring=ring;ring.activate(h);
+        int meleeMin=stack.min();assertFalse(MissileWeapon.isRangedAttack(h,stack));assertEquals(5,ExtractionGrowth.family(stack));
+        MissileWeapon thrown=(MissileWeapon)stack.detach(h.belongings.backpack);h.belongings.thrownWeapon=thrown;
+        try{assertTrue(MissileWeapon.isRangedAttack(h,thrown));assertEquals(10,ExtractionGrowth.family(thrown));assertTrue(thrown.min()>meleeMin);}finally{h.belongings.thrownWeapon=null;}
+        assertEquals(meleeMin,stack.min());assertEquals(5,ExtractionGrowth.family(stack));assertTrue(ExtractionGrowth.weaponDescription(stack).contains("근접은 단검"));
     }
 
     public static class RefuseLastStone extends ThrowingStone {

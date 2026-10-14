@@ -117,7 +117,7 @@ public class Dart extends MissileWeapon {
 	protected static Crossbow bow;
 	
 	private void updateCrossbow(){
-		if (Dungeon.hero == null) {
+		if (Dungeon.hero == null || meleeUse(Dungeon.hero)) {
 			bow = null;
 		} else if (Dungeon.hero.belongings.weapon() instanceof Crossbow){
 			bow = (Crossbow) Dungeon.hero.belongings.weapon();
@@ -135,6 +135,7 @@ public class Dart extends MissileWeapon {
 	
 	@Override
 	public boolean hasEnchant(Class<? extends Enchantment> type, Char owner) {
+		if (meleeUse(owner)) return super.hasEnchant(type, owner);
 		if (bow != null && bow.hasEnchant(type, owner)){
 			return true;
 		} else {
@@ -144,6 +145,7 @@ public class Dart extends MissileWeapon {
 
 	@Override
 	public float accuracyFactor(Char owner, Char target) {
+		if (meleeUse(owner)) return super.accuracyFactor(owner, target);
 		//don't update xbow here, as dart is the active weapon atm
 		if (bow != null && owner.buff(Crossbow.ChargedShot.class) != null){
 			return Char.INFINITE_ACCURACY;
@@ -154,6 +156,7 @@ public class Dart extends MissileWeapon {
 
 	@Override
 	public int proc(Char attacker, Char defender, int damage) {
+		if (meleeUse(attacker)) return super.proc(attacker, defender, damage);
 		if (bow != null && !processingChargedShot){
 			damage = bow.proc(attacker, defender, damage);
 		}

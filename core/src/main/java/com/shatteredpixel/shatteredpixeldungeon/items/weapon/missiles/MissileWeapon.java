@@ -100,7 +100,7 @@ abstract public class MissileWeapon extends Weapon {
 	@Override
 	public int min() {
 		if (Dungeon.hero != null){
-			return Math.max(0, min(buffedLvl() + RingOfSharpshooting.levelDamageBonus(Dungeon.hero)));
+			return Math.max(0, min(buffedLvl() + (meleeUse(Dungeon.hero) ? 0 : RingOfSharpshooting.levelDamageBonus(Dungeon.hero))));
 		} else {
 			return Math.max(0 , min( buffedLvl() ));
 		}
@@ -115,7 +115,7 @@ abstract public class MissileWeapon extends Weapon {
 	@Override
 	public int max() {
 		if (Dungeon.hero != null){
-			return Math.max(0, max( buffedLvl() + RingOfSharpshooting.levelDamageBonus(Dungeon.hero) ));
+			return Math.max(0, max( buffedLvl() + (meleeUse(Dungeon.hero) ? 0 : RingOfSharpshooting.levelDamageBonus(Dungeon.hero)) ));
 		} else {
 			return Math.max(0 , max( buffedLvl() ));
 		}
@@ -183,11 +183,34 @@ abstract public class MissileWeapon extends Weapon {
 		return actions;
 	}
 
-	@Override
-	public boolean canReach(Char owner, int target) {
-		return owner instanceof Hero && quantity() > 0 && Dungeon.level != null
-				&& throwPos((Hero) owner, target) == target;
-	}
+    /** True only while this item is used as a projectile, not as an equipped melee weapon. */
+    public boolean meleeUse(Char owner) {
+        return owner instanceof Hero && !spawnedForEffect && isEquipped((Hero) owner)
+                && ((Hero) owner).belongings.thrownWeapon != this;
+    }
+
+    public static boolean isRangedAttack(Char owner, com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon weapon) {
+        return weapon instanceof MissileWeapon && !((MissileWeapon) weapon).meleeUse(owner);
+    }
+
+    public int meleeFamily() {
+        if (this instanceof ThrowingKnife || this instanceof Kunai || this instanceof Shuriken
+                || this instanceof ThrowingSpike || this instanceof com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.darts.Dart) return 5;
+        if (this instanceof FishingSpear || this instanceof ThrowingSpear || this instanceof Javelin || this instanceof Trident) return 6;
+        if (this instanceof Tomahawk) return 7;
+        return 8;
+    }
+
+    @Override
+    public int damageRoll(Char owner) {
+        int damage = super.damageRoll(owner);
+        if (meleeUse(owner)) {
+            damage = Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.weapon(owner, damage, augment.damageFactor(1000)/1000f));
+            int extraStrength = ((Hero) owner).STR() - STRReq();
+            if (extraStrength > 0) damage += Hero.heroDamageIntRange(0, extraStrength);
+        }
+        return damage;
+    }
 
 	// Throwing the final equipped projectile empties the slot, without an extra swap turn.
 	private transient boolean throwingEquipped;
@@ -207,11 +230,6 @@ abstract public class MissileWeapon extends Weapon {
 		}
 	}
 
-	public void throwEquipped(Hero hero, int target) {
-		setCurrent(hero);
-		confirmThrow(hero, () -> cast(hero, target));
-	}
-	
 	@Override
 	public boolean collect(Bag container) {
 		// Recovered members of the equipped set return to that stack, even with a full bag.
@@ -264,7 +282,7 @@ abstract public class MissileWeapon extends Weapon {
 	public float accuracyFactor(Char owner, Char target) {
 		float accFactor = super.accuracyFactor(owner, target);
 
-		accFactor *= adjacentAccFactor(owner, target);
+		if (!meleeUse(owner)) accFactor *= adjacentAccFactor(owner, target);
 
 		return accFactor;
 	}
@@ -301,8 +319,6 @@ abstract public class MissileWeapon extends Weapon {
 					} else {
 						QuickSlotButton.cancel();
 						InventoryPane.cancelTargeting();
-						hero.curAction = null;
-						hero.next();
 					}
 				}
 
@@ -311,8 +327,6 @@ abstract public class MissileWeapon extends Weapon {
 					super.onBackPressed();
 					QuickSlotButton.cancel();
 					InventoryPane.cancelTargeting();
-					hero.curAction = null;
-					hero.next();
 				}
 			});
 
@@ -353,7 +367,7 @@ abstract public class MissileWeapon extends Weapon {
 
 	@Override
 	public int proc(Char attacker, Char defender, int damage) {
-		if (attacker == Dungeon.hero && Random.Int(3) < Dungeon.hero.pointsInTalent(Talent.SHARED_ENCHANTMENT)){
+		if (isRangedAttack(attacker, this) && attacker == Dungeon.hero && Random.Int(3) < Dungeon.hero.pointsInTalent(Talent.SHARED_ENCHANTMENT)){
 			SpiritBow bow = Dungeon.hero.belongings.getItem(SpiritBow.class);
 			if (bow != null && bow.enchantment != null && Dungeon.hero.buff(MagicImmune.class) == null) {
 				if (bow.enchantment instanceof Crystal){

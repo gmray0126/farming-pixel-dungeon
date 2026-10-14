@@ -330,6 +330,10 @@ public final class ExtractionGrowth {
     }
     /** Display uses the combat classifier so labels cannot drift from growth effects. */
     public static String weaponDescription(KindOfWeapon weapon){
+        if(weapon instanceof MissileWeapon && !((MissileWeapon)weapon).spawnedForEffect){
+            int melee=((MissileWeapon)weapon).meleeFamily();
+            return "_무기 종류: 투척무기 · 장착 시 "+BRANCHES[melee]+"_\n적용 성장: 근접은 "+BRANCHES[melee]+", 던지기는 "+BRANCHES[10]+" 계통\n\n";
+        }
         int branch=family(weapon);
         String type=branch<0?"특수 무기":BRANCHES[branch];
         if(weapon instanceof MagesStaff)type="마법 지팡이";
@@ -348,6 +352,7 @@ public final class ExtractionGrowth {
     public static int family(KindOfWeapon weapon){
         if(weapon==null||weapon instanceof Gloves||weapon instanceof Gauntlet)return FIST;
         if(weapon instanceof MagesStaff)return MAGIC;
+        if(weapon instanceof MissileWeapon && ((MissileWeapon)weapon).meleeUse(com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero))return ((MissileWeapon)weapon).meleeFamily();
         if(weapon instanceof AlchemyFirearm||weapon instanceof MissileWeapon||weapon instanceof SpiritBow||weapon instanceof Crossbow)return 10;
         if(weapon instanceof Greatsword)return 4;
         if(weapon instanceof Dagger||weapon instanceof Dirk||weapon instanceof AssassinsBlade||weapon instanceof Sai)return 5;
