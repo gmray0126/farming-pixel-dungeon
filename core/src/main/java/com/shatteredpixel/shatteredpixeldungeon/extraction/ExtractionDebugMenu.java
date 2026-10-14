@@ -45,10 +45,10 @@ public final class ExtractionDebugMenu {
         if(!raid&&ExtractionProfile.get().active)throw new IllegalStateException("원정을 이어간 뒤 원정 가방으로 지급하세요.");
         choose("물품 생성",raid?"가방이 가득 차면 발밑에 놓습니다.":"창고에 지급합니다.",i->{
             if(i<2){ArrayList<Item> list=new ArrayList<>();for(ExtractionShop.Offer offer:ExtractionShop.OFFERS)if(offer.category==i+1||i==1&&offer.category>=3)list.add(offer.item());catalog(list,0,true);}
-            else if(i==2){ArrayList<Item> list=new ArrayList<>();list.add(new ExpeditionArtifacts.BloodLantern());list.add(new ExpeditionArtifacts.GreedPouch());list.add(new ExpeditionArtifacts.BrokenHourglass());list.add(new ExpeditionArtifacts.HuntersMark());list.add(new ExpeditionArtifacts.UnstableCompass());catalog(list,0,false);}
+            else if(i==2){choose("반지 / 유물","종류를 선택하세요. 모든 물품은 감정·저주 해제 상태로 지급합니다.",n->catalog(ExtractionDebug.equipmentCatalog(n==0?com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING:com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT),0,true),"반지 12종","전체 유물 18종");}
             else if(i==3){ArrayList<Item> list=new ArrayList<>();for(int n=0;n<ExtractionPotionKnowledge.NAMES.length;n++)list.add(ExtractionPotionKnowledge.createPotion(n).quantity(5));catalog(list,0,false,ExtractionPotionKnowledge.NAMES);}
             else{ArrayList<Item> list=new ArrayList<>();list.add(new SupplyHealingPotion().quantity(10));list.add(new ExtractionShop.SupplyUpgrade().quantity(20));list.add(new ExtractionShop.SupplyIdentify().quantity(10));list.add(new ExtractionShop.SupplyRemoveCurse().quantity(10));list.add(new ScrollOfMagicMapping().quantity(5));list.add(new Food().quantity(10));catalog(list,0,false);}
-        },"무기 / 투척","갑옷 / 바지 / 신발","신규 유물 5종","물약 12종 · 각 5개","스크롤 / 보급품");
+        },"무기 / 투척","갑옷 / 바지 / 신발","반지 / 모든 유물","물약 12종 · 각 5개","스크롤 / 보급품");
     }
     private void catalog(ArrayList<Item> list,int page,boolean upgrades){catalog(list,page,upgrades,null);}
     private void catalog(ArrayList<Item> list,int page,boolean upgrades,String[] names){
@@ -61,11 +61,12 @@ public final class ExtractionDebugMenu {
         },labels.toArray(new String[0]));
     }
     private void upgrade(Item item){
-        int cap=item instanceof Armor?9:WeaponUpgradeLimit.tier(item)*3;
-        choose(item.title(),"강화 수치를 선택하세요.",i->{int level=i==0?0:i==1?Math.min(3,cap):cap;item.level(level);give(item);},"+0","+3","+"+cap);
+        int cap=WeaponUpgradeLimit.cap(item);
+        if(cap==0){give(item);return;}
+        choose(item.title(),"강화 수치를 선택하세요.",i->{int level=i==0?0:i==1?Math.min(3,cap):cap;ExtractionDebug.prepareEquipment(item,level);give(item);},"+0","+3","+"+cap);
     }
     private void give(Item item){
-        item.identify(false);if(item instanceof Weapon)((Weapon)item).cursed=false;if(item instanceof Armor)((Armor)item).cursed=false;
+        ExtractionDebug.identifyItem(item);
         ExtractionDebug.give(item,raid);done(item.title()+" 지급");
     }
     private void tools(){

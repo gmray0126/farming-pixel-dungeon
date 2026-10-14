@@ -847,6 +847,24 @@ public class ExtractionProfileTest {
         assertEquals(0,ExtractionDifficulty.tierWeights()[4],0);
         try{ExtractionDebug.give(new Food(),false);fail("Escrow must not be edited");}catch(IllegalStateException expected){}
     }
+    @Test public void debugRingAndArtifactCatalogsWorkWithoutHeroAndPreserveLootPools() throws Exception {
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category rings=com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.RING;
+        com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category artifacts=com.shatteredpixel.shatteredpixeldungeon.items.Generator.Category.ARTIFACT;
+        try{ExtractionDebug.equipmentCatalog(rings);fail("Debug must be enabled");}catch(IllegalStateException expected){}
+        profile.setDebugEnabled(true);Dungeon.hero=null;
+        float[] ringPool=rings.probs.clone(),artifactPool=artifacts.probs.clone();
+        java.util.ArrayList<Item> list=ExtractionDebug.equipmentCatalog(rings);assertEquals(12,list.size());
+        java.util.ArrayList<Item> relics=ExtractionDebug.equipmentCatalog(artifacts);assertEquals(18,relics.size());list.addAll(relics);
+        for(Item item:list){
+            assertTrue(item.isIdentified());assertFalse(item.cursed);assertFalse(item.title().contains("NO TEXT FOUND"));
+            int cap=WeaponUpgradeLimit.cap(item);ExtractionDebug.prepareEquipment(item,15);assertEquals(cap,item.trueLevel());
+            if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)assertTrue(item.level()<=((com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)item).nativeLevelCap());
+            ExtractionDebug.give(item,false);
+        }
+        assertArrayEquals(ringPool,rings.probs,0);assertArrayEquals(artifactPool,artifacts.probs,0);
+        forgetProfile();profile=ExtractionProfile.get();
+        for(Item item:list){Item stored=profile.stash.stream().filter(i->i.getClass()==item.getClass()).findFirst().get();assertEquals(item.trueLevel(),stored.trueLevel());assertTrue(stored.isIdentified());assertFalse(stored.cursed);}
+    }
     @Test public void debugRaidToolsPreserveSnapshotAndDisabledModeStopsInvulnerability() throws Exception {
         profile.setDebugEnabled(true);profile.begin();Dungeon.daily=Dungeon.dailyReplay=false;Dungeon.customSeedText="";Dungeon.initSeed();Dungeon.init();
         Dungeon.level=Dungeon.newLevel();Hero hero=Dungeon.hero;hero.pos=Dungeon.level.entrance();hero.ready=true;hero.sprite=new EffectSprite();hero.sprite.visible=false;
