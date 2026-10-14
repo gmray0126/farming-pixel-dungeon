@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.60.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.60.0-farming)
+[v0.60.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.60.1-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.60.0-farming/Farming_Pixel_Dungeon_v0.60.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.60.0-farming/Farming_Pixel_Dungeon_PC_v0.60.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.60.1-farming/Farming_Pixel_Dungeon_v0.60.1.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.60.1-farming/Farming_Pixel_Dungeon_PC_v0.60.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,14 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.60.1 — 장착 투척무기의 근접 사용 / Melee use of equipped thrown weapons
+
+장착한 투척무기로 적을 누르면 자동 투척 대신 근접 평타를 합니다. 수량과 내구도를 소모하지 않아 한 개만 남아 있어도 계속 사용할 수 있습니다. 단검·쿠나이 등은 단검 계통, 창류는 창 계통, 토마호크는 도끼 계통, 나머지는 둔기 계통으로 근접 성장하며 상세창에 두 사용 방식의 계통을 표시합니다. 근접 평타에는 투척의 반지나 원거리 전용 특성·근접 투척 명중 불이익이 적용되지 않습니다.
+
+가방·퀵슬롯에서 던지기를 선택하면 기존 투척 동작으로 수량·내구도를 소비하고 활·투척 계통과 투척의 반지를 적용합니다. 장착·해제, 원정 자동 장착, 저장, 같은 묶음의 회수 합치기는 유지합니다. 테스트 233개와 Android 빌드·Windows 실행 검증을 통과했습니다.
+
+Equipped thrown weapons now perform nonconsuming melee attacks when selecting an enemy, including with a single projectile remaining. Matching dagger/spear/axe/blunt growth and melee traits apply; point-blank throwing penalties and ranged-only bonuses do not. Use inventory/quickslot Throw for normal projectile consumption, durability, ranged growth, and Sharpshooting. Equip/Unequip, expedition auto-equipping, saves, and same-set recovery merging remain. All 233 regression tests, Android build, and native Windows checks passed.
 
 ## v0.60.0 — 투척무기 장착 / Equipped thrown weapons
 
