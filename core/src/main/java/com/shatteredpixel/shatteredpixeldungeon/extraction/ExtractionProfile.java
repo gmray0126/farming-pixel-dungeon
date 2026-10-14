@@ -273,15 +273,16 @@ public final class ExtractionProfile {
     public int armorPierce(KindOfWeapon weapon) { return Math.round(bonus(ExtractionGrowth.Stat.PIERCE,ExtractionGrowth.family(weapon))); }
     public int reachBonus(KindOfWeapon weapon) { return Math.round(bonus(ExtractionGrowth.Stat.REACH,ExtractionGrowth.family(weapon))); }
     public float wandChargeMultiplier() { return 1+bonus(ExtractionGrowth.Stat.WAND_CHARGE,ExtractionGrowth.MAGIC)/100f; }
-    public int magicDamage(int damage) {
-        return Math.round((damage+bonus(ExtractionGrowth.Stat.WAND_DAMAGE,ExtractionGrowth.MAGIC))*(1+bonus(ExtractionGrowth.Stat.WAND_POWER,ExtractionGrowth.MAGIC)/100f));
+    public int magicDamage(int damage,float... factors) {
+        return Math.round((damage+bonus(ExtractionGrowth.Stat.WAND_DAMAGE,ExtractionGrowth.MAGIC))*ExtractionScaling.sum(1+bonus(ExtractionGrowth.Stat.WAND_POWER,ExtractionGrowth.MAGIC)/100f,ExtractionScaling.sum(factors)));
     }
     /** Deterministic roll parameter makes critical/weapon specialization rules testable. */
     public int physicalDamage(int damage,KindOfWeapon weapon,float criticalRoll) {
         int family=ExtractionGrowth.family(weapon);
-        float value=(damage+bonus(ExtractionGrowth.Stat.DAMAGE,family))*(1+bonus(ExtractionGrowth.Stat.DAMAGE_PERCENT,family)/100f);
+        float factor=1+bonus(ExtractionGrowth.Stat.DAMAGE_PERCENT,family)/100f;
         float chance=Math.min(0.65f,bonus(ExtractionGrowth.Stat.CRIT_CHANCE,family)/100f);
-        if(criticalRoll<chance)value*=1.5f+bonus(ExtractionGrowth.Stat.CRIT_POWER,family)/100f;
+        if(criticalRoll<chance)factor+=.5f+bonus(ExtractionGrowth.Stat.CRIT_POWER,family)/100f;
+        float value=ExtractionScaling.seedPhysical(Dungeon.hero,damage+bonus(ExtractionGrowth.Stat.DAMAGE,family),factor);
         return Math.max(0,Math.round(value));
     }
     public boolean unlocked(int index) { return ExtractionGrowth.unlocked(ExtractionGrowth.NODES[index],nodes); }
@@ -475,7 +476,7 @@ public final class ExtractionProfile {
                 loot.removeIf(i -> i instanceof NodeSpiritBow && ((NodeSpiritBow)i).enchantment==null && ((NodeSpiritBow)i).augment==com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon.Augment.NONE);
                 for(Item item:loot){ExtractionStash.identifyEquipment(item);resetRoseForExpedition(item,roseAwakened);}
                 stash.addAll(loot);
-                gold+=Math.round(Dungeon.gold*(1+bonus(ExtractionGrowth.Stat.GOLD)/100f)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty)*(raidHard&&raidRules>=5?1.5f:1));
+                gold+=Math.round(Dungeon.gold*ExtractionScaling.sum(1+bonus(ExtractionGrowth.Stat.GOLD)/100f,raidHard&&raidRules>=5?1.5f:1)*ExtractionDifficulty.rewardMultiplier(raidChapter,raidDifficulty));
                 gold+=redeemed.gold;
                 if(!emergency)awardGrowthXP(10+5*(raidDifficulty-1)+10*(raidChapter-1));
                 result=(emergency?"비상탈출!":"탈출 성공!")+" 장비를 모두 감정하고 전리품을 창고에 보관했습니다."

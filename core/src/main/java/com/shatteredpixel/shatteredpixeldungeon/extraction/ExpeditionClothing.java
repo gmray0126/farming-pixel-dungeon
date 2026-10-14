@@ -83,8 +83,8 @@ public abstract class ExpeditionClothing extends EquipableItem {
         com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor base=new com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor(tier);
         return Math.max(0,Random.NormalIntRange(base.DRMin(buffedLvl()),base.DRMax(buffedLvl()))-2*missingStrength(hero))*share()*ExtractionRarity.multiplier(this);
     }
-    public float evasionFactor(Hero hero){return (float)Math.pow(1.5,-missingStrength(hero)*share());}
-    public float movementFactor(Hero hero){return speedBonus()*(float)Math.pow(1.2,-missingStrength(hero)*share());}
+    public float evasionFactor(Hero hero){return 1f/(1+.5f*missingStrength(hero)*share());}
+    public float movementFactor(Hero hero){return ExtractionScaling.sum(speedBonus(),1f/(1+.2f*missingStrength(hero)*share()));}
     public float speedBonus(){return boots()?1+tier*.02f:1;}
     public ExpeditionClothing inscribe(Glyph glyph){this.glyph=glyph;updateQuickslot();return this;}
     public ExpeditionClothing inscribe(){return inscribe(Glyph.random(glyph==null?null:glyph.getClass()));}

@@ -273,6 +273,8 @@ public class Hero extends Char {
 	}
 	
 	/** Extraction levels award node points, never automatic combat scaling. */
+	public int baseAttackRating(){return attackSkill;}
+    public int baseDefenseRating(){return defenseSkill;}
 	public int combatLevel(){ return extractionRaidID != 0 ? 1 : lvl; }
 
 	public void updateHT( boolean boostHP ){
@@ -554,7 +556,7 @@ public class Hero extends Char {
 		KindOfWeapon wep = belongings.attackingWeapon();
 		
 		float accuracy = extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().accuracyMultiplier(growthWeapon()) : 1;
-		accuracy *= RingOfAccuracy.accuracyMultiplier( this );
+		accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,RingOfAccuracy.accuracyMultiplier( this ));
 		
 		//precise assault and liquid agility
 		if (!(wep instanceof MissileWeapon)) {
@@ -565,7 +567,7 @@ public class Hero extends Char {
 				//non-duelist benefit for precise assault, can stack with liquid agility
 				if (!hasWeaponAbilities()) {
 					//persistent +10%/20%/30% ACC for other heroes
-					accuracy *= 1f + 0.1f * pointsInTalent(Talent.PRECISE_ASSAULT);
+					accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,1f + 0.1f * pointsInTalent(Talent.PRECISE_ASSAULT));
 				}
 
 				if (wep instanceof Flail && buff(Flail.SpinAbilityTracker.class) != null){
@@ -576,31 +578,31 @@ public class Hero extends Char {
 					// 2x/5x/inf. ACC for duelist if she just used a weapon ability
 					switch (pointsInTalent(Talent.PRECISE_ASSAULT)){
 						default: case 1:
-							accuracy *= 2; break;
+							accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,2); break;
 						case 2:
-							accuracy *= 5; break;
+							accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,5); break;
 						case 3:
-							accuracy *= Float.POSITIVE_INFINITY; break;
+							accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,Float.POSITIVE_INFINITY); break;
 					}
 				} else if (buff(Talent.LiquidAgilACCTracker.class) != null){
 					// 3x/inf. ACC, depending on talent level
-					accuracy *= pointsInTalent(Talent.LIQUID_AGILITY) == 2 ? Float.POSITIVE_INFINITY : 3f;
+					accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,pointsInTalent(Talent.LIQUID_AGILITY) == 2 ? Float.POSITIVE_INFINITY : 3f);
 					Talent.LiquidAgilACCTracker buff = buff(Talent.LiquidAgilACCTracker.class);
 					buff.uses--;
 				}
 			}
 		} else {
 			if (buff(Momentum.class) != null && buff(Momentum.class).freerunning()){
-				accuracy *= 1f + pointsInTalent(Talent.PROJECTILE_MOMENTUM)/2f;
+				accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,1f + pointsInTalent(Talent.PROJECTILE_MOMENTUM)/2f);
 			}
 		}
 
 		if (buff(Scimitar.SwordDance.class) != null){
-			accuracy *= 1.50f;
+			accuracy = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,1.50f);
 		}
 		
 		if (!RingOfForce.fightingUnarmed(this)) {
-			return Math.max(1, Math.round(attackSkill * accuracy * wep.accuracyFactor( this, target )));
+			return Math.max(1, Math.round(attackSkill * com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,accuracy,wep.accuracyFactor(this,target))));
 		} else {
 			return Math.max(1, Math.round(attackSkill * accuracy));
 		}
@@ -621,6 +623,7 @@ public class Hero extends Char {
 		}
 		
 		float evasion = defenseSkill;
+        if(extractionRaidID!=0)return additiveDefenseSkill();
         if(buff(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.RollAfterimage.class)!=null)evasion*=1.25f;
 		if(extractionRaidID != 0)evasion *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().evasionMultiplier(growthWeapon())*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_EVASION);
 		
@@ -659,6 +662,23 @@ public class Hero extends Char {
 
 		return Math.max(1, Math.round(evasion));
 	}
+
+    private int additiveDefenseSkill(){
+        float factor=1;
+        if(buff(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionHybridCombat.RollAfterimage.class)!=null)factor+=.25f;
+        factor=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.sum(factor,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().evasionMultiplier(growthWeapon()),com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_EVASION),RingOfEvasion.evasionMultiplier(this));
+        if(buff(Talent.LiquidAgilEVATracker.class)!=null){if(pointsInTalent(Talent.LIQUID_AGILITY)==2)return INFINITE_EVASION;if(pointsInTalent(Talent.LIQUID_AGILITY)==1)factor+=2;}
+        if(buff(Quarterstaff.DefensiveStance.class)!=null)factor+=2;
+        if(paralysed>0)factor-=.5f;
+        if(belongings.armor()!=null){
+            if(belongings.armor().hasGlyph(Stone.class,this)&&!Stone.testingEvasion())return 0;
+            factor+=belongings.armor().evasionFactor(this,defenseSkill)/Math.max(1f,defenseSkill)-1;
+        }
+        if(!Armor.testingNoArmDefSkill&&glyphLevel(Stone.class)>=0&&!Stone.testingEvasion())return 0;
+        if(belongings.pants()!=null)factor+=belongings.pants().evasionFactor(this)-1;
+        if(belongings.boots()!=null)factor+=belongings.boots().evasionFactor(this)-1;
+        return Math.max(1,Math.round(defenseSkill*Math.max(.1f,factor)));
+    }
 
 	@Override
 	public String defenseVerb() {
@@ -769,34 +789,34 @@ public class Hero extends Char {
 
 		float speed = super.speed();
 
-		speed *= RingOfHaste.speedMultiplier(this);
+		speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,RingOfHaste.speedMultiplier(this));
 		
 		if (belongings.armor() != null) {
-			speed = belongings.armor().speedFactor(this, speed);
+			speed = extractionRaidID!=0?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,belongings.armor().speedFactor(this,1)):belongings.armor().speedFactor(this,speed);
 		}
 		
 		Momentum momentum = buff(Momentum.class);
 		if (momentum != null){
-			((HeroSprite)sprite).sprint( momentum.freerunning() ? 1.5f : 1f );
-			speed *= momentum.speedMultiplier();
+			if(sprite instanceof HeroSprite)((HeroSprite)sprite).sprint( momentum.freerunning() ? 1.5f : 1f );
+			speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,momentum.speedMultiplier());
 		} else {
-			((HeroSprite)sprite).sprint( 1f );
+			if(sprite instanceof HeroSprite)((HeroSprite)sprite).sprint( 1f );
 		}
 
 		NaturesPower.naturesPowerTracker natStrength = buff(NaturesPower.naturesPowerTracker.class);
 		if (natStrength != null){
-			speed *= (2f + 0.25f*pointsInTalent(Talent.GROWING_POWER));
+			speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,(2f + 0.25f*pointsInTalent(Talent.GROWING_POWER)));
 		}
 
 		speed = AscensionChallenge.modifyHeroSpeed(speed);
 		
-		if(extractionRaidID != 0)speed *= com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier()*com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_SPEED);
+		if(extractionRaidID != 0)speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.sum(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().moveSpeedMultiplier(),com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionUtility.lowHealthMultiplier(this,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.LOW_HP_SPEED)));
         if(extractionRaidID!=0){
             if(belongings.pants()!=null)speed*=belongings.pants().movementFactor(this);
             if(belongings.boots()!=null)speed*=belongings.boots().movementFactor(this);
         }
 
-		return speed*com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this);
+		return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this));
 		
 	}
 
@@ -854,6 +874,7 @@ public class Hero extends Char {
 			return 0;
 		}
 
+        if(extractionRaidID!=0)return additiveAttackDelay();
 		float delay = (extractionRaidID != 0 ? 1f/com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackSpeedMultiplier(growthWeapon()) : 1f)/com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this);
 
 		if (!RingOfForce.fightingUnarmed(this)) {
@@ -1003,6 +1024,20 @@ public class Hero extends Char {
 		ready = false;
 	}
 	
+    private float additiveAttackDelay(){
+        float nodes=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().attackSpeedMultiplier(growthWeapon());
+        float tempo=com.shatteredpixel.shatteredpixeldungeon.extraction.ExpeditionArtifacts.tempo(this);
+        KindOfWeapon wep=belongings.attackingWeapon();
+        if(!RingOfForce.fightingUnarmed(this)&&wep instanceof Weapon){
+            float result=((Weapon)wep).additiveDelay(this,nodes+tempo-2);
+            return wep instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm?Math.max(1,result):result;
+        }
+        float speed=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.sum(nodes,tempo,RingOfFuror.attackSpeedMultiplier(this));
+        if(buff(Scimitar.SwordDance.class)!=null)speed+=.6f;
+        if(RingOfForce.unarmedGetsWeaponAugment(this)&&wep instanceof Weapon)speed+=1/((Weapon)wep).augment.delayFactor(1)-1;
+        return 1/Math.max(.1f,speed);
+    }
+
 	private void ready() {
 		if (sprite.looping()) sprite.idle();
 		curAction = null;
@@ -1704,7 +1739,10 @@ public class Hero extends Char {
 	}
 
 	@Override
-	public void damage( int dmg, Object src ) {
+	public void damage(int dmg,Object src){
+        try(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.Scope budget=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.incoming(this,dmg)){receiveDamage(dmg,src);}
+    }
+    private void receiveDamage(int dmg,Object src){
         if(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionTraining.active()&&this==Dungeon.hero)return;
 		if(extractionRaidID!=0&&extractionDebugInvulnerable&&com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().debugEnabled)return;
 		if (buff(TimekeepersHourglass.timeStasis.class) != null
@@ -1730,15 +1768,16 @@ public class Hero extends Char {
 		if (!(src instanceof Char)){
 			//reduce damage here if it isn't coming from a character (if it is we already reduced it)
 			if (endure != null){
-				damage = endure.adjustDamageTaken(dmg);
+				float adjusted=endure.adjustDamageTaken(dmg);
+                damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,dmg,dmg<=0?1:adjusted/dmg);
 			}
 			//the same also applies to challenge scroll damage reduction
 			if (buff(ScrollOfChallenge.ChallengeArena.class) != null){
-				damage *= 0.67f;
+				damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,damage,0.67f);
 			}
 			//and to monk meditate damage reduction
 			if (buff(MonkEnergy.MonkAbility.Meditate.MeditateResistance.class) != null){
-				damage *= 0.2f;
+				damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,damage,0.2f);
 			}
 		}
 
@@ -1756,7 +1795,7 @@ public class Hero extends Char {
 		dmg = Math.round(damage);
 
 		//we ceil this one to avoid letting the player easily take 0 dmg from tenacity early
-		dmg = (int)Math.ceil(dmg * RingOfTenacity.damageMultiplier( this ));
+		dmg = (int)Math.ceil(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,dmg,RingOfTenacity.damageMultiplier(this)));
 
 		int preHP = HP + shielding();
 		if (src instanceof Hunger) preHP -= shielding();

@@ -31,6 +31,7 @@ import com.watabou.noosa.audio.Sample;
 //for wands that directly damage a target
 //wands with AOE or circumstantial direct damage count here (e.g. fireblast, transfusion), but wands with indirect damage do not (e.g. corrosion)
 public abstract class DamageWand extends Wand{
+    public transient float additiveBase;
 
 	public int min(){
 		return min(buffedLvl());
@@ -59,8 +60,9 @@ public abstract class DamageWand extends Wand{
 			}
 			Sample.INSTANCE.play(Assets.Sounds.HIT_STRONG, 0.75f, 1.2f);
 		}
-		dmg=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.damage(this,dmg);
-		return Dungeon.hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().magicDamage(dmg) : dmg;
+
+        additiveBase=Dungeon.hero.extractionRaidID!=0?dmg+com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().bonus(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.Stat.WAND_DAMAGE,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionGrowth.MAGIC):0;
+		return Dungeon.hero.extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().magicDamage(dmg,com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.multiplier(this)) : com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionRarity.damage(this,dmg);
 	}
 
 	@Override

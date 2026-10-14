@@ -419,7 +419,7 @@ public class Armor extends EquipableItem {
 		
 		if (owner instanceof Hero){
 			int aEnc = STRReq() - ((Hero) owner).STR();
-			if (aEnc > 0) evasion /= Math.pow(1.5, aEnc*(owner instanceof Hero&&((Hero)owner).extractionRaidID!=0?.5f:1f));
+			if (aEnc > 0) evasion /= (1+.5f*aEnc*(owner instanceof Hero&&((Hero)owner).extractionRaidID!=0?.5f:1f));
 			
 			Momentum momentum = owner.buff(Momentum.class);
 			if (momentum != null){
@@ -434,7 +434,7 @@ public class Armor extends EquipableItem {
 		
 		if (owner instanceof Hero) {
 			int aEnc = STRReq() - ((Hero) owner).STR();
-			if (aEnc > 0) speed /= Math.pow(1.2, aEnc*(owner instanceof Hero&&((Hero)owner).extractionRaidID!=0?.5f:1f));
+			if (aEnc > 0) speed /= (1+.2f*aEnc*(owner instanceof Hero&&((Hero)owner).extractionRaidID!=0?.5f:1f));
 		}
 		
 		return speed;

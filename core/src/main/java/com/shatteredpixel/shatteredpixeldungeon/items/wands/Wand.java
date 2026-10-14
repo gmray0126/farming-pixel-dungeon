@@ -851,8 +851,7 @@ public abstract class Wand extends Item {
 					+ (SCALING_CHARGE_ADDITION * Math.pow(scalingFactor, missingCharges)));
 
 			if (Regeneration.regenOn())
-				partialCharge += (1f/turnsToCharge) * RingOfEnergy.wandChargeMultiplier(target)
-						* (target instanceof Hero && ((Hero)target).extractionRaidID != 0 ? com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().wandChargeMultiplier() : 1f);
+				partialCharge += (1f/turnsToCharge) * com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(target,RingOfEnergy.wandChargeMultiplier(target),target instanceof Hero&&((Hero)target).extractionRaidID!=0?com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionProfile.get().wandChargeMultiplier():1);
 
 			for (Recharging bonus : target.buffs(Recharging.class)){
 				if (bonus != null && bonus.remainder() > 0f) {

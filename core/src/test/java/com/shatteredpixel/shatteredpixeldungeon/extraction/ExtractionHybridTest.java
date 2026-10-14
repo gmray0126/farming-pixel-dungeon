@@ -84,6 +84,50 @@ public class ExtractionHybridTest {
             Dungeon.fail(null);assertFalse(h.extractionDeathRecorded);
         }finally{Gdx.app=original;com.shatteredpixel.shatteredpixeldungeon.windows.WndResurrect.instance=null;}
     }
+    @Test public void actualAttackAddsNodeCriticalAndFuryOnOneBase() throws Exception {
+        p.nodes.add("combat_merge");p.nodes.add("combat_cap");p.nodes.add("sword_1");p.nodes.add("sword_8");
+        ExtractionTraining.Room room=ExtractionTraining.prepare();
+        Hero fixed=new Hero(){@Override public int damageRoll(){return p.physicalDamage(100,belongings.attackingWeapon(),0);}};
+        fixed.extractionRaidID=1;fixed.HP=fixed.HT=20;fixed.belongings.weapon=new Sword();Dungeon.hero=fixed;
+        ExtractionTraining.Dummy dummy=(ExtractionTraining.Dummy)room.mobs.stream().filter(m->m.pos==4*room.width()+7).findFirst().get();fixed.pos=dummy.pos+1;
+        java.util.Arrays.fill(room.heroFOV,false);Buff.affect(fixed,Fury.class);
+        assertTrue(fixed.attack(dummy,1,0,Char.INFINITE_ACCURACY));assertEquals(243,dummy.total);
+        assertEquals(100,Math.round(ExtractionScaling.damage(fixed,100,1)));
+    }
+    @Test public void movementBonusesAndRingRanksAreAdditive(){
+        p.nodes.add("explore_right_1");p.nodes.add("explore_right_end");
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste();ring.level(2);h.belongings.ring=ring;ring.activate(h);
+        Buff.affect(h,Stamina.class);Buff.affect(h,Haste.class);
+        assertEquals(1.45f,com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfHaste.speedMultiplier(h),.001f);
+        assertEquals(4.05f,h.speed(),.001f);
+    }
+    @Test public void attackSpeedUsesOneSumBeforeTakingItsReciprocal(){
+        p.nodes.add("sword_5");
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror();ring.level(2);h.belongings.ring=ring;ring.activate(h);
+        assertEquals(1/(1+.08f+.09051f*3),h.attackDelay(),.0001f);
+    }
+    @Test public void accuracyRingsNodesAndBlessingShareTheBaseRating(){
+        p.nodes.add("combat_right_1");p.nodes.add("sword_4");
+        com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy();ring.level(2);h.belongings.ring=ring;ring.activate(h);
+        assertEquals(21,h.attackSkill(enemy()));assertEquals(23.5f,ExtractionScaling.accuracy(h,h.attackSkill(enemy()),1.25f),.001f);
+    }
+    @Test public void incomingReductionsAddCapAndRestoreNestedBudgets(){
+        try(ExtractionScaling.Scope scope=ExtractionScaling.incoming(h,100)){
+            float first=ExtractionScaling.received(h,100,.5f);assertEquals(50,first,0);
+            try(ExtractionScaling.Scope nested=ExtractionScaling.incoming(new Hero(),10)){}
+            assertEquals(25,ExtractionScaling.received(h,first,.75f),0);
+            assertEquals(20,ExtractionScaling.received(h,25,.1f),.001f);
+        }
+        assertEquals(50,ExtractionScaling.received(h,100,.5f),0);
+    }
+    @Test public void augmentRarityNodesAndCriticalShareTheDamageBase(){
+        p.nodes.add("combat_merge");p.nodes.add("combat_right_end");
+        try(ExtractionScaling.Scope scope=ExtractionScaling.attack(h)){
+            assertEquals(100,ExtractionScaling.weapon(h,100,1.5f),0);
+            assertEquals(100,ExtractionScaling.weapon(h,100,1.2f),0);
+            assertEquals(230,p.physicalDamage(100,h.belongings.weapon,0));
+        }
+    }
     private Mob enemy(){Mob m=new Rat();m.HP=m.HT=100;return m;}
     private void learn(String tree,int... nodes){for(int n:nodes)p.nodes.add(tree+"_"+n);}
     @Test public void sixTreesRequireBothClassNeighboursAndAllThreeConvergingPaths(){

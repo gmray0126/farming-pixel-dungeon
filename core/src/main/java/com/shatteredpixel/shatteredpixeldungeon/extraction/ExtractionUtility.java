@@ -61,14 +61,15 @@ public final class ExtractionUtility {
     public static int attack(Hero h,Char enemy,int damage){
         float multiplier=lowHealthMultiplier(h,LOW_HP_DAMAGE);
         if(h.extractionRaidID!=0&&enemy instanceof Mob&&((Mob)enemy).surprisedBy(h)){
-            multiplier*=1+value(h,SURPRISE_DAMAGE)/100f;recharge(h,value(h,SURPRISE_RECHARGE));
+            multiplier=ExtractionScaling.sum(multiplier,1+value(h,SURPRISE_DAMAGE)/100f);recharge(h,value(h,SURPRISE_RECHARGE));
         }
-        return ExpeditionArtifacts.attack(h,enemy,Math.round(damage*multiplier));
+        return ExpeditionArtifacts.attack(h,enemy,Math.round(ExtractionScaling.damage(h,damage,multiplier)));
     }
     private static boolean source(Object src,Class<?> type){return src==type||type.isInstance(src);}
     public static int incoming(Hero h,int damage,Object src){
         if(h.extractionRaidID==0||damage<=0)return damage;
-        damage=ExtractionHybridCombat.incoming(h,ExpeditionArtifacts.incoming(h,ExtractionDifficulty.incoming(damage,src)),src);
+        int scaled=ExtractionDifficulty.incoming(damage,src);ExtractionScaling.rebaseIncoming(h,damage==0?1:scaled/(float)damage);
+        damage=ExtractionHybridCombat.incoming(h,ExpeditionArtifacts.incoming(h,scaled),src);
         float reduction=0;
         boolean poison=source(src,Poison.class),burn=source(src,Burning.class),bleed=source(src,Bleeding.class),ooze=source(src,Ooze.class);
         if(poison||burn||bleed||ooze)reduction+=value(h,DOT_REDUCTION);
@@ -82,7 +83,7 @@ public final class ExtractionUtility {
             if(Char.hasProp(enemy,Char.Property.BOSS))reduction+=value(h,BOSS_REDUCTION);
             if(Dungeon.level!=null&&Dungeon.level.distance(h.pos,enemy.pos)>1)reduction+=value(h,RANGED_REDUCTION);
         }
-        return (int)Math.ceil(damage*(1-Math.min(75,reduction)/100f));
+        return (int)Math.ceil(ExtractionScaling.received(h,damage,1-Math.min(75,reduction)/100f));
     }
     /** One shared rescue charge for both final traits; persistent in the hero save. */
     public static boolean rescue(Hero h,int damage,Object src){

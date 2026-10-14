@@ -42,12 +42,12 @@ public final class ExpeditionArtifacts {
     }
     public static float healingMultiplier(Hero hero){return has(hero,BloodLantern.class)?.65f:1;}
     public static int incoming(Hero hero,int damage){
-        return has(hero,GreedPouch.class)?Math.round(damage*(1+Math.min(.3f,Dungeon.gold/250f*.1f))):damage;
+        return has(hero,GreedPouch.class)?Math.round(ExtractionScaling.received(hero,damage,1+Math.min(.3f,Dungeon.gold/250f*.1f))):damage;
     }
     public static int attack(Hero hero,Char enemy,int damage){
         Relic mark=equipped(hero,HuntersMark.class);if(mark==null||Dungeon.level==null)return damage;
-        if(enemy.buff(Hunted.class)!=null)return Math.round(damage*(1.3f+.04f*mark.level()));
-        for(Mob mob:Dungeon.level.mobs)if(mob.isAlive()&&mob.buff(Hunted.class)!=null)return Math.round(damage*.85f);
+        if(enemy.buff(Hunted.class)!=null)return Math.round(ExtractionScaling.damage(hero,damage,1.3f+.04f*mark.level()));
+        for(Mob mob:Dungeon.level.mobs)if(mob.isAlive()&&mob.buff(Hunted.class)!=null)return Math.round(ExtractionScaling.damage(hero,damage,.85f));
         return damage;
     }
     public static float tempo(Hero hero){return hero.buff(BurstTempo.class)!=null?2:1;}

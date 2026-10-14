@@ -67,7 +67,7 @@ public final class ExtractionGrowth {
             if(branch==MAGIC)text.append(" 마법 막대 충전은 보유한 막대에 적용됩니다.");
             if(effects.containsKey(Stat.SECOND_WIND))text.append("\n두 생존 최종 특성은 원정당 한 번의 발동 횟수를 공유합니다.");
             if(effects.containsKey(Stat.EVASION)||effects.containsKey(Stat.LOW_HP_EVASION))text.append("\n실제 회피 확률은 적의 명중과 버프를 반영하며 최대 80%입니다.");
-            if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타의 기본 피해 배율은 150%입니다.");
+            if(effects.containsKey(Stat.CRIT_CHANCE)||effects.containsKey(Stat.CRIT_POWER))text.append("\n치명타는 기본 피해의 +50%이며 다른 피해 증가율과 합산됩니다.");
             if(effects.containsKey(Stat.STRENGTH))text.append("\n\n범용 영구 힘 보너스입니다. 무기·직업과 관계없이 적용됩니다. 사망·탈출 후에도 유지되며 매 새 출격에 적용됩니다. 힘 물약으로 얻은 힘은 해당 원정에서만 유지됩니다.");
             if(alternatives.length>0)text.append("\n\n연결된 다른 계통의 노드에서도 진입할 수 있습니다.");
             if(parents.length>1)text.append("\n\n표시된 선행 노드를 모두 습득해야 합니다.");

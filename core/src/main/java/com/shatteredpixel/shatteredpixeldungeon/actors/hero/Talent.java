@@ -685,25 +685,25 @@ public enum Talent {
 
 		// Affected by both Warrior(1.75x/2.5x) and Duelist(2.5x/inst.) talents
 		if (item instanceof MeleeWeapon){
-			factor *= 1f + 1.5f*hero.pointsInTalent(ADVENTURERS_INTUITION); //instant at +2 (see onItemEquipped)
-			factor *= 1f + 0.75f*hero.pointsInTalent(VETERANS_INTUITION);
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + 1.5f*hero.pointsInTalent(ADVENTURERS_INTUITION)); //instant at +2 (see onItemEquipped)
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + 0.75f*hero.pointsInTalent(VETERANS_INTUITION));
 		}
 		// Affected by both Warrior(2.5x/inst.) and Duelist(1.75x/2.5x) talents
 		if (item instanceof Armor){
-			factor *= 1f + 0.75f*hero.pointsInTalent(ADVENTURERS_INTUITION);
-			factor *= 1f + hero.pointsInTalent(VETERANS_INTUITION); //instant at +2 (see onItemEquipped)
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + 0.75f*hero.pointsInTalent(ADVENTURERS_INTUITION));
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + hero.pointsInTalent(VETERANS_INTUITION)); //instant at +2 (see onItemEquipped)
 		}
 		// 3x/instant for Mage (see Wand.wandUsed())
 		if (item instanceof Wand){
-			factor *= 1f + 2.0f*hero.pointsInTalent(SCHOLARS_INTUITION);
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + 2.0f*hero.pointsInTalent(SCHOLARS_INTUITION));
 		}
 		// 3x/instant speed with Huntress talent (see MissileWeapon.proc)
 		if (item instanceof MissileWeapon){
-			factor *= 1f + 2.0f*hero.pointsInTalent(SURVIVALISTS_INTUITION);
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + 2.0f*hero.pointsInTalent(SURVIVALISTS_INTUITION));
 		}
 		// 2x/instant for Rogue (see onItemEqupped), also id's type on equip/on pickup
 		if (item instanceof Ring){
-			factor *= 1f + hero.pointsInTalent(THIEFS_INTUITION);
+			factor = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(hero,factor,1f + hero.pointsInTalent(THIEFS_INTUITION));
 		}
 		return factor;
 	}

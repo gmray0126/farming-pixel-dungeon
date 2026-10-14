@@ -1623,7 +1623,7 @@ public class ExtractionProfileTest {
         profile.points=1000;learnPath("dagger_3");
         Item dagger=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger();
         assertEquals(12,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,1f));
-        assertEquals(21,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,0f));
+        assertEquals(20,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,0f));
         assertEquals(11,profile.physicalDamage(10,new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),0f));
     }
     @Test public void spearReachIsAppliedByOriginalWeaponFormula() {

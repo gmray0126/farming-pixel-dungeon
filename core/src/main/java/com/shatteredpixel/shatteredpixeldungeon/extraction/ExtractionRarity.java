@@ -18,7 +18,7 @@ public final class ExtractionRarity {
         if(ExtractionDifficulty.hard()&&supported(item)&&roll<chance)item.extractionRare=true;
         return item;
     }
-    public static int damage(Item item,int damage){return Math.max(0,Math.round(damage*multiplier(item)));}
+    public static int damage(Item item,int damage){return Math.max(0,Math.round(ExtractionScaling.weapon(com.shatteredpixel.shatteredpixeldungeon.Dungeon.hero,damage,multiplier(item))));}
     public static float multiplier(Item item){return item!=null&&item.extractionRare?1.2f:1;}
     public static String description(Item item){
         if(!item.extractionRare)return "";

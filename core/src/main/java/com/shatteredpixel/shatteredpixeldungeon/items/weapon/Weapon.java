@@ -300,7 +300,7 @@ abstract public class Weapon extends KindOfWeapon {
 			ACC /= 5;
 		}
 
-		return encumbrance > 0 ? (float)(ACC / Math.pow( 1.5, encumbrance )) : ACC;
+		return encumbrance > 0 ? (float)(ACC / (1+.5f*encumbrance)) : ACC;
 	}
 	
 	@Override
@@ -308,12 +308,18 @@ abstract public class Weapon extends KindOfWeapon {
 		return baseDelay(owner) * (1f/speedMultiplier(owner));
 	}
 
+    public float additiveDelay(Char owner,float extraSpeed){
+        float augmentDelay=augment.delayFactor(1);
+        float speed=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.sum(speedMultiplier(owner),1/augmentDelay,1+extraSpeed);
+        return (baseDelay(owner)/augmentDelay)/speed;
+    }
+
 	protected float baseDelay( Char owner ){
 		float delay = augment.delayFactor(this.DLY);
 		if (owner instanceof Hero) {
 			int encumbrance = STRReq() - ((Hero)owner).STR();
 			if (encumbrance > 0){
-				delay *= Math.pow( 1.2, encumbrance );
+				delay *= (1+.2f*encumbrance);
 			}
 		}
 

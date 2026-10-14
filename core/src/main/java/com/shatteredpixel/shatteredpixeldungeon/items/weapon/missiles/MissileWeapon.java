@@ -535,7 +535,7 @@ abstract public class MissileWeapon extends Weapon {
 	
 	@Override
 	public int damageRoll(Char owner) {
-		int damage = augment.damageFactor(super.damageRoll( owner ));
+		int damage = Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.weapon(owner,super.damageRoll(owner),augment.damageFactor(1000)/1000f));
 		
 		if (owner instanceof Hero) {
 			int exStr = ((Hero)owner).STR() - STRReq();

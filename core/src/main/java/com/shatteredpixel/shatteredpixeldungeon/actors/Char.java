@@ -373,6 +373,11 @@ public abstract class Char extends Actor {
 	
     public boolean attack(Char enemy,float dmgMulti,float dmgBonus,float accMulti){
         if(enemy==null)return false;
+        try(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.Scope outgoing=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.attack(this);com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.Scope incoming=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.defence(enemy)){
+        return performAttack(enemy,dmgMulti,dmgBonus,accMulti);
+        }
+    }
+    private boolean performAttack(Char enemy,float dmgMulti,float dmgBonus,float accMulti){
         if(this instanceof Hero&&((Hero)this).belongings.attackingWeapon() instanceof com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm){
             com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm gun=(com.shatteredpixel.shatteredpixeldungeon.extraction.AlchemyFirearm)((Hero)this).belongings.attackingWeapon();
             if(!gun.canReach(this,enemy.pos))return false;
@@ -427,7 +432,7 @@ public abstract class Char extends Actor {
 				dmg = damageRoll();
 			}
 
-			dmg = dmg*dmgMulti;
+			dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,dmgMulti);
 
 			//flat damage bonus is affected by multipliers
 			dmg += dmgBonus;
@@ -443,53 +448,55 @@ public abstract class Char extends Actor {
 			}
 
 			Berserk berserk = buff(Berserk.class);
-			if (berserk != null) dmg = berserk.damageFactor(dmg);
+			if (berserk != null) dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,berserk.damageFactor(1000)/1000f);
 
 			if (buff( Fury.class ) != null) {
-				dmg *= 1.5f;
+				dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,1.5f);
 			}
 
 			if (buff( PowerOfMany.PowerBuff.class) != null){
 				if (buff( BeamingRay.BeamingRayBoost.class) != null
 					&& buff( BeamingRay.BeamingRayBoost.class).object == enemy.id()){
-					dmg *= 1.3f + 0.05f*Dungeon.hero.pointsInTalent(Talent.BEAMING_RAY);
+					dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,1.3f + 0.05f*Dungeon.hero.pointsInTalent(Talent.BEAMING_RAY));
 				} else {
-					dmg *= 1.25f;
+					dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,1.25f);
 				}
 			}
 
 			for (ChampionEnemy buff : buffs(ChampionEnemy.class)){
-				dmg *= buff.meleeDamageFactor();
+				dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,buff.meleeDamageFactor());
 			}
 
-			dmg *= AscensionChallenge.statModifier(this);
+			dmg = dmg * AscensionChallenge.statModifier(this);
 
 			//friendly endure
 			Endure.EndureTracker endure = buff(Endure.EndureTracker.class);
 			if (endure != null) dmg = endure.damageFactor(dmg);
 
+			com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.seedIncoming(enemy,dmg);
 			//enemy endure
 			endure = enemy.buff(Endure.EndureTracker.class);
 			if (endure != null){
-				dmg = endure.adjustDamageTaken(dmg);
+				float adjusted=endure.adjustDamageTaken(dmg);
+                dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(enemy,dmg,dmg<=0?1:adjusted/dmg);
 			}
 
 			if (enemy.buff(ScrollOfChallenge.ChallengeArena.class) != null){
-				dmg *= 0.67f;
+				dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(enemy,dmg,0.67f);
 			}
 
 			if (Dungeon.hero.alignment == enemy.alignment
 					&& Dungeon.hero.buff(AuraOfProtection.AuraBuff.class) != null
 					&& (Dungeon.level.distance(enemy.pos, Dungeon.hero.pos) <= 2 || enemy.buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null)){
-				dmg *= 0.9f - 0.1f*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
+				dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(enemy,dmg,0.9f - 0.1f*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION));
 			}
 
 			if (enemy.buff(MonkEnergy.MonkAbility.Meditate.MeditateResistance.class) != null){
-				dmg *= 0.2f;
+				dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(enemy,dmg,0.2f);
 			}
 
 			if ( buff(Weakness.class) != null ){
-				dmg *= 0.67f;
+				dmg = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,dmg,0.67f);
 			}
 
 			int effectiveDamage = enemy.defenseProc( this, Math.round(dmg) );
@@ -504,7 +511,7 @@ public abstract class Char extends Actor {
 
 				//vulnerable specifically applies after armor reductions
 				if (enemy.buff(Vulnerable.class) != null) {
-					effectiveDamage *= 1.33f;
+					effectiveDamage = Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.damage(this,effectiveDamage,1.33f));
 				}
 
 				effectiveDamage = attackProc(enemy, effectiveDamage);
@@ -657,37 +664,37 @@ public abstract class Char extends Actor {
 		}
 
 		float acuScale = acuStat;
-		if (attacker.buff(Bless.class) != null) acuScale *= 1.25f;
-		if (attacker.buff(  Hex.class) != null) acuScale *= 0.8f;
-		if (attacker.buff( Daze.class) != null) acuScale *= 0.5f;
+		if (attacker.buff(Bless.class) != null) acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,1.25f);
+		if (attacker.buff(  Hex.class) != null) acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,0.8f);
+		if (attacker.buff( Daze.class) != null) acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,0.5f);
 		for (ChampionEnemy buff : attacker.buffs(ChampionEnemy.class)){
-			acuScale *= buff.evasionAndAccuracyFactor();
+			acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,buff.evasionAndAccuracyFactor());
 		}
-		acuScale *= AscensionChallenge.statModifier(attacker);
+		acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,AscensionChallenge.statModifier(attacker));
 		if (Dungeon.hero.heroClass != HeroClass.CLERIC
 				&& Dungeon.hero.hasTalent(Talent.BLESS)
 				&& attacker.alignment == Alignment.ALLY){
 			// + 3%/5%
-			acuScale *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
+			acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS));
 		}
-		acuScale *= accMulti;
-        if(attacker instanceof Mob&&((Mob)attacker).extractionScaled)acuScale*=1+.05f*(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-1);
+		acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,accMulti);
+        if(attacker instanceof Mob&&((Mob)attacker).extractionScaled)acuScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.accuracy(attacker,acuScale,1+.05f*(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionDifficulty.stage()-1));
 
 		float defScale = defStat;
-		if (defender.buff(Bless.class) != null) defScale *= 1.25f;
-		if (defender.buff(  Hex.class) != null) defScale *= 0.8f;
-		if (defender.buff( Daze.class) != null) defScale *= 0.5f;
+		if (defender.buff(Bless.class) != null) defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,1.25f);
+		if (defender.buff(  Hex.class) != null) defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,0.8f);
+		if (defender.buff( Daze.class) != null) defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,0.5f);
 		for (ChampionEnemy buff : defender.buffs(ChampionEnemy.class)){
-			defScale *= buff.evasionAndAccuracyFactor();
+			defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,buff.evasionAndAccuracyFactor());
 		}
-		defScale *= AscensionChallenge.statModifier(defender);
+		defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,AscensionChallenge.statModifier(defender));
 		if (Dungeon.hero.heroClass != HeroClass.CLERIC
 				&& Dungeon.hero.hasTalent(Talent.BLESS)
 				&& defender.alignment == Alignment.ALLY){
 			// + 3%/5%
-			defScale *= 1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS);
+			defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS));
 		}
-		defScale *= FerretTuft.evasionMultiplier();
+		defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,FerretTuft.evasionMultiplier());
 
 		if(defender instanceof Hero && ((Hero)defender).extractionRaidID!=0){
             acuScale=Math.max(1f,acuScale);
@@ -788,18 +795,18 @@ public abstract class Char extends Actor {
 	}
 	
 	public float speed() {
-		float speed = baseSpeed;
-		if ( buff( Cripple.class ) != null ) speed /= 2f;
-		if ( buff( Stamina.class ) != null) speed *= 1.5f;
-		if ( buff( Adrenaline.class ) != null) speed *= 2f;
-		if ( buff( Haste.class ) != null) speed *= 3f;
-		if ( buff( Dread.class ) != null) speed *= 2f;
+		float speed = 1;
+		if ( buff( Cripple.class ) != null ) speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,.5f);
+		if ( buff( Stamina.class ) != null) speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,1.5f);
+		if ( buff( Adrenaline.class ) != null) speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,2f);
+		if ( buff( Haste.class ) != null) speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,3f);
+		if ( buff( Dread.class ) != null) speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,2f);
 
-		speed *= Swiftness.speedBoost(this, glyphLevel(Swiftness.class));
-		speed *= Flow.speedBoost(this, glyphLevel(Flow.class));
-		speed *= Bulk.speedBoost(this, glyphLevel(Bulk.class));
+		speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,Swiftness.speedBoost(this, glyphLevel(Swiftness.class)));
+		speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,Flow.speedBoost(this, glyphLevel(Flow.class)));
+		speed = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,speed,Bulk.speedBoost(this, glyphLevel(Bulk.class)));
 
-		return speed;
+		return baseSpeed*speed;
 	}
 
 	//currently only used by invisible chars, or by the hero
@@ -891,15 +898,15 @@ public abstract class Char extends Actor {
 			if (Dungeon.hero.alignment == alignment
 					&& Dungeon.hero.buff(AuraOfProtection.AuraBuff.class) != null
 					&& (Dungeon.level.distance(pos, Dungeon.hero.pos) <= 2 || buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null)) {
-				damage *= 0.9f - 0.1f*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION);
+				damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,damage,0.9f - 0.1f*Dungeon.hero.pointsInTalent(Talent.AURA_OF_PROTECTION));
 			}
 		}
 
 		if (buff(PowerOfMany.PowerBuff.class) != null){
 			if (buff(LifeLinkSpell.LifeLinkSpellBuff.class) != null){
-				damage *= 0.70f - 0.05f*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK);
+				damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,damage,0.70f - 0.05f*Dungeon.hero.pointsInTalent(Talent.LIFE_LINK));
 			} else {
-				damage *= 0.75f;
+				damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,damage,0.75f);
 			}
 		}
 
@@ -922,10 +929,10 @@ public abstract class Char extends Actor {
 			Buff.detach(this, MagicalSleep.class);
 		}
 		if (this.buff(Doom.class) != null && !isImmune(Doom.class)){
-			damage *= 1.67f;
+			damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.amplified(this,src,damage,1.67f);
 		}
 		if (alignment != Alignment.ALLY && this.buff(DeathMark.DeathMarkTracker.class) != null){
-			damage *= 1.25f;
+			damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.amplified(this,src,damage,1.25f);
 		}
 
 		//two separate things can convert dmg to bleed, we handle that here
@@ -950,7 +957,7 @@ public abstract class Char extends Actor {
 		if (isImmune( srcClass )) {
 			damage = 0;
 		} else {
-			damage *= resist( srcClass );
+			damage = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.received(this,damage,resist( srcClass ));
 		}
 
 		dmg = Math.round(damage);

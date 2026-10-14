@@ -53,7 +53,7 @@ public class RingOfEvasion extends Ring {
 		int bonus=getBuffedBonus(target,Evasion.class);
         if(target instanceof com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero&&((com.shatteredpixel.shatteredpixeldungeon.actors.hero.Hero)target).extractionRaidID!=0)
             return com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.ringMultiplier(bonus);
-        return (float)Math.pow(1.125,bonus);
+        return (float)com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.linear(1.125,bonus);
 	}
 
 	public class Evasion extends RingBuff {

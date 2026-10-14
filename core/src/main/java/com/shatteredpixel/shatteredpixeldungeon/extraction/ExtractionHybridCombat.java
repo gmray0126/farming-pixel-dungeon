@@ -22,7 +22,7 @@ public final class ExtractionHybridCombat {
         public float spellUntil,bladeUntil,rangeUntil,coatReadyAt,stepReadyAt,shadowReadyAt,rollReadyAt;
         public int spellChain,lastSpellKind,rangeChain,lastRangeKind,coating,coatedShots,faith,oathTurns;
         public transient boolean castEmpowered,castHit,castExtraCharge;
-        public transient float castMultiplier=1;
+        public transient float castMultiplier=1,castDamageFactor=1;
         @Override public void storeInBundle(Bundle b){
             b.put("roll_ready",rollReadyAt);b.put("spell_ready",spellReady);b.put("blade_ready",bladeReady);b.put("blood_oath",bloodOath);
             b.put("spell_until",spellUntil);b.put("blade_until",bladeUntil);b.put("range_until",rangeUntil);
@@ -99,7 +99,7 @@ public final class ExtractionHybridCombat {
         if(!ranged&&swordWave(h)){
             if(s.bladeReady&&now<=s.bladeUntil){
                 s.spellChain=s.lastSpellKind==2?Math.min(3,s.spellChain+1):0;
-                damage=Math.round(damage*(learned(h,"spell",12)?1.4f:1.2f)*(1+(learned(h,"spell",13)?s.spellChain*.05f:0)));
+                damage=Math.round(ExtractionScaling.damage(h,damage,ExtractionScaling.sum(learned(h,"spell",12)?1.4f:1.2f,1+(learned(h,"spell",13)?s.spellChain*.05f:0))));
                 if(learned(h,"spell",1))damage+=2;
                 if(learned(h,"spell",6))shield(h,learned(h,"spell",8)?6:3);
 
@@ -109,7 +109,7 @@ public final class ExtractionHybridCombat {
             s.lastSpellKind=1;s.spellReady=true;s.spellUntil=now+(learned(h,"spell",14)?10:6);
         }
         if(family==5&&learned(h,"shadow",0)){
-            if(enemy.buff(ShadowMark.class)!=null&&learned(h,"shadow",11))damage=Math.round(damage*1.15f);
+            if(enemy.buff(ShadowMark.class)!=null&&learned(h,"shadow",11))damage=Math.round(ExtractionScaling.damage(h,damage,1.15f));
             mark(h,enemy);
         }
         if(learned(h,"storm",0)){
@@ -117,7 +117,7 @@ public final class ExtractionHybridCombat {
             if(alternating){
                 s.rangeChain=Math.min(3,s.rangeChain+1);
                 float boost=ranged?(learned(h,"storm",10)?.35f:.2f):(learned(h,"storm",4)?.4f:.2f);
-                damage=Math.round(damage*(1+boost+(learned(h,"storm",13)?s.rangeChain*.05f:0)));
+                damage=Math.round(ExtractionScaling.damage(h,damage,1+boost+(learned(h,"storm",13)?s.rangeChain*.05f:0)));
                 if(!ranged){if(learned(h,"storm",1))damage+=2;if(learned(h,"storm",2))Buff.prolong(h,Haste.class,2);if(learned(h,"storm",3))Buff.prolong(enemy,Vulnerable.class,3);}
                 else {if(learned(h,"storm",5))Buff.prolong(enemy,Cripple.class,3);if(learned(h,"storm",6))Buff.prolong(h,Haste.class,2);}
                 if(learned(h,"storm",9))shield(h,learned(h,"storm",14)?6:3);
@@ -132,12 +132,12 @@ public final class ExtractionHybridCombat {
         if(!ranged&&learned(h,"blood",0)){
             boolean bleeding=enemy.buff(Bleeding.class)!=null;
             if(bleeding){
-                if(learned(h,"blood",2))damage=Math.round(damage*1.15f);
+                if(learned(h,"blood",2))damage=Math.round(ExtractionScaling.damage(h,damage,1.15f));
                 if(learned(h,"blood",5))heal(h,(learned(h,"blood",6)?2:1)+(learned(h,"blood",14)?1:0));
             }
             int cost=Math.max(1,(int)Math.ceil(h.HT*(learned(h,"blood",8)?.03f:.05f)));
             if(s.bloodOath&&h.HP>cost){
-                h.HP-=cost;damage=Math.round(damage*(learned(h,"blood",4)?1.45f:1.3f)*(bleeding&&learned(h,"blood",13)?1.1f:1));
+                h.HP-=cost;damage=Math.round(ExtractionScaling.damage(h,damage,ExtractionScaling.sum(learned(h,"blood",4)?1.45f:1.3f,bleeding&&learned(h,"blood",13)?1.1f:1)));
                 Bleeding b=Buff.affect(enemy,Bleeding.class);if(b!=null)b.set(learned(h,"blood",1)?3:2);
                 if(bleeding&&learned(h,"blood",3))Buff.prolong(enemy,Vulnerable.class,2);
                 if(learned(h,"blood",7))shield(h,learned(h,"blood",14)?6:3);
@@ -148,7 +148,7 @@ public final class ExtractionHybridCombat {
         return damage;
     }
     public static void beginCast(Hero h,Wand wand,int baseCost){
-        if(h==null||h.extractionRaidID==0)return;State s=state(h);s.castHit=false;s.castEmpowered=false;s.castExtraCharge=false;s.castMultiplier=1;
+        if(h==null||h.extractionRaidID==0)return;State s=state(h);s.castHit=false;s.castEmpowered=false;s.castExtraCharge=false;s.castMultiplier=1;s.castDamageFactor=wand instanceof com.shatteredpixel.shatteredpixeldungeon.items.wands.DamageWand?ExtractionScaling.sum(1+ExtractionProfile.get().bonus(ExtractionGrowth.Stat.WAND_POWER,ExtractionGrowth.MAGIC)/100f,ExtractionRarity.multiplier(wand)):1;
         if(h.buff(MagicImmune.class)!=null||!learned(h,"spell",0)||!s.spellReady||Actor.now()>s.spellUntil)return;
         s.castEmpowered=true;
         s.castExtraCharge=learned(h,"spell",4)&&wand.curCharges>=baseCost+1;
@@ -160,7 +160,7 @@ public final class ExtractionHybridCombat {
         if(!target(h,enemy,damage)||h.buff(MagicImmune.class)!=null)return damage;
         State s=state(h);boolean first=!s.castHit;s.castHit=true;
         if(s.castEmpowered){
-            damage=Math.round(damage*s.castMultiplier);tag(enemy,0);
+            damage=Math.round(damage+damage/Math.max(.1f,s.castDamageFactor)*(s.castMultiplier-1));tag(enemy,0);
             if(learned(h,"spell",3))Buff.prolong(enemy,Vulnerable.class,3);
             if(learned(h,"spell",10))Buff.prolong(enemy,Chill.class,3);
             if(first){s.spellReady=false;s.spellChain=s.lastSpellKind==1?Math.min(3,s.spellChain+1):0;if(learned(h,"spell",5))shield(h,learned(h,"spell",8)?6:3);if(learned(h,"spell",7))clean(h);}
@@ -195,7 +195,7 @@ public final class ExtractionHybridCombat {
     public static int incoming(Hero h,int damage,Object source){
         if(h==null||h.extractionRaidID==0)return damage;
 
-        if(learned(h,"holy",11)&&state(h).faith>=3&&source instanceof Char)damage=(int)Math.ceil(damage*.9f);
+        if(learned(h,"holy",11)&&state(h).faith>=3&&source instanceof Char)damage=(int)Math.ceil(ExtractionScaling.received(h,damage,.9f));
         return damage;
     }
     public static void defeated(Hero h,Mob mob){

@@ -36,7 +36,7 @@ public class AlchemyFirearm extends Weapon {
     public int magicDamage(Hero h){int amount=Math.max(1,Math.round((min()+max())*.15f));return h!=null&&h.extractionRaidID!=0?ExtractionProfile.get().magicDamage(amount):amount;}
     public void bulletEffects(Hero h,Char target,int kind){
         if(kind!=AlchemyBullet.NORMAL&&target!=null&&target.isAlive()&&target.alignment==Char.Alignment.ENEMY){
-            target.damage(magicDamage(h),new ElementDamage());
+            target.damage(magicDamage(h),new ElementDamage(Math.max(1,Math.round((min()+max())*.15f))+(h.extractionRaidID!=0?ExtractionProfile.get().bonus(ExtractionGrowth.Stat.WAND_DAMAGE,ExtractionGrowth.MAGIC):0)));
             if(target.isAlive())elemental(h,target,kind);
         }
     }
@@ -50,7 +50,7 @@ public class AlchemyFirearm extends Weapon {
     @Override public int reachFactor(Char owner){return owner instanceof Hero?range((Hero)owner):6;}
     @Override public boolean canReach(Char owner,int cell){if(!(owner instanceof Hero)||Dungeon.level==null||Dungeon.level.distance(owner.pos,cell)>range((Hero)owner))return false;return new com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica(owner.pos,cell,com.shatteredpixel.shatteredpixeldungeon.mechanics.Ballistica.PROJECTILE).collisionPos==cell;}
     @Override public float delayFactor(Char owner){return Math.max(1,super.delayFactor(owner));}
-    @Override public float accuracyFactor(Char owner,Char target){float factor=super.accuracyFactor(owner,target);if(Dungeon.level!=null&&Dungeon.level.adjacent(owner.pos,target.pos))factor*=.5f;if(owner instanceof Hero&&node((Hero)owner,12))factor*=1.15f;return factor;}
+    @Override public float accuracyFactor(Char owner,Char target){float factor=super.accuracyFactor(owner,target);if(Dungeon.level!=null&&Dungeon.level.adjacent(owner.pos,target.pos))factor=ExtractionScaling.merge(owner,factor,.5f);if(owner instanceof Hero&&node((Hero)owner,12))factor=ExtractionScaling.merge(owner,factor,1.15f);return factor;}
     public boolean consumeRound(Hero h,Char target){if(!unlocked(h)||loaded<=0)return false;loaded--;Item.updateQuickslot();if(h.sprite!=null&&h.sprite.parent!=null&&target.sprite!=null)((com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite)h.sprite.parent.recycle(com.shatteredpixel.shatteredpixeldungeon.sprites.MissileSprite.class)).reset(h.sprite,target.sprite,new AlchemyBullet(element),()->{});return true;}
     @Override public int proc(Char owner,Char target,int damage){if(owner instanceof Hero&&((Hero)owner).belongings.attackingWeapon()==this){bulletEffects((Hero)owner,target,element);if(target.alignment==Char.Alignment.ENEMY){ExtractionHybridCombat.HybridTag tag=Buff.prolong(target,ExtractionHybridCombat.HybridTag.class,12);if(tag!=null)tag.mask|=4;}if(node((Hero)owner,4)&&element!=0)damage+=2;}return super.proc(owner,target,damage);}
     public static AlchemyFirearm find(Hero h){return h==null?null:h.belongings.getItem(AlchemyFirearm.class);}
@@ -92,13 +92,13 @@ public class AlchemyFirearm extends Weapon {
         if(node(h,11)){boolean prior=enemy.buff(Poison.class)!=null||enemy.buff(Chill.class)!=null;if(prior&&kind==AlchemyBullet.FIRE){enemy.damage(3,new ElementDamage());Buff.affect(h,Barrier.class).setShield(3);}}
         ExtractionHybridCombat.HybridTag tag=Buff.prolong(enemy,ExtractionHybridCombat.HybridTag.class,12);if(tag!=null)tag.mask|=4;
     }
-    public static class ElementDamage{}
+    public static class ElementDamage{public float base;public ElementDamage(){}public ElementDamage(float base){this.base=base;}}
     public static class Shot extends MissileWeapon {
         private transient AlchemyFirearm gun;private int kind;
         public Shot(){image=11002;spawnedForEffect=true;}
         public Shot(AlchemyFirearm gun,int kind){this();this.gun=gun;this.kind=kind;}
         @Override public int defaultQuantity(){return 1;}
-        @Override public float accuracyFactor(Char owner,Char target){float f=super.accuracyFactor(owner,target);return owner instanceof Hero&&node((Hero)owner,12)?f*1.15f:f;}
+        @Override public float accuracyFactor(Char owner,Char target){float f=super.accuracyFactor(owner,target);return owner instanceof Hero&&node((Hero)owner,12)?ExtractionScaling.merge(owner,f,1.15f):f;}
         @Override public int min(int level){return gun==null?0:gun.min();}
         @Override public int max(int level){return gun==null?0:gun.max();}
         @Override public int STRReq(int level){return 10;}
