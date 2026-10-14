@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.58.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.58.1-farming)
+[v0.59.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.59.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.1-farming/Farming_Pixel_Dungeon_v0.58.1.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.58.1-farming/Farming_Pixel_Dungeon_PC_v0.58.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.59.0-farming/Farming_Pixel_Dungeon_v0.59.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.59.0-farming/Farming_Pixel_Dungeon_PC_v0.59.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -48,6 +48,14 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
 - **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.59.0 — 전투 보너스 합연산 / Additive combat bonuses
+
+성장 노드·반지·유물·희귀 장비·혼합 특성의 보너스가 기본값에 합산됩니다. 기본 피해 100에 +30%, +50%가 적용되면 180입니다. 물리 피해·치명타·마법 강화·명중·회피·공격 및 이동 속도·충전·회복·감정 보너스와 시간 가속에 적용하며, 반지도 지수 성장 대신 선형 성장으로 표시와 실제 효과를 맞췄습니다. 힘 부족 불이익은 선형으로 계산합니다.
+
+비율 피해 감소는 합산하여 최대 80%로 제한합니다. 고정 방어력과 명시적 무적은 별도 처리하며 실제 회피율 최대 80%도 유지합니다. 기본 피해 산식·탄약 및 행동 비용·챕터 난이도 배율·별도 속성 추가타의 비율은 유지합니다. 회귀 테스트 228개와 Android 빌드, Windows 실행·출격·이어하기·세로 UI·총탄 안내 스크롤·훈련장 검증을 통과했습니다.
+
+Combat bonuses from nodes, rings, artifacts, rare gear, and hybrid traits add against their base: 100 with +30% and +50% becomes 180. Applies to damage, critical bonuses, magic amplification, accuracy, evasion, attack/movement speed, recharge, healing, identification, and global time acceleration. Rings and strength penalties scale linearly. Percentage damage reduction caps at 80%; flat defense and explicit immunity remain separate. Actual dodge retains its 80% cap. Base damage rules, ammunition/action costs, chapter multipliers, and separate elemental-hit ratios remain. All 228 regression tests, Android build, and native Windows checks passed.
 
 ## v0.58.1 — 총탄 제작법·빈 탄창 무투 / Ammo guide and empty-gun fists
 
