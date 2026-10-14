@@ -277,6 +277,31 @@ public class ExtractionHybridTest {
         for(float accuracy:new float[]{1,5,20,100})for(float defense:new float[]{0,1,10,100,10000,Float.POSITIVE_INFINITY})assertTrue(ExtractionEvasion.chance(accuracy,defense)<=.80001f);
         assertEquals(.8f,ExtractionEvasion.chance(20,10000),.00001f);assertEquals(0,ExtractionEvasion.chance(20,0),0);assertEquals(.25f,ExtractionEvasion.chance(20,10),.00001f);
     }
+    @Test public void enemyEvasionReductionAppliesToBossesAndHardButNotAlliesOrTraining(){
+        assertEquals(60,ExtractionEvasion.enemyDefense(new Rat(),80),0);
+        assertEquals(60,ExtractionEvasion.enemyDefense(new Goo(),80),0);
+        p.active=true;p.raidHard=true;p.raidRules=5;p.raidChapter=5;
+        assertEquals(60,ExtractionEvasion.enemyDefense(new Tengu(),80),0);
+        Rat ally=new Rat();ally.alignment=Char.Alignment.ALLY;assertEquals(80,ExtractionEvasion.enemyDefense(ally,80),0);
+        ally.alignment=Char.Alignment.NEUTRAL;assertEquals(80,ExtractionEvasion.enemyDefense(ally,80),0);
+        assertEquals(80,ExtractionEvasion.enemyDefense(h,80),0);
+        assertEquals(0,ExtractionEvasion.enemyDefense(new Rat(),0),0);
+        assertEquals(Char.INFINITE_EVASION,ExtractionEvasion.enemyDefense(new Rat(),Char.INFINITE_EVASION),0);
+        h.extractionRaidID=-2;assertEquals(80,ExtractionEvasion.enemyDefense(new Rat(),80),0);
+        h.extractionRaidID=0;assertEquals(80,ExtractionEvasion.enemyDefense(new Rat(),80),0);
+    }
+    @Test public void realHitRollsLowerEnemyDodgeFromFiftyToThirtySevenPointFivePercent(){
+        h=new Hero(){@Override public int attackSkill(Char target){return 20;}};Dungeon.hero=h;
+        Rat defender=new Rat(){@Override public int defenseSkill(Char enemy){return 20;}};
+        Random.pushGenerator(610);
+        try{
+            int normal=0,reduced=0;
+            h.extractionRaidID=0;for(int i=0;i<10000;i++)if(Char.hit(h,defender,false))normal++;
+            h.extractionRaidID=1;for(int i=0;i<10000;i++)if(Char.hit(h,defender,false))reduced++;
+            assertEquals(.5f,normal/10000f,.02f);assertEquals(.625f,reduced/10000f,.02f);
+            assertTrue(reduced>normal);
+        }finally{Random.popGenerator();}
+    }
     @Test public void swordWaveAddsRangeAndSeparateMagicWithoutEnablingRangedWeapons(){
         learn("spell",0);assertEquals(3,((com.shatteredpixel.shatteredpixeldungeon.items.weapon.Weapon)h.belongings.weapon).reachFactor(h));Mob e=enemy();ExtractionHybridCombat.waveMagic(h,e,20);assertEquals(97,e.HP);learn("spell",1,9);ExtractionHybridCombat.waveMagic(h,e,20);assertEquals(93,e.HP);assertEquals(4,ExtractionHybridCombat.waveReach(h));h.belongings.weapon=new ThrowingKnife();assertEquals(0,ExtractionHybridCombat.waveReach(h));
     }

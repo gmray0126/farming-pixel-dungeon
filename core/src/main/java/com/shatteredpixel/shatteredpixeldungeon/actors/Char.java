@@ -695,6 +695,7 @@ public abstract class Char extends Actor {
 			defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,1.01f + 0.02f*Dungeon.hero.pointsInTalent(Talent.BLESS));
 		}
 		defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.evasion(defender,defScale,FerretTuft.evasionMultiplier());
+		defScale = com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionEvasion.enemyDefense(defender,defScale);
 
 		if(defender instanceof Hero && ((Hero)defender).extractionRaidID!=0){
             acuScale=Math.max(1f,acuScale);
