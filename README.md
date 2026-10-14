@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.61.1-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.61.1-farming)
+[v0.62.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.62.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.61.1-farming/Farming_Pixel_Dungeon_v0.61.1.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.61.1-farming/Farming_Pixel_Dungeon_PC_v0.61.1_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.62.0-farming/Farming_Pixel_Dungeon_v0.62.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.62.0-farming/Farming_Pixel_Dungeon_PC_v0.62.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,12 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.62.0 — 후반 챕터 방어 관통 / Late-chapter armor piercing
+
+4챕터 적의 물리 공격은 피해의 25%, 5챕터는 35%가 고정 방어력을 우회합니다. 나머지 피해는 기존 방어력으로 막으며, 보호막·피해 감소·완전 방어는 유지합니다. 몬스터 기본 공격력과 공격 배율은 올리지 않았고, 하드의 기존 관통과는 더 큰 결과만 적용합니다. 1~3챕터는 기존 방어 규칙을 유지합니다. 로비 챕터 안내에도 표시하며 진행 중인 원정에 반영됩니다.
+
+Enemy physical attacks bypass flat armor with 25% of their damage in chapter 4 and 35% in chapter 5. Remaining damage is blocked normally; shields, mitigation, and complete cancellation remain effective. Base damage and chapter multipliers remain unchanged. Hard uses the stronger penetration result instead of stacking. Chapters 1–3 keep their armor rules. The hub guide explains the rule, which also applies to ongoing expeditions. All 238 regression tests, Android build, and native Windows checks passed.
 
 ## v0.61.0 — 적 회피 하향 / Lower enemy evasion
 
