@@ -1,0 +1,86 @@
+name: Publish Farming Pixel Dungeon v0.59.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v059.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v059
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38489115766
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38489115704
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.59.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.59.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.59.0 / Farming Pixel Dungeon v0.59.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - 성장 노드·반지·유물·희귀 장비·혼합 특성의 전투 보너스를 곱연산 대신 기본값 기준 합연산으로 변경했습니다. 예: 기본 피해 100에 +30%, +50%를 받으면 180입니다.
+          - 물리 피해·치명타·마법 강화·명중·회피·공격 및 이동 속도·충전·회복·감정 보너스에 적용합니다. 시간 가속도 이동/공격 속도 보너스와 합산합니다.
+          - 반지의 지수 성장을 선형 성장으로 바꾸고 실제 효과와 상세창의 수치를 맞췄습니다.
+          - 힘 부족으로 인한 장비 불이익을 선형 계산으로 변경했습니다. 몸통·바지·신발의 분배와 착용 규칙은 유지합니다.
+          - 받는 피해의 비율 감소를 합산하고 최대 80%로 제한합니다. 고정 방어력과 명시적 무적 효과는 별도 처리합니다. 실제 회피율 최대 80%도 유지합니다.
+          - 인내 반격 보너스도 합산하고, 피해 감소 특성의 단계별 증가량과 설명을 선형 기준으로 맞췄습니다.
+          - 기본 피해 산식·탄약 및 행동 비용·챕터 난이도 배율·별도 속성 추가타의 비율은 유지합니다.
+          
+          ## English changes
+          - Combat bonuses from growth nodes, rings, artifacts, rare equipment, and hybrid traits now add against their base instead of multiplying each other. Base damage 100 with +30% and +50% becomes 180.
+          - Covers physical damage, critical bonuses, magic amplification, accuracy, evasion, attack/movement speed, recharge, healing, and identification. Global time acceleration adds to movement/attack speed bonuses.
+          - Replaced exponential ring scaling with linear growth and synchronized runtime effects with descriptions and previews.
+          - Insufficient-strength equipment penalties now scale linearly. Armor distribution and equip rules remain.
+          - Percentage damage reductions add and cap at 80%; flat defense and explicit immunity remain separate. Actual dodge chance retains its 80% cap.
+          - Endure retaliation bonuses add; its reduction talent and descriptions use consistent linear progression.
+          - Base damage rules, ammunition/action costs, chapter difficulty multipliers, and separate elemental-hit ratios remain unchanged.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          228 core regression tests and the Android build passed. Native Windows launch, departure, resume, portrait UI, ammunition-guide scrolling, and training checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/321ce2f325725377bcc8da96076434a861de08c7)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.59.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.59.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
