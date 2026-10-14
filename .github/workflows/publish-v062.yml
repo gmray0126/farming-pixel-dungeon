@@ -1,0 +1,84 @@
+name: Publish Farming Pixel Dungeon v0.62.0
+on:
+  workflow_dispatch:
+  push:
+    branches: [extraction]
+    paths: ['.github/workflows/publish-v062.yml']
+permissions:
+  contents: write
+  actions: read
+concurrency:
+  group: publish-farming-v062
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Download verified Android build
+        uses: actions/download-artifact@v4
+        with:
+          name: echo-extraction-debug-apk
+          run-id: 38557267134
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/android
+      - name: Download verified Windows build
+        uses: actions/download-artifact@v4
+        with:
+          name: farming-pc-windows
+          run-id: 38557266962
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: release-input/windows
+      - name: Stage the previously tested files
+        run: |
+          (cd release-input/android && sha256sum -c SHA256SUMS.txt)
+          (cd release-input/windows && sed -i 's/\r$//' SHA256SUMS.txt && sha256sum -c SHA256SUMS.txt)
+          mkdir -p release-output
+          cp release-input/android/android-debug.apk release-output/Farming_Pixel_Dungeon_v0.62.0.apk
+          cp release-input/windows/Farming_Pixel_Dungeon_PC_v0.62.0_Windows.zip release-output/
+          cp core/src/main/assets/sprites/huntress.png release-output/Huntress_Original_256x128.png
+          cd release-output
+          sha256sum *.apk *.zip *.png > SHA256SUMS.txt
+      - name: Write bilingual release notes
+        run: |
+          cat > release-notes.md <<'NOTES'
+          # 파밍픽셀던전 v0.62.0 / Farming Pixel Dungeon v0.62.0
+          
+          **Shattered Pixel Dungeon 모딩 작품입니다. AI를 사용했습니다.**
+          **A mod of Shattered Pixel Dungeon, developed with AI assistance.**
+          
+          ## 한국어 변경 사항
+          - 4챕터 드워프 도시의 적 물리 공격에 25%, 5챕터 악마의 전당에 35%의 부분 방어 관통을 적용했습니다. 일반 적·정예·보스와 진행 중인 원정에 적용합니다.
+          - 공격 피해의 관통분은 갑옷 등의 고정 방어력을 우회하고, 나머지 피해는 기존 방어력으로 막습니다. 방어력이 높아도 명중한 물리 공격을 전부 0으로 막기 어렵게 했습니다.
+          - 몬스터 기본 공격력과 챕터 공격 배율을 올리지 않았습니다. 방어력이 낮아 이미 많은 피해를 받던 경우에는 관통으로 피해가 추가 증가하지 않습니다.
+          - 보호막·피해 감소·완전 방어는 계속 적용됩니다. 이미 취소되거나 완전히 막힌 공격에 강제 피해를 만들지 않습니다.
+          - 하드모드의 기존 관통과 새 관통을 합산하지 않고 더 큰 결과만 적용합니다. 1~3챕터의 방어 규칙은 유지합니다.
+          - 로비 챕터 안내에 후반 방어 관통을 표시했습니다.
+          
+          ## English changes
+          - Enemy physical attacks partially bypass flat armor in chapter 4 (Dwarven City: 25%) and chapter 5 (Demon Halls: 35%), including ordinary enemies, elites, bosses, and ongoing expeditions.
+          - The piercing portion skips flat armor; the remaining damage is blocked normally. High armor alone can no longer fully erase most landed physical attacks.
+          - Base monster damage and chapter damage multipliers were not increased. Low-armor characters do not receive extra damage from this rule when their existing damage exceeds the piercing portion.
+          - Shields, percentage mitigation, and complete defensive cancellation still work. Cancelled or fully blocked attacks do not gain forced damage.
+          - Existing Hard-mode penetration and the new rule use the stronger result rather than stacking. Chapter 1–3 armor rules remain unchanged.
+          - Added the late-chapter penetration rules to the hub's chapter guide.
+          
+          ## 실행 / Playing
+          - Android: install the APK below.
+          - Windows 64-bit: extract the entire ZIP and run `FarmingPixelDungeon/FarmingPixelDungeon.exe`. Java is bundled.
+          - 게임 UI는 한국어입니다. The game interface currently uses Korean labels.
+          
+          ## 검증 / Validation
+          238 core regression tests and the Android build passed, including actual monster attack and chapter/Hard-mode/armor-boundary checks. Native Windows launch, departure, resume, portrait UI, ammunition-guide scrolling, and training checks passed. This is an in-development build.
+          
+          ## Credits / 제작자와 원작
+          **gmray0126** — mod creator, design, and maintenance. **Evan Debenham / 00-Evan** — Shattered Pixel Dungeon. **Oleg Dolya / Watabou** — original Pixel Dungeon. Thanks to upstream contributors for code, art, music, and translations. Upstream credits do not imply participation in or endorsement of this mod. AI assistance was used. Existing copyright notices are retained under GPL v3 or later.
+          
+          [게임 소개 / Project overview](https://github.com/gmray0126/farming-pixel-dungeon#readme) · [검증한 소스 / Tested source](https://github.com/gmray0126/farming-pixel-dungeon/tree/91d6f7ea0eabe39088302e0bfdeee568040a6efe)
+          NOTES
+      - name: Publish Android and Windows downloads
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create v0.62.0-farming release-output/* --repo gmray0126/farming-pixel-dungeon --target "${{ github.sha }}" --title '파밍픽셀던전 v0.62.0 / Farming Pixel Dungeon' --notes-file release-notes.md --prerelease
