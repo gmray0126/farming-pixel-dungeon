@@ -750,7 +750,7 @@ public class Hero extends Char {
 		} else {
 			dmg = RingOfForce.damageRoll(this);
 			if (RingOfForce.unarmedGetsWeaponAugment(this)){
-				dmg = ((Weapon)belongings.attackingWeapon()).augment.damageFactor(dmg);
+				dmg = Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.weapon(this,dmg,((Weapon)belongings.attackingWeapon()).augment.damageFactor(1000)/1000f));
 			}
 		}
 
@@ -767,7 +767,7 @@ public class Hero extends Char {
 		if (!hasWeaponAbilities()
 				&& hasTalent(Talent.WEAPON_RECHARGING)
 				&& (buff(Recharging.class) != null || buff(ArtifactRecharge.class) != null)){
-			dmg = Math.round(dmg * 1.025f + (.025f*pointsInTalent(Talent.WEAPON_RECHARGING)));
+			dmg = Math.round(com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.weapon(this,dmg,1.025f) + (.025f*pointsInTalent(Talent.WEAPON_RECHARGING)));
 		}
 
 		if (dmg < 0) dmg = 0;
@@ -923,6 +923,9 @@ public class Hero extends Char {
 		next();
 	}
 	
+    private void spendAndNextAdditive(float cost,float base){busy();spendAdditive(cost,base);next();}
+    private float attackTimeBase(){KindOfWeapon w=belongings.attackingWeapon();return !RingOfForce.fightingUnarmed(this)&&w instanceof Weapon?((Weapon)w).additiveBaseDelay(this):1;}
+
 	@Override
 	public boolean act() {
 		
@@ -1125,7 +1128,7 @@ public class Hero extends Char {
 		} else if (pos == action.dst && canSelfTrample()){
 			canSelfTrample = false;
 			Dungeon.level.pressCell(pos);
-			spendAndNext( 1 / speed() );
+			spendAndNextAdditive(1/speed(),1);
 			return false;
 		} else {
 			ready();
@@ -2025,7 +2028,7 @@ public class Hero extends Char {
 			sprite.move(pos, step);
 			move(step);
 
-			spend( delay / speed() );
+			spendAdditive(delay/speed(),delay);
 			
 			search(false);
 
@@ -2517,8 +2520,8 @@ public class Hero extends Char {
 		Invisibility.dispel();
         if(firedGun!=null){
             firedGun.firing=true;
-            try{spend(Math.max(1,attackDelay()));}finally{firedGun.firing=false;}
-        }else spend(attackDelay());
+            try{spendAdditive(Math.max(1,attackDelay()),attackTimeBase());}finally{firedGun.firing=false;}
+        }else spendAdditive(attackDelay(),attackTimeBase());
 
 		if (hit && hasSubclass(HeroSubClass.GLADIATOR) && wasEnemy){
 			Buff.affect( this, Combo.class ).hit(attackTarget);

@@ -8,6 +8,6 @@ public final class ExtractionEvasion {
         float a=Math.max(1,accuracy),d=cappedDefense(a,defense);
         return d<=0?0:d>=a?1-a/(2*d):d/(2*a);
     }
-    public static float ringMultiplier(int bonus){return bonus>=0?1+.125f*bonus:1/(1+.125f*-bonus);}
+    public static float ringMultiplier(int bonus){return Math.max(.1f,1+.125f*bonus);}
     private ExtractionEvasion(){}
 }

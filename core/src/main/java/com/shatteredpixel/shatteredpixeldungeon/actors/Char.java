@@ -1191,23 +1191,22 @@ public abstract class Char extends Actor {
 		super.spendConstant(time);
 	}
 
-	@Override
-	protected void spend( float time ) {
+    private transient boolean additiveClockApplied;
+    public float actionTimeFactor(){
+        float factor=1;
+        if(buff(Slow.class)!=null)factor=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,factor,.5f);
+        else if(buff(Chill.class)!=null)factor=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,factor,buff(Chill.class).speedFactor());
+        if(buff(Speed.class)!=null)factor=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.merge(this,factor,2);
+        return factor;
+    }
+    public void spendAdditive(float cost,float base){
+        if(!com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.raid(this)||cost<=0||base<=0){spend(cost);return;}
+        float time=base/Math.max(.1f,base/cost+actionTimeFactor()-1);
+        boolean old=additiveClockApplied;additiveClockApplied=true;
+        try{spend(time);}finally{additiveClockApplied=old;}
+    }
+    @Override protected void spend(float time){super.spend(time/(additiveClockApplied?1:actionTimeFactor()));}
 
-		float timeScale = 1f;
-		if (buff( Slow.class ) != null) {
-			timeScale *= 0.5f;
-			//slowed and chilled do not stack
-		} else if (buff( Chill.class ) != null) {
-			timeScale *= buff( Chill.class ).speedFactor();
-		}
-		if (buff( Speed.class ) != null) {
-			timeScale *= 2.0f;
-		}
-		
-		super.spend( time / timeScale );
-	}
-	
 	public synchronized LinkedHashSet<Buff> buffs() {
 		return new LinkedHashSet<>(buffs);
 	}

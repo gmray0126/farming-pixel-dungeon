@@ -102,11 +102,13 @@ public class ExtractionHybridTest {
         assertEquals(4.05f,h.speed(),.001f);
     }
     @Test public void attackSpeedUsesOneSumBeforeTakingItsReciprocal(){
+        h.STR=20;
         p.nodes.add("sword_5");
         com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfFuror();ring.level(2);h.belongings.ring=ring;ring.activate(h);
         assertEquals(1/(1+.08f+.09051f*3),h.attackDelay(),.0001f);
     }
     @Test public void accuracyRingsNodesAndBlessingShareTheBaseRating(){
+        h.STR=20;
         p.nodes.add("combat_right_1");p.nodes.add("sword_4");
         com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy ring=new com.shatteredpixel.shatteredpixeldungeon.items.rings.RingOfAccuracy();ring.level(2);h.belongings.ring=ring;ring.activate(h);
         assertEquals(21,h.attackSkill(enemy()));assertEquals(23.5f,ExtractionScaling.accuracy(h,h.attackSkill(enemy()),1.25f),.001f);
@@ -127,6 +129,12 @@ public class ExtractionHybridTest {
             assertEquals(100,ExtractionScaling.weapon(h,100,1.2f),0);
             assertEquals(230,p.physicalDamage(100,h.belongings.weapon,0));
         }
+    }
+    @Test public void globalTimeSpeedAddsToMovementAndAttackRatesWithoutLeaking(){
+        Buff.affect(h,Speed.class);float start=h.cooldown();
+        h.spendAdditive(1/3f,1);assertEquals(start+.25f,h.cooldown(),.00001f);
+        h.spendAdditive(0,1);assertEquals(start+.25f,h.cooldown(),.00001f);
+        h.spend(1);assertEquals(start+.75f,h.cooldown(),.00001f);
     }
     private Mob enemy(){Mob m=new Rat();m.HP=m.HT=100;return m;}
     private void learn(String tree,int... nodes){for(int n:nodes)p.nodes.add(tree+"_"+n);}

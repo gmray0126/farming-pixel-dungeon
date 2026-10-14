@@ -308,6 +308,7 @@ abstract public class Weapon extends KindOfWeapon {
 		return baseDelay(owner) * (1f/speedMultiplier(owner));
 	}
 
+    public float additiveBaseDelay(Char owner){return baseDelay(owner)/augment.delayFactor(1);}
     public float additiveDelay(Char owner,float extraSpeed){
         float augmentDelay=augment.delayFactor(1);
         float speed=com.shatteredpixel.shatteredpixeldungeon.extraction.ExtractionScaling.sum(speedMultiplier(owner),1/augmentDelay,1+extraSpeed);

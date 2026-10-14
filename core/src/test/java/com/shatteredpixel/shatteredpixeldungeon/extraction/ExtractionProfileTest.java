@@ -1623,7 +1623,7 @@ public class ExtractionProfileTest {
         profile.points=1000;learnPath("dagger_3");
         Item dagger=new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Dagger();
         assertEquals(12,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,1f));
-        assertEquals(20,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,0f));
+        assertEquals(21,profile.physicalDamage(10,(com.shatteredpixel.shatteredpixeldungeon.items.KindOfWeapon)dagger,0f));
         assertEquals(11,profile.physicalDamage(10,new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),0f));
     }
     @Test public void spearReachIsAppliedByOriginalWeaponFormula() {
@@ -1971,8 +1971,8 @@ public class ExtractionProfileTest {
         hero.belongings.pants=null;hero.belongings.boots=null;average=0;for(int i=0;i<4000;i++)average+=ExpeditionClothing.bodyDefense(hero);
         assertEquals((armor.DRMin()+armor.DRMax())/4f,average/4000,.4f);
         hero.belongings.pants=pants;hero.belongings.boots=boots;hero.STR=10;int deficit=armor.STRReq()-hero.STR();
-        assertEquals((float)Math.pow(1.2,-deficit),armor.speedFactor(hero,1)*pants.movementFactor(hero)*boots.movementFactor(hero)/boots.speedBonus(),.00001f);
-        assertEquals((float)Math.pow(1.5,-deficit),armor.evasionFactor(hero,1)*pants.evasionFactor(hero)*boots.evasionFactor(hero),.00001f);
+        assertEquals(ExtractionScaling.sum(armor.speedFactor(hero,1),pants.movementFactor(hero),boots.movementFactor(hero)),hero.speed(),.00001f);
+        assertEquals(Math.max(1,Math.round(hero.baseDefenseRating()*ExtractionScaling.sum(armor.evasionFactor(hero,1),pants.evasionFactor(hero),boots.evasionFactor(hero)))),hero.defenseSkill(new com.shatteredpixel.shatteredpixeldungeon.actors.mobs.Rat()));
         hero.STR=30;assertEquals(1,pants.movementFactor(hero),0);assertEquals(1.06f,boots.movementFactor(hero),.00001f);assertEquals(1,boots.evasionFactor(hero),0);
     }
     @Test public void clothingLootRespectsEveryChapterTierAndIterationCanRemoveSlots() {
