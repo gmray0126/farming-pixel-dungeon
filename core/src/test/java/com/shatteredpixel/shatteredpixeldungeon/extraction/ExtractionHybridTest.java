@@ -277,6 +277,34 @@ public class ExtractionHybridTest {
         for(float accuracy:new float[]{1,5,20,100})for(float defense:new float[]{0,1,10,100,10000,Float.POSITIVE_INFINITY})assertTrue(ExtractionEvasion.chance(accuracy,defense)<=.80001f);
         assertEquals(.8f,ExtractionEvasion.chance(20,10000),.00001f);assertEquals(0,ExtractionEvasion.chance(20,0),0);assertEquals(.25f,ExtractionEvasion.chance(20,10),.00001f);
     }
+    @Test public void lateChapterArmorBypassDoesNotStackHardRulesOrRaiseAttackDamage(){
+        Rat attacker=new Rat();
+        for(int chapter=1;chapter<=3;chapter++){p.raidChapter=chapter;assertEquals(0,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));}
+        p.raidChapter=4;assertEquals(25,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));
+        assertEquals(90,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,10));assertEquals(100,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,0));
+        assertEquals(0,ExtractionDifficulty.armorAfterHardHit(attacker,h,0,1000));assertEquals(1,ExtractionDifficulty.armorAfterHardHit(attacker,h,1,1000));
+        p.raidChapter=5;assertEquals(35,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));
+        attacker.alignment=Char.Alignment.ALLY;assertEquals(0,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));attacker.alignment=Char.Alignment.ENEMY;
+        assertEquals(0,ExtractionDifficulty.armorAfterHardHit(h,attacker,100,1000));assertEquals(0,ExtractionDifficulty.armorAfterHardHit(attacker,new Hero(),100,1000));
+        p.active=true;p.raidHard=true;p.raidRules=5;
+        assertEquals(60,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,100));assertEquals(35,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));
+        assertEquals(100,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,0));
+        h.extractionRaidID=-2;assertEquals(0,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));h.extractionRaidID=0;assertEquals(0,ExtractionDifficulty.armorAfterHardHit(attacker,h,100,1000));
+    }
+    public static class ArmorReceiver extends Hero {
+        int received,armor=1000;
+        @Override public int drRoll(){return armor;}
+        @Override public int defenseProc(Char attacker,int damage){return damage;}
+        @Override public void damage(int damage,Object source){received=damage;}
+    }
+    @Test public void actualMonsterAttackUsesLateChapterBypassWithItsOriginalDamageRoll(){
+        ExtractionTraining.Room room=ExtractionTraining.prepare();ArmorReceiver defender=new ArmorReceiver();defender.extractionRaidID=1;defender.HP=defender.HT=1000;defender.damageInterrupt=false;Dungeon.hero=defender;
+        Rat attacker=new Rat(){@Override public int damageRoll(){return 100;}};attacker.pos=4*room.width()+6;defender.pos=attacker.pos+1;
+        p.raidChapter=3;assertTrue(attacker.attack(defender,1,0,Char.INFINITE_ACCURACY));assertEquals(0,defender.received);
+        p.raidChapter=4;assertTrue(attacker.attack(defender,1,0,Char.INFINITE_ACCURACY));assertEquals(25,defender.received);
+        p.raidChapter=5;assertTrue(attacker.attack(defender,1,0,Char.INFINITE_ACCURACY));assertEquals(35,defender.received);
+        defender.armor=0;assertTrue(attacker.attack(defender,1,0,Char.INFINITE_ACCURACY));assertEquals(100,defender.received);assertEquals(100,attacker.damageRoll());
+    }
     @Test public void enemyEvasionReductionAppliesToBossesAndHardButNotAlliesOrTraining(){
         assertEquals(60,ExtractionEvasion.enemyDefense(new Rat(),80),0);
         assertEquals(60,ExtractionEvasion.enemyDefense(new Goo(),80),0);

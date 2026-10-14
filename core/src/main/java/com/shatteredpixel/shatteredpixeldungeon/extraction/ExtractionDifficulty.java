@@ -85,12 +85,19 @@ public final class ExtractionDifficulty {
         return damage;
     }
     public static int extraArmor(Char enemy){return (hard()&&enemy instanceof Mob&&enemy.alignment==Char.Alignment.ENEMY?4+2*chapter():0)+(enemy instanceof Mob&&((Mob)enemy).extractionElite==2?2+(stage()-1)/3:0);}
+    public static int chapterArmorBypassPercent(int chapter){return chapter==4?25:chapter==5?35:0;}
+    /** Late-chapter piercing protects part of the attack from flat armor, without raising its roll. */
     public static int armorAfterHardHit(Char attacker,Char defender,int damage,int armor){
-        boolean enemyHit=hard()&&attacker instanceof Mob&&attacker.alignment==Char.Alignment.ENEMY&&defender==Dungeon.hero;
+        boolean enemyHit=active()&&Dungeon.hero.extractionRaidID>0&&attacker instanceof Mob&&attacker.alignment==Char.Alignment.ENEMY&&defender==Dungeon.hero;
         if(!enemyHit)return Math.max(damage-armor,0);
         if(damage<=0)return 0; // Successful shielding and cancelled attacks remain effective.
+        int percent=chapterArmorBypassPercent(chapter());
+        int bypass=percent==0?0:Math.min(damage,Math.max(1,Math.round(damage*percent/100f)));
+        int normal=bypass+Math.max(damage-bypass-Math.max(0,armor),0);
+        if(!hard())return normal;
         int defended=Math.max(damage-Math.round(armor*.4f),0);
-        return Math.max(defended,Math.min(damage,1+chapter()));
+        // Choose the stronger outcome instead of adding the two penetration rules together.
+        return Math.min(damage,Math.max(normal,Math.max(defended,Math.min(damage,1+chapter()))));
     }
     public static String eliteName(int type){return type==1?"광폭":type==2?"철갑":type==3?"추적":"";}
     public static void reinforce(Mob boss){
