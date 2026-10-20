@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.62.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.62.0-farming)
+[v0.63.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.63.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.62.0-farming/Farming_Pixel_Dungeon_v0.62.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.62.0-farming/Farming_Pixel_Dungeon_PC_v0.62.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.63.0-farming/Farming_Pixel_Dungeon_v0.63.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.63.0-farming/Farming_Pixel_Dungeon_PC_v0.63.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -38,6 +38,17 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **More equipment slots:** Weapons, body armor, trousers, and boots span T1–T5. Defense is shared across the three armor pieces, which support armor glyphs. Boots also improve movement speed. Insufficient strength causes penalties rather than blocking equipment.
 - **Artifacts and trading:** New artifacts pair benefits with drawbacks, such as healing versus potion efficiency, or acceleration followed by slowdown. Buy and sell supplies and T1–T5 equipment at the hub shop. Rings, magic wands, and growing artifacts cap at +15. Tiered equipment caps at tier × 3, up to +15. The Spirit Bow cannot use regular upgrade scrolls.
 - **Chapter progression:** Farm the Sewers before taking on the substantially harder later chapters. Equipment drops follow the chapter's tier ceiling.
+
+## v0.63.0 — 유물 거래·출격 보급·나무껍질 / Artifact trading, supplies, and Barkskin
+
+- 추가 유물 5종과 의뢰인의 인장을 던전 상점에서 판매하거나 변환할 수 있습니다. 기존 저장 물품에도 적용하며 착용 중인 저주 유물 판매 제한은 유지합니다.
+- 다른 무기를 준비해도 보급 낡은 검 한 자루를 가방에 지급합니다. 무기가 없으면 장착하며, 보급 검을 가져왔으면 중복 지급하지 않습니다. 가방 여유를 확보해 가득 준비한 물품도 유지합니다.
+- 사냥꾼 계통의 풀 보존과 나무껍질을 습득 노드 기준으로 수정했습니다. 저격수·숲지기를 함께 배워도 작동하고, 헤쳐진 풀로 이동하면 나무껍질을 갱신합니다. 재방문으로 풀 전리품이 반복 생성되지는 않습니다.
+- 나무껍질 설명에 단계별 수치 2/4/6, 현재 수치 범위의 무작위 물리 피해 방어, 매 턴 1 감소, 풀 이동·식물로 갱신되는 조건을 명시했습니다.
+- The five added artifacts and Commission Seal can be sold and transmuted, including saved items; equipped cursed artifacts remain unsellable.
+- Each expedition provides one basic sword even with another prepared weapon, without duplicating an existing supplied sword or overflowing a full prepared loadout.
+- Huntress grass preservation and Barkskin follow learned nodes and support combined Sniper/Warden builds. Furrowed grass refreshes Barkskin without repeatedly generating loot.
+- Barkskin's description now explains rank values, random physical damage blocking, decay, and refresh conditions.
 
 ## v0.62.0 — 후반 챕터 방어 관통 / Late-chapter armor piercing
 
@@ -260,7 +271,7 @@ Use **기록** at the top right of the hub to open the original personal records
 
 Use **연금술 열기** in the sixth **연금술** hub tab to craft with up to three ingredients and the original alchemy recipes. Buy energy for 5 gold per unit or energize stash materials. Ingredients, energy, and outputs are saved together; hub crafting is unavailable during an active expedition. Catalyst choices persist when reopening the window.
 
-식량은 층에서 자연 생성되며 몬스터 전리품과 상점에서도 얻을 수 있습니다. 출격 시 준비한 무기나 갑옷이 없으면 해당 보급 검·천 갑옷을 중복 없이 지급하고, 돌멩이 3개와 빈 물통(미준비 시)을 지급합니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
+식량은 층에서 자연 생성되며 몬스터 전리품과 상점에서도 얻을 수 있습니다. 출격 시 다른 무기를 준비해도 보급 검 한 자루를 중복 없이 지급하고, 갑옷이 없으면 보급 천 갑옷을 지급합니다. 또한 돌멩이 3개와 빈 물통(미준비 시)을 지급합니다. 피의 서약 유지 중에는 기존 명중 비용에 더해 5턴마다 체력 1을 소모하며 체력이 1이면 자동 해제됩니다.
 
 Food spawns naturally on floors and is available from monster loot and the hub shop. Expeditions provide a fallback sword and cloth armor only when the corresponding gear is missing, plus three throwing stones and a waterskin when needed. Blood Oath additionally drains one HP every five turns while active and turns off automatically at one HP.
 
