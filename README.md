@@ -6,10 +6,10 @@
 
 ## 다운로드 / Downloads
 
-[v0.62.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.62.0-farming)
+[v0.63.0-farming — 개발 버전 / Development release](https://github.com/gmray0126/farming-pixel-dungeon/releases/tag/v0.63.0-farming)
 
-- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.62.0-farming/Farming_Pixel_Dungeon_v0.62.0.apk)
-- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.62.0-farming/Farming_Pixel_Dungeon_PC_v0.62.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
+- [Android APK](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.63.0-farming/Farming_Pixel_Dungeon_v0.63.0.apk)
+- [Windows 64-bit ZIP](https://github.com/gmray0126/farming-pixel-dungeon/releases/download/v0.63.0-farming/Farming_Pixel_Dungeon_PC_v0.63.0_Windows.zip) — ZIP 전체를 압축 해제한 뒤 `FarmingPixelDungeon/FarmingPixelDungeon.exe`를 실행합니다. Extract the entire ZIP and run that executable; Java is bundled.
 
 모딩 소스는 [`extraction` 브랜치](https://github.com/gmray0126/farming-pixel-dungeon/tree/extraction)에 있습니다. 기본 브랜치의 소개에서 아래 링크를 통해 실제 게임 소스로 이동할 수 있습니다.
 
@@ -30,7 +30,7 @@ The mod's game source is on the [`extraction` branch](https://github.com/gmray01
 - **혼합 전투 트리:** 여섯 직업 계통 사이에 마검사·그림자술사·연금 사냥꾼·폭풍 유격수·성전사·혈기사의 90개 노드를 배치했습니다. 교대 공격, 표식 폭발, 약품 코팅, 거리 전환, 성력 소비, 피의 서약으로 전투 방식을 바꿉니다.
 - **로비 의뢰:** 사냥·기록 회수·무기 납품과 혼합 실전 훈련의 21개 의뢰를 제공합니다. 최대 3개를 받아 출격하고 탈출하면 진행도를 저장합니다. 최초 완료 장비와 하수도 연속 의뢰 유물도 얻을 수 있습니다.
 
-- **출격 보급:** 준비한 무기·갑옷이 없으면 해당 보급 검·천 갑옷을 중복 없이 지급합니다. 새 원정마다 돌멩이 3개와 미준비 시 빈 물통을 지급합니다. 식량은 층 자연 생성·몬스터 전리품·상점으로 얻습니다.
+- **출격 보급:** 보급 검은 다른 무기를 준비해도 한 자루 지급하고, 갑옷을 준비하지 않으면 보급 천 갑옷을 지급합니다. 이미 보급 검을 준비했으면 검은 중복 지급하지 않습니다. 새 원정마다 돌멩이 3개와 미준비 시 빈 물통을 지급합니다. 식량은 층 자연 생성·몬스터 전리품·상점으로 얻습니다.
 
 ## English overview
 
@@ -47,7 +47,18 @@ Farming Pixel Dungeon is built around repeated expeditions: prepare equipment at
 - **Hybrid combat trees:** Ninety new nodes connect six neighbouring class themes: Spellblade, Shadowcaster, Alchemical Hunter, Storm Skirmisher, Crusader, and Blood Knight. Alternate attacks, detonate marks, coat ranged weapons, build faith, or trade health for damage.
 - **Hub contracts:** Accept up to three of 21 hunting, recovery, delivery, and hybrid training contracts. Extraction banks progress; first completion awards a choice of equipment, with a unique artifact for finishing the Sewers contract chain.
 
-- **Starter supplies:** Missing weapons and body armor receive a free fallback sword and cloth armor without duplicate gear. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+- **Starter supplies:** Every expedition provides one basic sword, even with another prepared weapon, without duplicating a supplied sword already brought. Missing body armor receives free cloth armor. Every new expedition receives three throwing stones and a waterskin when needed. Food comes from natural floor spawns, monster loot, and the shop.
+
+## v0.63.0 — 유물 거래·출격 보급·나무껍질 / Artifact trading, supplies, and Barkskin
+
+- 추가 유물 5종과 의뢰인의 인장을 던전 상점에서 판매하거나 변환할 수 있습니다. 기존 저장 물품에도 적용하며 착용 중인 저주 유물 판매 제한은 유지합니다.
+- 다른 무기를 준비해도 보급 낡은 검 한 자루를 가방에 지급합니다. 무기가 없으면 장착하며, 보급 검을 가져왔으면 중복 지급하지 않습니다. 가방 여유를 확보해 가득 준비한 물품도 유지합니다.
+- 사냥꾼 계통의 풀 보존과 나무껍질을 습득 노드 기준으로 수정했습니다. 저격수·숲지기를 함께 배워도 작동하고, 헤쳐진 풀로 이동하면 나무껍질을 갱신합니다. 재방문으로 풀 전리품이 반복 생성되지는 않습니다.
+- 나무껍질 설명에 단계별 수치 2/4/6, 현재 수치 범위의 무작위 물리 피해 방어, 매 턴 1 감소, 풀 이동·식물로 갱신되는 조건을 명시했습니다.
+- The five added artifacts and Commission Seal can be sold and transmuted, including saved items; equipped cursed artifacts remain unsellable.
+- Each expedition provides one basic sword even with another prepared weapon, without duplicating an existing supplied sword or overflowing a full prepared loadout.
+- Huntress grass preservation and Barkskin follow learned nodes and support combined Sniper/Warden builds. Furrowed grass refreshes Barkskin without repeatedly generating loot.
+- Barkskin's description now explains rank values, random physical damage blocking, decay, and refresh conditions.
 
 ## v0.62.0 — 후반 챕터 방어 관통 / Late-chapter armor piercing
 
