@@ -47,7 +47,7 @@ public class ExtractionHybridTest {
                 Random.pushGenerator(0);try{room.pressCell(h.pos);}finally{Random.popGenerator();}
                 assertEquals(com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.FURROWED_GRASS,room.map[h.pos]);assertEquals(2*rank,Barkskin.currentLevel(h));
                 h.buff(Barkskin.class).act();assertEquals(2*rank-1,Barkskin.currentLevel(h));
-                int heaps=room.heaps.values().size();room.pressCell(h.pos);assertEquals(2*rank,Barkskin.currentLevel(h));assertEquals(heaps,room.heaps.values().size());
+                int heaps=room.heaps.size;room.pressCell(h.pos);assertEquals(2*rank,Barkskin.currentLevel(h));assertEquals(heaps,room.heaps.size);
                 com.shatteredpixel.shatteredpixeldungeon.levels.Level.set(h.pos,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.GRASS);
                 h.buff(Barkskin.class).act();room.pressCell(h.pos);assertEquals(2*rank-1,Barkskin.currentLevel(h));
                 room.heroFOV[h.pos]=false;com.shatteredpixel.shatteredpixeldungeon.plants.Plant plant=new com.shatteredpixel.shatteredpixeldungeon.plants.Plant(){@Override public void activate(Char ch){}};plant.pos=h.pos;plant.trigger();assertEquals(2*rank,Barkskin.currentLevel(h));
