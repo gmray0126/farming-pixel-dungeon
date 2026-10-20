@@ -53,7 +53,7 @@ public final class ExpeditionArtifacts {
     public static float tempo(Hero hero){return hero.buff(BurstTempo.class)!=null?2:1;}
     public abstract static class Relic extends Artifact {
         public static final String USE="RELIC_USE";
-        protected Relic(){unique=true;levelCap=15;chargeCap=8;charge=0;defaultAction=USE;}
+        protected Relic(){unique=false;levelCap=15;chargeCap=8;charge=0;defaultAction=USE;}
         @Override public Item upgrade(){if(level()<levelCap)return super.upgrade();return this;}
         @Override public Item level(int value){return super.level(Math.min(levelCap,value));}
         public void gainKill(){

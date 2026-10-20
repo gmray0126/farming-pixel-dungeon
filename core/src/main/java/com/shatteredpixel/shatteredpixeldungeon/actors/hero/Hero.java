@@ -1112,8 +1112,8 @@ public class Hero extends Char {
 		return canSelfTrample && !rooted && !flying &&
 				//standing in high grass
 				(Dungeon.level.map[pos] == Terrain.HIGH_GRASS ||
-				//standing in furrowed grass and not huntress
-				(heroClass != HeroClass.HUNTRESS && Dungeon.level.map[pos] == Terrain.FURROWED_GRASS) ||
+				//Only offer trampling if this hero actually flattens furrowed grass.
+				(!com.shatteredpixel.shatteredpixeldungeon.levels.features.HighGrass.preservesGrass(this) && Dungeon.level.map[pos] == Terrain.FURROWED_GRASS) ||
 				//standing on a plant
 				Dungeon.level.plants.get(pos) != null);
 	}

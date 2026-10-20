@@ -20,6 +20,45 @@ import java.lang.reflect.*;
 import static org.junit.Assert.*;
 
 public class ExtractionHybridTest {
+    private static class TransmutationProbe extends com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation {
+        boolean accepts(Item item){return usableOnItem(item);}
+    }
+    @Test public void addedArtifactsCanBeSoldAndTransmutedAfterSaving() throws Exception {
+        TransmutationProbe scroll=new TransmutationProbe();
+        Method change=com.shatteredpixel.shatteredpixeldungeon.items.scrolls.ScrollOfTransmutation.class.getDeclaredMethod("changeArtifact",com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact.class);change.setAccessible(true);
+        for(ExpeditionArtifacts.Relic relic:new ExpeditionArtifacts.Relic[]{new ExpeditionArtifacts.BloodLantern(),new ExpeditionArtifacts.GreedPouch(),new ExpeditionArtifacts.BrokenHourglass(),new ExpeditionArtifacts.HuntersMark(),new ExpeditionArtifacts.UnstableCompass(),new ExtractionContracts.CommissionSeal()}) {
+            relic.identify(false);relic.upgrade(7);Bundle saved=new Bundle();saved.put("item",relic);
+            ExpeditionArtifacts.Relic restored=(ExpeditionArtifacts.Relic)saved.get("item");
+            assertTrue(restored.name(),com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper.canSell(restored));assertTrue(scroll.accepts(restored));
+            Generator.reset();com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact changed=(com.shatteredpixel.shatteredpixeldungeon.items.artifacts.Artifact)change.invoke(null,restored);
+            assertNotNull(changed);assertNotEquals(restored.getClass(),changed.getClass());assertEquals(7,changed.visiblyUpgraded());
+            restored.cursed=true;h.belongings.artifact=restored;assertFalse(com.shatteredpixel.shatteredpixeldungeon.actors.mobs.npcs.Shopkeeper.canSell(restored));h.belongings.artifact=null;
+        }
+        assertFalse(scroll.accepts(new com.shatteredpixel.shatteredpixeldungeon.items.artifacts.CloakOfShadows()));
+        assertFalse(scroll.accepts(new com.shatteredpixel.shatteredpixeldungeon.items.artifacts.HolyTome()));
+    }
+    @Test public void sniperAndWardenNodesPreserveGrassAndRefreshBarkskinAtEveryRank() throws Exception {
+        p.nodes.add("skill_hawk");p.nodes.add("subclass_sniper");p.nodes.add("subclass_warden");
+        ExtractionTraining.Room room=ExtractionTraining.prepare();h=Dungeon.hero;h.heroClass=com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
+        try {
+            assertTrue(h.hasSubclass(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.SNIPER));assertTrue(h.hasSubclass(com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroSubClass.WARDEN));
+            for(int rank=1;rank<=3;rank++){
+                p.nodes.add("utility_barkskin_"+rank);com.shatteredpixel.shatteredpixeldungeon.levels.Level.set(h.pos,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.HIGH_GRASS);
+                Random.pushGenerator(0);try{room.pressCell(h.pos);}finally{Random.popGenerator();}
+                assertEquals(com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.FURROWED_GRASS,room.map[h.pos]);assertEquals(2*rank,Barkskin.currentLevel(h));
+                h.buff(Barkskin.class).act();assertEquals(2*rank-1,Barkskin.currentLevel(h));
+                int heaps=room.heaps.size();room.pressCell(h.pos);assertEquals(2*rank,Barkskin.currentLevel(h));assertEquals(heaps,room.heaps.size());
+                com.shatteredpixel.shatteredpixeldungeon.levels.Level.set(h.pos,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.GRASS);
+                h.buff(Barkskin.class).act();room.pressCell(h.pos);assertEquals(2*rank-1,Barkskin.currentLevel(h));
+                room.heroFOV[h.pos]=false;com.shatteredpixel.shatteredpixeldungeon.plants.Plant plant=new com.shatteredpixel.shatteredpixeldungeon.plants.Plant(){@Override public void activate(Char ch){}};plant.pos=h.pos;plant.trigger();assertEquals(2*rank,Barkskin.currentLevel(h));
+            }
+            p.nodes.clear();for(Barkskin buff:h.buffs(Barkskin.class))buff.detach();
+            com.shatteredpixel.shatteredpixeldungeon.levels.Level.set(h.pos,com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.FURROWED_GRASS);room.pressCell(h.pos);
+            assertEquals(com.shatteredpixel.shatteredpixeldungeon.levels.Terrain.GRASS,room.map[h.pos]);assertEquals(0,Barkskin.currentLevel(h));
+            h.extractionRaidID=0;h.heroClass=com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.HUNTRESS;
+            assertTrue(com.shatteredpixel.shatteredpixeldungeon.levels.features.HighGrass.preservesGrass(h));
+        } finally {ExtractionTraining.finish();}
+    }
     @Test public void arcaneBallisticsBridgesMageAndHuntress(){
         ExtractionGrowth.Node root=ExtractionGrowth.NODES[ExtractionGrowth.index("alchemy_0")];
         assertEquals("마탄학자",ExtractionGrowth.BRANCHES[root.branch]);

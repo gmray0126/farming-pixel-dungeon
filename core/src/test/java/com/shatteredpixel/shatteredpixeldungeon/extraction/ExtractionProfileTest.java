@@ -1291,6 +1291,22 @@ public class ExtractionProfileTest {
         assertEquals(25,profile.growthExperienceRequired());assertEquals(6,profile.points);
         profile.begin();Hero next=new Hero();profile.initialize(next);assertEquals(20,next.HT);assertEquals(10,next.STR);
     }
+    @Test public void startingWithAnotherWeaponStillGrantsOneBackupSwordAndKeepsFullLoadouts() {
+        for(Item primary:new Item[]{new com.shatteredpixel.shatteredpixeldungeon.items.weapon.melee.Sword(),new AlchemyFirearm(),new BasicExpeditionSword()}) {
+            profile.stash.add(primary);profile.prepare(primary,true);
+            for(int i=1;i<profile.capacity();i++){Item item=new Item();profile.stash.add(item);profile.prepare(item,true);}
+            profile.begin();Hero h=roseHero();assertEquals(primary.getClass(),h.belongings.weapon.getClass());
+            int swords=0,preparedItems=0;for(Item item:h.belongings){if(item instanceof BasicExpeditionSword)swords++;if(item.getClass()==Item.class)preparedItems++;}
+            assertEquals(1,swords);assertEquals(profile.capacity()-1,preparedItems);
+            assertNotNull(h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class));
+            assertEquals(3,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
+            assertTrue(h.belongings.backpack.items.size()<=h.belongings.backpack.capacity());
+            Bundle saved=new Bundle();h.belongings.storeInBundle(saved);
+            com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings restored=new com.shatteredpixel.shatteredpixeldungeon.actors.hero.Belongings(h);restored.restoreFromBundle(saved);
+            int restoredSwords=0;for(Item item:restored)if(item instanceof BasicExpeditionSword)restoredSwords++;assertEquals(1,restoredSwords);
+            profile.settle(profile.raidID,false);
+        }
+    }
     @Test public void waterskinIsReissuedAfterDeathAndPreparedDewSurvivesWithoutDuplicates() throws Exception {
         profile.begin();Dungeon.hero=new Hero();Dungeon.hero.extractionRaidID=profile.raidID;profile.initialize(Dungeon.hero);
         com.shatteredpixel.shatteredpixeldungeon.items.Waterskin skin=Dungeon.hero.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class);

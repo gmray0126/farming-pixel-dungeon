@@ -235,6 +235,9 @@ public final class ExtractionProfile {
             h.belongings.weapon=(KindOfWeapon)new BasicExpeditionSword().identify(false);
             h.belongings.weapon.activate(h);
         }
+        if(h.belongings.getItem(BasicExpeditionSword.class)==null
+                &&!new BasicExpeditionSword().identify(false).collect(h.belongings.backpack))
+            throw new IllegalStateException("보급 검을 가방에 넣지 못했습니다.");
         if(h.belongings.armor==null){
             h.belongings.armor=(Armor)new BasicExpeditionArmor().identify(false);
             h.belongings.armor.activate(h);
