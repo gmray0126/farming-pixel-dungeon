@@ -1203,16 +1203,18 @@ public class ExtractionProfileTest {
         profile.settle(profile.raidID,true);assertEquals(5,profile.stash.size());
         Item chosen=profile.stash.get(0);profile.prepare(chosen,true);profile.begin();
         Hero next=new Hero();profile.initialize(next);assertEquals(chosen.getClass(),next.belongings.weapon.getClass());
-        assertEquals(2,next.belongings.backpack.items.size());
+        assertEquals(3,next.belongings.backpack.items.size());
+        assertNotNull(next.belongings.getItem(BasicExpeditionSword.class));
         assertNotNull(next.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.Waterskin.class));
     }
-    @Test public void preparedSwordAndArmorDoNotGetDuplicateFallbackGearAndStonesSurviveSave(){
+    @Test public void preparedWeaponKeepsOneBackupSwordAndArmorAndStonesSurviveSave(){
         Item sword=profile.stash.get(0);
         Item armor=new com.shatteredpixel.shatteredpixeldungeon.items.armor.LeatherArmor().identify(false).upgrade();
         profile.stash.add(armor);profile.prepare(sword,true);profile.prepare(armor,true);profile.begin();
         Hero h=new Hero();Dungeon.hero=h;h.extractionRaidID=profile.raidID;profile.initialize(h);
         assertEquals(sword.getClass(),h.belongings.weapon.getClass());assertEquals(armor.getClass(),h.belongings.armor.getClass());
-        int armors=0;for(Item item:h.belongings){assertFalse(item instanceof BasicExpeditionSword);assertFalse(item instanceof BasicExpeditionArmor);if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)armors++;}
+        int armors=0,swords=0;for(Item item:h.belongings){if(item instanceof BasicExpeditionSword)swords++;assertFalse(item instanceof BasicExpeditionArmor);if(item instanceof com.shatteredpixel.shatteredpixeldungeon.items.armor.Armor)armors++;}
+        assertEquals(1,swords);
         assertEquals(1,armors);assertEquals(3,h.belongings.getItem(com.shatteredpixel.shatteredpixeldungeon.items.weapon.missiles.ThrowingStone.class).quantity());
         com.shatteredpixel.shatteredpixeldungeon.actors.hero.Talent.initClassTalents(h);
         com.watabou.utils.Bundle saved=new com.watabou.utils.Bundle();saved.put("hero",h);Hero restored=(Hero)saved.get("hero");
@@ -1465,7 +1467,8 @@ public class ExtractionProfileTest {
         Dungeon.hero.heroClass = com.shatteredpixel.shatteredpixeldungeon.actors.hero.HeroClass.WARRIOR;
         profile.initialize(Dungeon.hero);
         assertEquals(1, Dungeon.hero.belongings.weapon.level());
-        assertEquals(3, Dungeon.hero.belongings.backpack.items.size());
+        assertEquals(4, Dungeon.hero.belongings.backpack.items.size());
+        assertNotNull(Dungeon.hero.belongings.getItem(BasicExpeditionSword.class));
     }
     @Test public void returnAllPreservesEveryPreparedItemAfterReload() throws Exception {
         for (Item item : new java.util.ArrayList<>(profile.stash)) profile.prepare(item, true);
